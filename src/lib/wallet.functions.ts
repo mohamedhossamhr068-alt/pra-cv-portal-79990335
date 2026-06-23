@@ -126,3 +126,88 @@ export const getScreenshotUrl = createServerFn({ method: "POST" })
     if (error) throw error;
     return { url: signed.signedUrl };
   });
+
+// ============ Payment methods (multi-channel) ============
+
+export const listPaymentMethods = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: prof } = await supabase
+      .from("profiles").select("tenant_id").eq("id", userId).maybeSingle();
+    if (!prof?.tenant_id) return [];
+    const { data } = await supabase
+      .from("payment_methods" as any).select("*")
+      .eq("tenant_id", prof.tenant_id)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+    return (data as any[]) ?? [];
+  });
+
+const paymentMethodSchema = z.object({
+  id: z.string().uuid().optional(),
+  type: z.enum(["vodafone_cash","orange_cash","etisalat_cash","we_pay","instapay","bank_transfer","fawry","meeza","other"]),
+  label: z.string().min(1).max(80),
+  account_number: z.string().min(3).max(80),
+  account_name: z.string().max(120).optional().nullable(),
+  bank_name: z.string().max(120).optional().nullable(),
+  instructions: z.string().max(500).optional().nullable(),
+  is_active: z.boolean().optional().default(true),
+  sort_order: z.number().int().optional().default(0),
+});
+
+export const upsertPaymentMethod = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => paymentMethodSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: prof } = await supabase
+      .from("profiles").select("tenant_id").eq("id", userId).maybeSingle();
+    if (!prof?.tenant_id) throw new Error("NO_TENANT");
+    const payload: any = { ...data, tenant_id: prof.tenant_id };
+    const { error } = await supabase.from("payment_methods" as any).upsert(payload);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const deletePaymentMethod = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("payment_methods" as any).delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+// Updated topup to attach payment method
+export const createTopupRequestV2 = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      amount_egp: z.number().positive().max(1000000),
+      reference_number: z.string().max(80).optional().default(""),
+      screenshot_path: z.string().min(3),
+      payment_method_id: z.string().uuid().optional().nullable(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: prof } = await supabase
+      .from("profiles").select("tenant_id").eq("id", userId).maybeSingle();
+    if (!prof?.tenant_id) throw new Error("NO_TENANT");
+    const { data: w } = await supabase
+      .from("wallet_settings").select("credits_per_egp").eq("tenant_id", prof.tenant_id).maybeSingle();
+    const rate = Number((w as any)?.credits_per_egp ?? 1);
+    const credits = Math.max(1, Math.floor(data.amount_egp * rate));
+    const { error } = await supabase.from("topup_requests").insert({
+      tenant_id: prof.tenant_id,
+      user_id: userId,
+      amount_egp: data.amount_egp,
+      credits_requested: credits,
+      reference_number: data.reference_number || null,
+      screenshot_path: data.screenshot_path,
+      payment_method_id: data.payment_method_id || null,
+    } as any);
+    if (error) throw error;
+    return { ok: true, credits };
+  });
