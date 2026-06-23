@@ -76,11 +76,11 @@ function Jobs() {
           <div className="flex items-center gap-1.5 rounded-full border bg-card px-3 py-1.5 text-sm">
             <Coins className="h-3.5 w-3.5 text-amber-500" />
             <span className="font-semibold">{me.data?.credits ?? 0}</span>
-            <span className="text-xs text-muted-foreground">رصيد</span>
+            <span className="text-xs text-muted-foreground">{t("jobs.creditsLabel")}</span>
           </div>
           <Button onClick={() => mut.mutate()} disabled={mut.isPending} className="gap-2">
             <Sparkles className="h-4 w-4" />
-            {mut.isPending ? "جاري المطابقة…" : "مطابقة (-1)"}
+            {mut.isPending ? t("jobs.matching") : t("jobs.runMatch")}
           </Button>
         </div>
       </div>
