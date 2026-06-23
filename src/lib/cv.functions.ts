@@ -29,6 +29,10 @@ const CvInputSchema = z.object({
   skills: z.string().min(1).max(1000),
   template: z.enum(["modern_executive", "corporate_minimal", "creative_professional"]).default("modern_executive"),
   locale: z.enum(["en", "ar"]).default("en"),
+  avatarDataUrl: z.string().max(400_000).optional(),
+  email: z.string().max(160).optional(),
+  phone: z.string().max(40).optional(),
+  location: z.string().max(120).optional(),
 });
 
 type CvInput = z.infer<typeof CvInputSchema>;
