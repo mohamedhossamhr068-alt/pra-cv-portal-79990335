@@ -2,12 +2,12 @@ import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getCv, updateCvStyle } from "@/lib/cv.functions";
+import { getCv, updateCvStyle, translateCv } from "@/lib/cv.functions";
 import { useMeQuery } from "@/lib/me.hooks";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Download, ArrowLeft, Sparkles, Award, Briefcase, Wrench, Target, MessageCircle, TrendingUp, Globe2, Mail, Phone, MapPin, FileText, Gauge, Palette, Check } from "lucide-react";
+import { Download, ArrowLeft, Sparkles, Award, Briefcase, Wrench, Target, MessageCircle, TrendingUp, Globe2, Mail, Phone, MapPin, FileText, Gauge, Palette, Check, Languages } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/cv/$id")({
