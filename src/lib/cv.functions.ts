@@ -20,6 +20,11 @@ const CvOutputSchema = z.object({
   recommendations: z.array(z.string()),
 });
 
+const LanguageSchema = z.object({
+  name: z.string().min(1).max(40),
+  level: z.string().min(1).max(30),
+});
+
 const CvInputSchema = z.object({
   fullName: z.string().min(1).max(120),
   jobTitle: z.string().min(1).max(120),
@@ -33,6 +38,14 @@ const CvInputSchema = z.object({
   email: z.string().max(160).optional(),
   phone: z.string().max(40).optional(),
   location: z.string().max(120).optional(),
+  englishLevel: z.enum(["none", "basic", "intermediate", "advanced", "fluent", "native"]).optional(),
+  languages: z.array(LanguageSchema).max(8).optional(),
+  erp: z.string().max(120).optional(),
+  yearsExperience: z.coerce.number().min(0).max(60).optional(),
+  education: z.string().max(400).optional(),
+  certifications: z.string().max(600).optional(),
+  linkedinUrl: z.string().max(200).optional(),
+  portfolioUrl: z.string().max(200).optional(),
 });
 
 type CvInput = z.infer<typeof CvInputSchema>;
