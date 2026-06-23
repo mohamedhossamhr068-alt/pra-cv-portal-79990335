@@ -1,8 +1,8 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useRef, useState } from "react";
-import { getCv } from "@/lib/cv.functions";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { getCv, updateCvStyle } from "@/lib/cv.functions";
 import { useMeQuery } from "@/lib/me.hooks";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
