@@ -86,14 +86,38 @@ function NewCv() {
     mutationFn: () =>
       fn({
         data: {
-          ...form,
+          fullName: form.fullName,
+          jobTitle: form.jobTitle,
+          industry: form.industry,
+          seniority: form.seniority,
+          experience: form.experience,
+          skills: form.skills,
+          template: form.template,
           avatarDataUrl: form.avatarDataUrl || undefined,
           email: form.email || undefined,
           phone: form.phone || undefined,
           location: form.location || undefined,
+          englishLevel: form.englishLevel,
+          languages: form.languages.length ? form.languages : undefined,
+          erp: form.erp || undefined,
+          yearsExperience: form.yearsExperience ? Number(form.yearsExperience) : undefined,
+          education: form.education || undefined,
+          certifications: form.certifications || undefined,
+          linkedinUrl: form.linkedinUrl || undefined,
+          portfolioUrl: form.portfolioUrl || undefined,
           locale: (ar ? "ar" : "en") as "en" | "ar",
         },
       }),
+    onSuccess: (res) => {
+      toast.success(ar ? "تم إنشاء السيرة" : "CV generated");
+      navigate({ to: "/cv/$id", params: { id: res.id } });
+    },
+    onError: (e: any) => {
+      const msg = String(e?.message ?? "");
+      if (msg.includes("QUOTA_REACHED")) toast.error(t("cv.quotaReached"));
+      else toast.error(msg || "Failed");
+    },
+  });
     onSuccess: (res) => {
       toast.success(ar ? "تم إنشاء السيرة" : "CV generated");
       navigate({ to: "/cv/$id", params: { id: res.id } });
