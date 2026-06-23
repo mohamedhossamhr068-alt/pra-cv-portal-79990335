@@ -443,12 +443,12 @@ function CvViewer() {
   );
 }
 
-function AtsScoreCard({ score, checks, ar }: { score: number; checks: { label: string; pass: boolean; weight: number; tip?: string }[]; ar: boolean }) {
+function AtsScoreCard({ score, checks, ar }: { score: number; checks: { label: string; pass: boolean; partial: boolean; weight: number; tip?: string; detail?: string }[]; ar: boolean }) {
   const tier = score >= 85 ? { label: ar ? "ممتاز" : "Excellent", color: "#16a34a", glow: "from-emerald-400 to-green-600" }
     : score >= 70 ? { label: ar ? "جيد جداً" : "Strong", color: "#0284c7", glow: "from-sky-400 to-blue-600" }
     : score >= 55 ? { label: ar ? "متوسط" : "Average", color: "#d97706", glow: "from-amber-400 to-orange-600" }
     : { label: ar ? "يحتاج تطوير" : "Needs work", color: "#dc2626", glow: "from-rose-400 to-red-600" };
-  const failed = checks.filter((c) => !c.pass && c.tip);
+  const tips = checks.filter((c) => !c.pass && c.tip);
   const C = 2 * Math.PI * 42;
   const offset = C - (score / 100) * C;
 
@@ -478,23 +478,34 @@ function AtsScoreCard({ score, checks, ar }: { score: number; checks: { label: s
             <h2 className="text-base font-bold">{ar ? "نتيجة توافق ATS" : "ATS Compatibility Score"}</h2>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            {ar ? "تحليل مدى توافق سيرتك مع أنظمة فرز السير الذاتية المؤتمتة." : "How well your CV passes automated applicant tracking systems."}
+            {ar ? "تحليل واقعي يتغيّر تلقائياً مع كل تعديل في بياناتك." : "Realistic score that adapts to your actual CV data."}
           </p>
-          <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-            {checks.map((c, i) => (
-              <div key={i} className={`flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10.5px] ${c.pass ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300" : "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300"}`}>
-                <span>{c.pass ? "✓" : "○"}</span>
-                <span className="truncate">{c.label}</span>
-              </div>
-            ))}
+          <div className="mt-3 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+            {checks.map((c, i) => {
+              const cls = c.pass
+                ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300"
+                : c.partial
+                  ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300"
+                  : "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300";
+              const icon = c.pass ? "✓" : c.partial ? "◐" : "○";
+              return (
+                <div key={i} className={`flex items-center justify-between gap-2 rounded-md border px-2 py-1 text-[10.5px] ${cls}`}>
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <span className="shrink-0">{icon}</span>
+                    <span className="truncate">{c.label}</span>
+                  </div>
+                  {c.detail && <span className="shrink-0 font-mono opacity-70">{c.detail}</span>}
+                </div>
+              );
+            })}
           </div>
-          {failed.length > 0 && (
+          {tips.length > 0 && (
             <details className="mt-3 rounded-lg border bg-card p-3 text-xs">
               <summary className="cursor-pointer font-semibold text-foreground">
-                💡 {ar ? `اقتراحات لرفع النتيجة (${failed.length})` : `Tips to boost your score (${failed.length})`}
+                💡 {ar ? `اقتراحات لرفع النتيجة (${tips.length})` : `Tips to boost your score (${tips.length})`}
               </summary>
               <ul className="mt-2 space-y-1 ps-4 text-muted-foreground">
-                {failed.map((f, i) => <li key={i} className="list-disc"><span className="text-foreground font-medium">{f.label}:</span> {f.tip}</li>)}
+                {tips.map((f, i) => <li key={i} className="list-disc"><span className="text-foreground font-medium">{f.label}:</span> {f.tip}</li>)}
               </ul>
             </details>
           )}
