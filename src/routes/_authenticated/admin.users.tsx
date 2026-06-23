@@ -46,7 +46,7 @@ function AdminUsers() {
       <div className="rounded-2xl border bg-[image:var(--gradient-primary)] p-6 text-primary-foreground shadow-[var(--shadow-elegant)]">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <div className="text-xs uppercase tracking-widest opacity-80">Admin Panel</div>
+            <div className="text-xs uppercase tracking-widest opacity-80">لوحة الإدارة</div>
             <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">إدارة المستخدمين</h1>
             <p className="mt-1 text-sm opacity-90">تحكّم في الرصيد والصلاحيات والحظر لكل أعضاء شركتك.</p>
           </div>
