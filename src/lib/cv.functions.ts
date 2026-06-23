@@ -127,7 +127,11 @@ function normalizeCvOutput(raw: unknown, input: CvInput): CvOutput {
 }
 
 
-const CV_CREDIT_COST = 5;
+async function getCvCost(supabase: any, tenantId: string | null): Promise<number> {
+  if (!tenantId) return 5;
+  const { data } = await supabase.from("tenants").select("cv_credit_cost").eq("id", tenantId).maybeSingle();
+  return (data as any)?.cv_credit_cost ?? 5;
+}
 
 async function generateAnalysis(
   gateway: ReturnType<typeof createLovableAiGatewayProvider>,
