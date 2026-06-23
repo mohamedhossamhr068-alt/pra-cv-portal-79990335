@@ -156,13 +156,13 @@ function CvViewer() {
       const contact = [input.email, input.phone, input.location].filter(Boolean).join(" • ");
       if (contact) children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: contact, size: 20, color: "777777" })], spacing: { after: 240 } }));
 
-      children.push(h(ar ? "الملخص المهني" : "Summary"));
+      children.push(h(cvLang === "ar" ? "الملخص المهني" : "Summary"));
       children.push(para(out.summary));
 
-      children.push(h(ar ? "الكفاءات الأساسية" : "Core Competencies"));
+      children.push(h(cvLang === "ar" ? "الكفاءات الأساسية" : "Core Competencies"));
       children.push(para(out.competencies.join(" • ")));
 
-      children.push(h(ar ? "الخبرة العملية" : "Professional Experience"));
+      children.push(h(cvLang === "ar" ? "الخبرة العملية" : "Professional Experience"));
       out.experience.forEach((e) => {
         children.push(new Paragraph({ children: [new TextRun({ text: `${e.role} — ${e.company}`, bold: true })] }));
         children.push(new Paragraph({ children: [new TextRun({ text: e.dates, italics: true, color: "888888" })], spacing: { after: 80 } }));
@@ -170,17 +170,17 @@ function CvViewer() {
       });
 
       if (out.achievements.length) {
-        children.push(h(ar ? "أبرز الإنجازات" : "Key Achievements"));
+        children.push(h(cvLang === "ar" ? "أبرز الإنجازات" : "Key Achievements"));
         out.achievements.forEach((a) => children.push(bullet(a)));
       }
 
-      children.push(h(ar ? "المهارات" : "Skills"));
+      children.push(h(cvLang === "ar" ? "المهارات" : "Skills"));
       out.skillsMatrix.forEach((g) => {
         children.push(new Paragraph({ children: [new TextRun({ text: `${g.category}: `, bold: true }), new TextRun({ text: g.skills.join(", ") })], spacing: { after: 80 } }));
       });
 
       if (out.recommendations.length) {
-        children.push(h(ar ? "توصيات للتطوير" : "Recommendations"));
+        children.push(h(cvLang === "ar" ? "توصيات للتطوير" : "Recommendations"));
         out.recommendations.forEach((r) => children.push(bullet(r)));
       }
 
