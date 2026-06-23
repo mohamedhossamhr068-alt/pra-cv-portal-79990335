@@ -63,6 +63,7 @@ function CvViewer() {
   const { id } = useParams({ from: "/_authenticated/cv/$id" });
   const fn = useServerFn(getCv);
   const saveStyleFn = useServerFn(updateCvStyle);
+  const translateFn = useServerFn(translateCv);
   const { data, isLoading } = useQuery({ queryKey: ["cv", id], queryFn: () => fn({ data: { id } }) });
   const me = useMeQuery();
   const tenant = me.data?.tenant;
@@ -71,8 +72,12 @@ function CvViewer() {
   const [exportingDocx, setExportingDocx] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [selectedAccent, setSelectedAccent] = useState<string | null>(null);
+  const [translated, setTranslated] = useState<{ output: CvOut; analysis: CvAnalysis | null } | null>(null);
+  const [translatedLang, setTranslatedLang] = useState<"ar" | "en" | null>(null);
+  const [translating, setTranslating] = useState(false);
 
-  const out = (data?.output as CvOut) ?? null;
+  const baseOut = (data?.output as CvOut) ?? null;
+  const out = (translated?.output as CvOut) ?? baseOut;
   const input = (data as any)?.input ?? {};
   const ats = useMemo(() => (out ? computeAtsScore(out, input) : null), [out, input]);
 
