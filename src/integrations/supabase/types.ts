@@ -54,6 +54,7 @@ export type Database = {
       }
       cv_logs: {
         Row: {
+          accent_color: string | null
           analysis: Json | null
           created_at: string
           id: string
@@ -66,6 +67,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          accent_color?: string | null
           analysis?: Json | null
           created_at?: string
           id?: string
@@ -78,6 +80,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          accent_color?: string | null
           analysis?: Json | null
           created_at?: string
           id?: string
@@ -376,36 +379,48 @@ export type Database = {
       tenants: {
         Row: {
           created_at: string
+          currency: string
           cv_credit_cost: number
           id: string
           industry: string | null
           logo_url: string | null
           match_credit_cost: number
           name: string
+          plan_price_business: number
+          plan_price_free: number
+          plan_price_pro: number
           primary_color: string | null
           scrape_credit_cost: number
           slug: string
         }
         Insert: {
           created_at?: string
+          currency?: string
           cv_credit_cost?: number
           id?: string
           industry?: string | null
           logo_url?: string | null
           match_credit_cost?: number
           name: string
+          plan_price_business?: number
+          plan_price_free?: number
+          plan_price_pro?: number
           primary_color?: string | null
           scrape_credit_cost?: number
           slug: string
         }
         Update: {
           created_at?: string
+          currency?: string
           cv_credit_cost?: number
           id?: string
           industry?: string | null
           logo_url?: string | null
           match_credit_cost?: number
           name?: string
+          plan_price_business?: number
+          plan_price_free?: number
+          plan_price_pro?: number
           primary_color?: string | null
           scrape_credit_cost?: number
           slug?: string
@@ -618,10 +633,27 @@ export type Database = {
         Args: { _approve: boolean; _note?: string; _request_id: string }
         Returns: undefined
       }
-      admin_update_pricing: {
-        Args: { _cv_cost?: number; _match_cost?: number; _scrape_cost?: number }
-        Returns: undefined
-      }
+      admin_update_pricing:
+        | {
+            Args: {
+              _cv_cost?: number
+              _match_cost?: number
+              _scrape_cost?: number
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _currency?: string
+              _cv_cost?: number
+              _match_cost?: number
+              _plan_business?: number
+              _plan_free?: number
+              _plan_pro?: number
+              _scrape_cost?: number
+            }
+            Returns: undefined
+          }
       admin_update_user: {
         Args: {
           _credits?: number
