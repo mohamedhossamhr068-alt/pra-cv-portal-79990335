@@ -61,6 +61,7 @@ export type Database = {
           input: Json
           output: Json
           pdf_storage_path: string | null
+          print_locale: string | null
           template: string
           tenant_id: string | null
           title: string
@@ -74,6 +75,7 @@ export type Database = {
           input: Json
           output: Json
           pdf_storage_path?: string | null
+          print_locale?: string | null
           template?: string
           tenant_id?: string | null
           title: string
@@ -87,6 +89,7 @@ export type Database = {
           input?: Json
           output?: Json
           pdf_storage_path?: string | null
+          print_locale?: string | null
           template?: string
           tenant_id?: string | null
           title?: string

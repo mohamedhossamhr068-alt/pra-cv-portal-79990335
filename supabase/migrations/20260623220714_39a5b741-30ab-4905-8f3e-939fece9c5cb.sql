@@ -1,0 +1,1 @@
+ALTER TABLE public.cv_logs ADD COLUMN IF NOT EXISTS print_locale TEXT;
