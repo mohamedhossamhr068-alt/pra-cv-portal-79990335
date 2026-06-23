@@ -135,46 +135,43 @@ function computeAtsScore(
     tip: contact < 8 ? (ar ? "أكمل الإيميل (صيغة صحيحة) والهاتف والموقع." : "Add a valid email, phone, and location.") : undefined,
   });
 
-  // 11. English proficiency (matters for ATS in EG/GCC market) (0-5)
-  const levels: Record<string, number> = { none: 0, basic: 1, intermediate: 3, advanced: 4, fluent: 5, native: 5 };
-  const elv = levels[(input?.englishLevel ?? "").toLowerCase()] ?? 0;
+  // 11. English proficiency (low weight — optional) (0-2)
+  const levels: Record<string, number> = { none: 0, basic: 1, intermediate: 2, advanced: 2, fluent: 2, native: 2 };
+  const elv = levels[(input?.englishLevel ?? "").toLowerCase()] ?? 1;
   items.push({
     label: ar ? "مستوى اللغة الإنجليزية" : "English proficiency",
-    score: elv, max: 5,
-    tip: elv < 3 ? (ar ? "ارفع مستوى الإنجليزية إلى متقدم/طلاقة لزيادة الفرص." : "Aim for Advanced/Fluent English to widen reach.") : undefined,
+    score: elv, max: 2,
     detail: input?.englishLevel || "-",
   });
 
-  // 12. Additional languages (0-3)
+  // 12. Additional languages (optional) (0-1)
   const langCount = Array.isArray(input?.languages) ? input.languages.length : 0;
   items.push({
     label: ar ? "لغات إضافية" : "Additional languages",
-    score: Math.min(3, langCount * 2), max: 3, detail: `${langCount}`,
+    score: Math.min(1, langCount), max: 1, detail: `${langCount}`,
   });
 
-  // 13. ERP / systems exposure (0-3)
+  // 13. ERP / systems exposure (optional) (0-1)
   const hasErp = typeof input?.erp === "string" && input.erp.trim().length > 1;
   items.push({
     label: ar ? "أنظمة ERP / برامج تخصصية" : "ERP / specialised systems",
-    score: hasErp ? 3 : 0, max: 3,
-    tip: !hasErp ? (ar ? "اذكر أي نظام ERP أو برنامج تخصصي تعرفه." : "List any ERP or domain tooling you know.") : undefined,
+    score: hasErp ? 1 : 0, max: 1,
   });
 
-  // 14. Education/Certifications (0-4)
+  // 14. Education/Certifications (0-3)
   const hasEdu = (input?.education || "").length > 5;
   const hasCert = (input?.certifications || "").length > 2;
   items.push({
     label: ar ? "التعليم والشهادات" : "Education & certifications",
-    score: (hasEdu ? 2 : 0) + (hasCert ? 2 : 0), max: 4,
+    score: (hasEdu ? 2 : 0) + (hasCert ? 1 : 0), max: 3,
   });
 
-  // 15. Online presence (LinkedIn/portfolio) (0-3)
+  // 15. Online presence (LinkedIn/portfolio) (0-2)
   const hasLi = /linkedin\.com/i.test(input?.linkedinUrl || "");
   const hasPort = /^https?:\/\//i.test(input?.portfolioUrl || "");
   items.push({
     label: ar ? "حضور رقمي (LinkedIn/Portfolio)" : "Online presence (LinkedIn/Portfolio)",
-    score: (hasLi ? 2 : 0) + (hasPort ? 1 : 0), max: 3,
-    tip: !hasLi ? (ar ? "أضف رابط LinkedIn محدّث." : "Add an updated LinkedIn URL.") : undefined,
+    score: (hasLi ? 1 : 0) + (hasPort ? 1 : 0), max: 2,
   });
 
   // 16. Content depth (0-4)
@@ -187,19 +184,22 @@ function computeAtsScore(
 
   const totalMax = items.reduce((s, i) => s + i.max, 0);
   const earned = items.reduce((s, i) => s + i.score, 0);
-  const score = Math.round((earned / totalMax) * 100);
+  // Lenient scoring: rescale and add baseline boost so realistic CVs score in 70-95 range.
+  const raw = (earned / totalMax) * 100;
+  const score = Math.max(0, Math.min(100, Math.round(raw * 0.85 + 18)));
   return {
     score,
     checks: items.map((i) => ({
       label: i.label,
-      pass: i.score >= i.max * 0.7,
-      partial: i.score > 0 && i.score < i.max * 0.7,
+      pass: i.score >= i.max * 0.6,
+      partial: i.score > 0 && i.score < i.max * 0.6,
       weight: i.max,
       tip: i.tip,
       detail: i.detail,
     })),
   };
 }
+
 
 function CvViewer() {
   const { t, i18n } = useTranslation();
