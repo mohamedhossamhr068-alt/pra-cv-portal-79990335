@@ -69,8 +69,8 @@ function Jobs() {
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">وظائف مصر</h1>
-          <p className="text-sm text-muted-foreground">من LinkedIn و Wuzzuf و Bayt و Forasna. مطابقة ذكية بناءً على سي في.</p>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t("jobs.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("jobs.sub")}</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 rounded-full border bg-card px-3 py-1.5 text-sm">
