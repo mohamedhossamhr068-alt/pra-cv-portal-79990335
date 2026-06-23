@@ -254,35 +254,45 @@ function CvViewer() {
     if (!pdfRef.current) return;
     setDownloading(true);
     try {
-      // Use the browser's native print pipeline (renders Tailwind v4 oklch / RTL
-      // / web fonts correctly — unlike html2canvas which silently produces blank PDFs).
-      const styles = Array.from(
-        document.querySelectorAll('link[rel="stylesheet"], style')
-      )
-        .map((n) => n.outerHTML)
-        .join("\n");
-      const iframe = document.createElement("iframe");
-      iframe.style.cssText =
-        "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
-      document.body.appendChild(iframe);
-      const idoc = iframe.contentDocument!;
-      idoc.open();
-      idoc.write(`<!doctype html><html dir="${cvDir}" lang="${cvLang}"><head><meta charset="utf-8"><title>${data.title.replace(/[<>&"']/g, "")}</title>${styles}<style>@page{size:A4;margin:0}html,body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}</style></head><body>${pdfRef.current.outerHTML}</body></html>`);
-      idoc.close();
-      await new Promise<void>((resolve) => {
-        const ready = () => setTimeout(resolve, 500);
-        if (idoc.readyState === "complete") ready();
-        else iframe.onload = ready;
+      // Use html2canvas-pro (oklch-aware) + jsPDF to actually DOWNLOAD a PDF file,
+      // not just open the browser print dialog.
+      const [{ default: html2canvas }, jsPDFmod] = await Promise.all([
+        import("html2canvas-pro"),
+        import("jspdf"),
+      ]);
+      const jsPDF = (jsPDFmod as any).jsPDF ?? (jsPDFmod as any).default;
+      const node = pdfRef.current;
+      const canvas = await html2canvas(node, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
       });
-      iframe.contentWindow!.focus();
-      iframe.contentWindow!.print();
-      setTimeout(() => iframe.remove(), 1500);
-    } catch {
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgH = (canvas.height * pageW) / canvas.width;
+      let heightLeft = imgH;
+      let position = 0;
+      pdf.addImage(imgData, "JPEG", 0, position, pageW, imgH);
+      heightLeft -= pageH;
+      while (heightLeft > 0) {
+        position = heightLeft - imgH;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, position, pageW, imgH);
+        heightLeft -= pageH;
+      }
+      const filename = `${data.title.replace(/[^\w\s-]/g, "").trim() || "cv"}.pdf`;
+      pdf.save(filename);
+    } catch (err) {
+      console.error("PDF export failed", err);
       toast.error(ar ? "تعذر إنشاء PDF" : "Could not generate PDF.");
     } finally {
       setDownloading(false);
     }
   };
+
 
   const handleDownloadDocx = async () => {
     setExportingDocx(true);
