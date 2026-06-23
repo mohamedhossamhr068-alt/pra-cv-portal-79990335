@@ -81,7 +81,7 @@ const en = {
     senioritySenior: "Senior",
     senioritylead: "Lead/Executive",
     experience: "Experience (free text)",
-    experiencePlaceholder: "Briefly describe your roles, companies, and key responsibilities…",
+    experiencePlaceholder: "List each company you worked at on its own line. Format: Role — Company — Dates (e.g. Senior Accountant — XYZ Co — Jan 2022 to present). Then add 2-4 lines describing what you did.",
     skills: "Skills (comma separated)",
     template: "Template",
     templateModern: "Modern Executive",
