@@ -209,7 +209,7 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
               <img
                 src={src?.logo ?? `https://www.google.com/s2/favicons?domain=${srcKey}.com&sz=64`}
                 alt=""
-                className="h-3 w-3 rounded-sm bg-white/10 object-contain"
+                className="h-3 w-3 rounded-sm bg-white object-contain p-[1px]"
                 onError={(e) => ((e.currentTarget.style.display = "none"))}
               />
               {src?.label ?? job.source}
