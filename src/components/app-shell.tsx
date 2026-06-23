@@ -213,7 +213,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="hidden items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-xs sm:flex">
               <span className="text-amber-500">●</span>
               <span className="font-semibold">{me.data.credits}</span>
-              <span className="text-muted-foreground">credit</span>
+              <span className="text-muted-foreground">{t("jobs.creditsLabel")}</span>
             </div>
           )}
           <Button
