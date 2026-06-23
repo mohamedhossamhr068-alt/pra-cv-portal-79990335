@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { setLocale } from "@/lib/i18n";
 import { useMeQuery } from "@/lib/me.hooks";
+import { NotificationBell } from "@/components/notification-bell";
 
 type NavItem = { to: string; key: string; label: string; icon: any };
 
