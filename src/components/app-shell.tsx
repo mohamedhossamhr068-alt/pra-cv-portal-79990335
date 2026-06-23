@@ -217,13 +217,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           )}
           <Button
-            variant="ghost"
+          <Button
+            variant="outline"
             size="sm"
             onClick={() => setLocale(i18n.language === "ar" ? "en" : "ar")}
-            className="gap-1.5"
+            className="gap-1.5 font-semibold"
+            aria-label="Toggle language"
           >
             <Globe2 className="h-4 w-4" />
-            {i18n.language === "ar" ? "EN" : "ع"}
+            {i18n.language === "ar" ? "English" : "العربية"}
           </Button>
           <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
