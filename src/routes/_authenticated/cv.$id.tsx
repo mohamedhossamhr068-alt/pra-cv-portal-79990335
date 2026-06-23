@@ -40,81 +40,23 @@ function CvViewer() {
   const accent = tenant?.primary_color ?? "#4f46e5";
 
   const handleDownload = async () => {
-    const node = pdfRef.current;
-    if (!node) {
-      toast.error("CV is not ready yet. Please wait a moment and try again.");
-      return;
-    }
-    // Validate the node is actually rendered and has dimensions before attempting capture.
-    const rect = node.getBoundingClientRect();
-    if (rect.width < 50 || rect.height < 50 || !node.isConnected) {
-      toast.error("CV content is not visible yet. Scroll to the CV and try again.");
-      return;
-    }
-
+    if (!pdfRef.current) return;
     setDownloading(true);
-    const filename = `${data.title.replace(/[^\w\s-]/g, "").trim() || "cv"}.pdf`;
-    const captureOptions = {
-      scale: 2,
-      useCORS: true,
-      allowTaint: false,
-      backgroundColor: "#ffffff",
-      logging: false,
-      windowWidth: node.scrollWidth,
-    } as const;
-
-    const renderCanvas = async () => {
-      // html2canvas-pro supports modern CSS color functions (oklch/lab) used by Tailwind v4.
-      const { default: html2canvas } = await import("html2canvas-pro");
-      const canvas = await html2canvas(node, captureOptions);
-      if (!canvas || canvas.width === 0 || canvas.height === 0) {
-        throw new Error("Empty canvas");
-      }
-      return canvas;
-    };
-
-    let canvas: HTMLCanvasElement | null = null;
-    // Retry-safe: try up to 3 times, waiting briefly between attempts so late
-    // fonts/images/layout settle before the second pass.
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        if (document.fonts?.ready) await document.fonts.ready;
-        canvas = await renderCanvas();
-        break;
-      } catch (err) {
-        console.warn(`PDF render attempt ${attempt} failed`, err);
-        if (attempt === 3) {
-          setDownloading(false);
-          toast.error("Could not generate PDF. Try the Print option instead.");
-          return;
-        }
-        await new Promise((r) => setTimeout(r, 350 * attempt));
-      }
-    }
-
     try {
-      const { jsPDF } = await import("jspdf");
-      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const imgW = pageW;
-      const imgH = (canvas!.height * imgW) / canvas!.width;
-      const imgData = canvas!.toDataURL("image/jpeg", 0.95);
+      const html2pdf = (await import("html2pdf.js")).default;
+      await html2pdf()
+        .set({
+          margin: 0,
+          filename: `${data.title.replace(/[^\w\s-]/g, "")}.pdf`,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        } as any)
+        .from(pdfRef.current)
+        .save();
 
-      let heightLeft = imgH;
-      let position = 0;
-      pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
-      heightLeft -= pageH;
-      while (heightLeft > 0) {
-        position = heightLeft - imgH;
-        pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
-        heightLeft -= pageH;
-      }
-      pdf.save(filename);
-    } catch (e) {
-      console.error(e);
-      toast.error("Could not save the PDF file. Try the Print option instead.");
+    } catch (e: any) {
+      toast.error("Could not generate PDF. Try the print option.");
     } finally {
       setDownloading(false);
     }
