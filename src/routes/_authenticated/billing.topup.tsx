@@ -44,7 +44,7 @@ function TopupPage() {
       if (!file) throw new Error(T("ارفع صورة التحويل أولاً", "Upload the transfer screenshot first"));
       if (!amount || amount <= 0) throw new Error(T("أدخل المبلغ", "Enter amount"));
       setUploading(true);
-      const userId = me.data?.id;
+      const userId = me.data?.profile?.id;
       const ext = file.name.split(".").pop() || "png";
       const path = `${userId}/${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("topup-screenshots").upload(path, file, {
