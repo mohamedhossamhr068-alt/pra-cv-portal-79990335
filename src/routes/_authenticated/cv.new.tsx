@@ -108,9 +108,12 @@ function NewCv() {
           certifications: form.certifications || undefined,
           linkedinUrl: form.linkedinUrl || undefined,
           portfolioUrl: form.portfolioUrl || undefined,
+          birthDate: form.birthDate || undefined,
+          maritalStatus: form.maritalStatus || undefined,
           locale: (ar ? "ar" : "en") as "en" | "ar",
         },
       }),
+
     onSuccess: (res) => {
       toast.success(ar ? "تم إنشاء السيرة" : "CV generated");
       navigate({ to: "/cv/$id", params: { id: res.id } });
