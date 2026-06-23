@@ -212,9 +212,10 @@ export const generateCv = createServerFn({ method: "POST" })
       .maybeSingle();
     if (profile?.is_blocked) throw new Error("ACCOUNT_BLOCKED");
     const credits = profile?.credits ?? 0;
+    const tenantId = profile?.tenant_id ?? null;
+    const CV_CREDIT_COST = await getCvCost(supabase, tenantId);
     if (credits < CV_CREDIT_COST) throw new Error("NO_CREDITS");
 
-    const tenantId = profile?.tenant_id ?? null;
     const { data: sub } = tenantId
       ? await supabase.from("subscriptions").select("plan").eq("tenant_id", tenantId).maybeSingle()
       : { data: null };
