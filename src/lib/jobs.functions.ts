@@ -31,6 +31,7 @@ export const runMatch = createServerFn({ method: "POST" })
       .eq("id", userId)
       .maybeSingle();
     if (profile?.is_blocked) throw new Error("ACCOUNT_BLOCKED");
+    const MATCH_CREDIT_COST = await getMatchCost(supabase, userId);
     if ((profile?.credits ?? 0) < MATCH_CREDIT_COST) throw new Error("NO_CREDITS");
 
     const { data: cvs } = await supabase
