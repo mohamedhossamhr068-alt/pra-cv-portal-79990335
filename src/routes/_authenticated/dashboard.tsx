@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useMeQuery } from "@/lib/me.client";
+import { useMeQuery } from "@/lib/me.hooks";
 import { Button } from "@/components/ui/button";
 import { FileText, Sparkles, Briefcase, Users, ArrowRight } from "lucide-react";
 
