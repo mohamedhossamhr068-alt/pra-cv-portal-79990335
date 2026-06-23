@@ -68,6 +68,8 @@ function CvViewer() {
   const pdfRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
   const [exportingDocx, setExportingDocx] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [selectedAccent, setSelectedAccent] = useState<string | null>(null);
 
   const out = (data?.output as CvOut) ?? null;
   const input = (data as any)?.input ?? {};
@@ -76,8 +78,8 @@ function CvViewer() {
   if (isLoading || !data || !out) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
 
   const analysis = (data as any).analysis as CvAnalysis | null;
-  const tpl = data.template as string;
-  const accent = tenant?.primary_color ?? "#4f46e5";
+  const tpl = selectedTemplate ?? (data.template as string);
+  const accent = selectedAccent ?? tenant?.primary_color ?? "#4f46e5";
 
   const handleDownload = async () => {
     if (!pdfRef.current) return;
