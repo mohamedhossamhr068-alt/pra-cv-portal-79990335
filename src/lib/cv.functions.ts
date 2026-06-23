@@ -6,23 +6,18 @@ import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 
 const CvOutputSchema = z.object({
   summary: z.string(),
-  competencies: z.array(z.string()).min(4).max(12),
-  experience: z
-    .array(
-      z.object({
-        role: z.string(),
-        company: z.string(),
-        dates: z.string(),
-        bullets: z.array(z.string()).min(2).max(6),
-      }),
-    )
-    .min(1)
-    .max(8),
-  achievements: z.array(z.string()).min(2).max(8),
-  skillsMatrix: z
-    .array(z.object({ category: z.string(), skills: z.array(z.string()).min(1) }))
-    .min(2),
-  recommendations: z.array(z.string()).min(2).max(6),
+  competencies: z.array(z.string()),
+  experience: z.array(
+    z.object({
+      role: z.string(),
+      company: z.string(),
+      dates: z.string(),
+      bullets: z.array(z.string()),
+    }),
+  ),
+  achievements: z.array(z.string()),
+  skillsMatrix: z.array(z.object({ category: z.string(), skills: z.array(z.string()) })),
+  recommendations: z.array(z.string()),
 });
 
 const CvInputSchema = z.object({
