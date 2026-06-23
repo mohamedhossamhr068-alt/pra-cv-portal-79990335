@@ -51,10 +51,10 @@ function CvViewer() {
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
           jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-          pagebreak: { mode: ["css", "legacy"] },
-        })
+        } as any)
         .from(pdfRef.current)
         .save();
+
     } catch (e: any) {
       toast.error("Could not generate PDF. Try the print option.");
     } finally {
