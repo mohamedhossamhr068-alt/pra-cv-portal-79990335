@@ -412,6 +412,9 @@ function CvTemplate({
   const [name, target] = title.split(" — ");
   const isCreative = template === "creative_professional";
   const isMinimal = template === "corporate_minimal";
+  const isSidebar = template === "modern_sidebar";
+  const isElegant = template === "elegant_serif";
+  const isMono = template === "mono_dark";
   const avatar = input?.avatarDataUrl as string | undefined;
   const contactItems = [
     input?.email ? { icon: <Mail className="h-3 w-3" />, text: input.email } : null,
@@ -419,20 +422,93 @@ function CvTemplate({
     input?.location ? { icon: <MapPin className="h-3 w-3" />, text: input.location } : null,
   ].filter(Boolean) as { icon: any; text: string }[];
 
+  // Sidebar layout: completely different structure
+  if (isSidebar) {
+    return (
+      <div className="grid grid-cols-[34%_1fr] font-sans text-[12px] leading-[1.6] text-neutral-800" style={{ fontFamily: "Inter, system-ui, sans-serif", minHeight: "1100px" }}>
+        <aside className="p-7 text-white" style={{ background: `linear-gradient(180deg, ${accent} 0%, ${accent}d0 100%)` }}>
+          {avatar && (
+            <img src={avatar} alt="" className="mx-auto mb-4 h-28 w-28 rounded-full object-cover" style={{ border: "4px solid rgba(255,255,255,0.85)" }} />
+          )}
+          <h1 className="text-center text-xl font-bold tracking-tight">{name}</h1>
+          <div className="mt-1 text-center text-[12px] opacity-90">{target}</div>
+          <div className="my-4 h-px bg-white/30" />
+          {contactItems.length > 0 && (
+            <div className="space-y-1.5 text-[11px]">
+              {contactItems.map((c, i) => (
+                <div key={i} className="flex items-center gap-2 break-all">{c.icon}<span>{c.text}</span></div>
+              ))}
+            </div>
+          )}
+          <div className="mt-5">
+            <h3 className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] opacity-90">{t("cv.competencies")}</h3>
+            <div className="flex flex-wrap gap-1.5">
+              {output.competencies.map((c) => (
+                <span key={c} className="rounded bg-white/15 px-2 py-0.5 text-[10.5px]">{c}</span>
+              ))}
+            </div>
+          </div>
+          <div className="mt-5">
+            <h3 className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] opacity-90">{t("cv.skillsMatrix")}</h3>
+            {output.skillsMatrix.map((g) => (
+              <div key={g.category} className="mb-2">
+                <div className="text-[10.5px] font-semibold opacity-90">{g.category}</div>
+                <div className="text-[11px] opacity-80">{g.skills.join(" · ")}</div>
+              </div>
+            ))}
+          </div>
+        </aside>
+        <main className="bg-white p-8 space-y-6">
+          <Section icon={<Sparkles className="h-4 w-4" />} title={t("cv.summary")} accent={accent}>
+            <p className="text-[12.5px] leading-[1.7] text-neutral-700">{output.summary}</p>
+          </Section>
+          <Section icon={<Briefcase className="h-4 w-4" />} title={t("cv.professional")} accent={accent}>
+            <div className="space-y-4">
+              {output.experience.map((e, i) => (
+                <div key={i} className="relative ps-4" style={{ borderInlineStart: `2px solid ${accent}30` }}>
+                  <div className="absolute top-1.5 h-2 w-2 rounded-full" style={{ background: accent, insetInlineStart: "-5px" }} />
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <div className="font-semibold text-neutral-900">{e.role}<span className="font-normal text-neutral-500"> · {e.company}</span></div>
+                    <div className="text-[10.5px] font-medium uppercase tracking-wider text-neutral-500">{e.dates}</div>
+                  </div>
+                  <ul className="ms-4 mt-1.5 list-disc space-y-1 text-neutral-700">{e.bullets.map((b, j) => (<li key={j}>{b}</li>))}</ul>
+                </div>
+              ))}
+            </div>
+          </Section>
+          {output.achievements.length > 0 && (
+            <Section icon={<Award className="h-4 w-4" />} title={t("cv.achievements")} accent={accent}>
+              <ul className="ms-4 list-disc space-y-1 text-neutral-700">{output.achievements.map((a, i) => (<li key={i}>{a}</li>))}</ul>
+            </Section>
+          )}
+          {output.recommendations.length > 0 && (
+            <Section icon={<Sparkles className="h-4 w-4" />} title={t("cv.recommendations")} accent={accent}>
+              <ul className="ms-4 list-disc space-y-1 text-neutral-700">{output.recommendations.map((r, i) => (<li key={i}>{r}</li>))}</ul>
+            </Section>
+          )}
+        </main>
+      </div>
+    );
+  }
+
+  const headerBg = isMono
+    ? "#0f172a"
+    : isCreative
+    ? `linear-gradient(135deg, ${accent} 0%, ${accent}dd 100%)`
+    : isMinimal
+    ? "#ffffff"
+    : isElegant
+    ? "#faf7f2"
+    : `linear-gradient(180deg, ${accent}10 0%, transparent 100%)`;
+  const headerColor = isMono || isCreative ? "#ffffff" : "#0f172a";
+  const headerBorder = isMinimal ? `2px solid ${accent}` : isElegant ? `1px solid ${accent}40` : "none";
+  const fontFamily = isElegant ? "'Cormorant Garamond', Georgia, serif" : "Inter, system-ui, -apple-system, sans-serif";
+
   return (
-    <div className="font-sans text-[12.5px] leading-[1.6] text-neutral-800" style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}>
-      {/* Header */}
+    <div className="font-sans text-[12.5px] leading-[1.6] text-neutral-800" style={{ fontFamily }}>
       <header
         className="px-10 py-8"
-        style={{
-          background: isCreative
-            ? `linear-gradient(135deg, ${accent} 0%, ${accent}dd 100%)`
-            : isMinimal
-            ? "#ffffff"
-            : `linear-gradient(180deg, ${accent}10 0%, transparent 100%)`,
-          color: isCreative ? "#ffffff" : "#0f172a",
-          borderBottom: isMinimal ? `2px solid ${accent}` : "none",
-        }}
+        style={{ background: headerBg, color: headerColor, borderBottom: headerBorder }}
       >
         <div className="flex items-start gap-5">
           {avatar && (
