@@ -202,9 +202,26 @@ function NewCv() {
             <Input placeholder={ar ? "القاهرة، مصر" : "Cairo, Egypt"} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
           </div>
           <div>
+            <Label>{ar ? "تاريخ الميلاد" : "Date of birth"}</Label>
+            <Input type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} />
+          </div>
+          <div>
+            <Label>{ar ? "الحالة الاجتماعية" : "Marital status"}</Label>
+            <Select value={form.maritalStatus} onValueChange={(v: any) => setForm({ ...form, maritalStatus: v })}>
+              <SelectTrigger><SelectValue placeholder={ar ? "اختر" : "Select"} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="single">{ar ? "أعزب/عزباء" : "Single"}</SelectItem>
+                <SelectItem value="married">{ar ? "متزوج/ة" : "Married"}</SelectItem>
+                <SelectItem value="divorced">{ar ? "مطلق/ة" : "Divorced"}</SelectItem>
+                <SelectItem value="widowed">{ar ? "أرمل/ة" : "Widowed"}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <Label>{t("cv.industry")}</Label>
             <Input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} />
           </div>
+
           <div className="sm:col-span-2">
             <Label>{t("cv.seniority")}</Label>
             <Select value={form.seniority} onValueChange={(v: any) => setForm({ ...form, seniority: v })}>
