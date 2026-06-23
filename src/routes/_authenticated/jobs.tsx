@@ -159,18 +159,36 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
       )}
       <CardContent className="space-y-3 pt-5">
         <div className="flex items-start gap-3">
-          <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-lg border bg-white">
-            {job.company_logo ? (
-              <img
-                src={job.company_logo}
-                alt={job.company}
-                className="h-full w-full object-contain p-1"
-                onError={(e) => ((e.currentTarget.style.display = "none"))}
-              />
-            ) : (
-              <Building2 className="h-6 w-6 text-muted-foreground" />
-            )}
-          </div>
+          {(() => {
+            let host = "";
+            try { host = job.external_url ? new URL(job.external_url).hostname.replace(/^www\./, "") : ""; } catch {}
+            const fallback = host
+              ? `https://www.google.com/s2/favicons?domain=${host}&sz=128`
+              : (src ? src.logo : "");
+            const logoSrc = job.company_logo || fallback;
+            return (
+              <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-lg border bg-white">
+                {logoSrc ? (
+                  <img
+                    src={logoSrc}
+                    alt={job.company || ""}
+                    className="h-full w-full object-contain p-1"
+                    onError={(e) => {
+                      const el = e.currentTarget;
+                      if (el.dataset.fb !== "1" && fallback && el.src !== fallback) {
+                        el.dataset.fb = "1";
+                        el.src = fallback;
+                      } else {
+                        el.style.display = "none";
+                      }
+                    }}
+                  />
+                ) : (
+                  <Building2 className="h-6 w-6 text-muted-foreground" />
+                )}
+              </div>
+            );
+          })()}
           <div className="min-w-0 flex-1 pe-14">
             <div className="truncate text-sm font-semibold">{job.title}</div>
             <div className="truncate text-xs text-muted-foreground">{job.company}</div>
