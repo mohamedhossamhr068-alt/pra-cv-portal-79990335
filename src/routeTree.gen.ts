@@ -9,38 +9,244 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/jobs'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
+import { Route as AuthenticatedCvIndexRouteImport } from './routes/_authenticated/cv.index'
+import { Route as AuthenticatedPlatformTenantsRouteImport } from './routes/_authenticated/platform.tenants'
+import { Route as AuthenticatedPlatformAnalyticsRouteImport } from './routes/_authenticated/platform.analytics'
+import { Route as AuthenticatedCvNewRouteImport } from './routes/_authenticated/cv.new'
+import { Route as AuthenticatedCvIdRouteImport } from './routes/_authenticated/cv.$id'
+import { Route as AuthenticatedAdminUsageRouteImport } from './routes/_authenticated/admin.usage'
+import { Route as AuthenticatedAdminTeamRouteImport } from './routes/_authenticated/admin.team'
+import { Route as AuthenticatedAdminBrandingRouteImport } from './routes/_authenticated/admin.branding'
 
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedJobsRoute = AuthenticatedJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCvIndexRoute = AuthenticatedCvIndexRouteImport.update({
+  id: '/cv/',
+  path: '/cv/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPlatformTenantsRoute =
+  AuthenticatedPlatformTenantsRouteImport.update({
+    id: '/platform/tenants',
+    path: '/platform/tenants',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPlatformAnalyticsRoute =
+  AuthenticatedPlatformAnalyticsRouteImport.update({
+    id: '/platform/analytics',
+    path: '/platform/analytics',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCvNewRoute = AuthenticatedCvNewRouteImport.update({
+  id: '/cv/new',
+  path: '/cv/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCvIdRoute = AuthenticatedCvIdRouteImport.update({
+  id: '/cv/$id',
+  path: '/cv/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminUsageRoute = AuthenticatedAdminUsageRouteImport.update({
+  id: '/admin/usage',
+  path: '/admin/usage',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminTeamRoute = AuthenticatedAdminTeamRouteImport.update({
+  id: '/admin/team',
+  path: '/admin/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminBrandingRoute =
+  AuthenticatedAdminBrandingRouteImport.update({
+    id: '/admin/branding',
+    path: '/admin/branding',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/pricing': typeof PricingRoute
+  '/billing': typeof AuthenticatedBillingRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/jobs': typeof AuthenticatedJobsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/admin/branding': typeof AuthenticatedAdminBrandingRoute
+  '/admin/team': typeof AuthenticatedAdminTeamRoute
+  '/admin/usage': typeof AuthenticatedAdminUsageRoute
+  '/cv/$id': typeof AuthenticatedCvIdRoute
+  '/cv/new': typeof AuthenticatedCvNewRoute
+  '/platform/analytics': typeof AuthenticatedPlatformAnalyticsRoute
+  '/platform/tenants': typeof AuthenticatedPlatformTenantsRoute
+  '/cv/': typeof AuthenticatedCvIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/pricing': typeof PricingRoute
+  '/billing': typeof AuthenticatedBillingRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/jobs': typeof AuthenticatedJobsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/admin/branding': typeof AuthenticatedAdminBrandingRoute
+  '/admin/team': typeof AuthenticatedAdminTeamRoute
+  '/admin/usage': typeof AuthenticatedAdminUsageRoute
+  '/cv/$id': typeof AuthenticatedCvIdRoute
+  '/cv/new': typeof AuthenticatedCvNewRoute
+  '/platform/analytics': typeof AuthenticatedPlatformAnalyticsRoute
+  '/platform/tenants': typeof AuthenticatedPlatformTenantsRoute
+  '/cv': typeof AuthenticatedCvIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/pricing': typeof PricingRoute
+  '/_authenticated/billing': typeof AuthenticatedBillingRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/jobs': typeof AuthenticatedJobsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/admin/branding': typeof AuthenticatedAdminBrandingRoute
+  '/_authenticated/admin/team': typeof AuthenticatedAdminTeamRoute
+  '/_authenticated/admin/usage': typeof AuthenticatedAdminUsageRoute
+  '/_authenticated/cv/$id': typeof AuthenticatedCvIdRoute
+  '/_authenticated/cv/new': typeof AuthenticatedCvNewRoute
+  '/_authenticated/platform/analytics': typeof AuthenticatedPlatformAnalyticsRoute
+  '/_authenticated/platform/tenants': typeof AuthenticatedPlatformTenantsRoute
+  '/_authenticated/cv/': typeof AuthenticatedCvIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/pricing'
+    | '/billing'
+    | '/dashboard'
+    | '/jobs'
+    | '/settings'
+    | '/admin/branding'
+    | '/admin/team'
+    | '/admin/usage'
+    | '/cv/$id'
+    | '/cv/new'
+    | '/platform/analytics'
+    | '/platform/tenants'
+    | '/cv/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/pricing'
+    | '/billing'
+    | '/dashboard'
+    | '/jobs'
+    | '/settings'
+    | '/admin/branding'
+    | '/admin/team'
+    | '/admin/usage'
+    | '/cv/$id'
+    | '/cv/new'
+    | '/platform/analytics'
+    | '/platform/tenants'
+    | '/cv'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/pricing'
+    | '/_authenticated/billing'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/jobs'
+    | '/_authenticated/settings'
+    | '/_authenticated/admin/branding'
+    | '/_authenticated/admin/team'
+    | '/_authenticated/admin/usage'
+    | '/_authenticated/cv/$id'
+    | '/_authenticated/cv/new'
+    | '/_authenticated/platform/analytics'
+    | '/_authenticated/platform/tenants'
+    | '/_authenticated/cv/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  PricingRoute: typeof PricingRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +254,132 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/jobs': {
+      id: '/_authenticated/jobs'
+      path: '/jobs'
+      fullPath: '/jobs'
+      preLoaderRoute: typeof AuthenticatedJobsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/billing': {
+      id: '/_authenticated/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof AuthenticatedBillingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cv/': {
+      id: '/_authenticated/cv/'
+      path: '/cv'
+      fullPath: '/cv/'
+      preLoaderRoute: typeof AuthenticatedCvIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/platform/tenants': {
+      id: '/_authenticated/platform/tenants'
+      path: '/platform/tenants'
+      fullPath: '/platform/tenants'
+      preLoaderRoute: typeof AuthenticatedPlatformTenantsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/platform/analytics': {
+      id: '/_authenticated/platform/analytics'
+      path: '/platform/analytics'
+      fullPath: '/platform/analytics'
+      preLoaderRoute: typeof AuthenticatedPlatformAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cv/new': {
+      id: '/_authenticated/cv/new'
+      path: '/cv/new'
+      fullPath: '/cv/new'
+      preLoaderRoute: typeof AuthenticatedCvNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cv/$id': {
+      id: '/_authenticated/cv/$id'
+      path: '/cv/$id'
+      fullPath: '/cv/$id'
+      preLoaderRoute: typeof AuthenticatedCvIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/usage': {
+      id: '/_authenticated/admin/usage'
+      path: '/admin/usage'
+      fullPath: '/admin/usage'
+      preLoaderRoute: typeof AuthenticatedAdminUsageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/team': {
+      id: '/_authenticated/admin/team'
+      path: '/admin/team'
+      fullPath: '/admin/team'
+      preLoaderRoute: typeof AuthenticatedAdminTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/branding': {
+      id: '/_authenticated/admin/branding'
+      path: '/admin/branding'
+      fullPath: '/admin/branding'
+      preLoaderRoute: typeof AuthenticatedAdminBrandingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedAdminBrandingRoute: typeof AuthenticatedAdminBrandingRoute
+  AuthenticatedAdminTeamRoute: typeof AuthenticatedAdminTeamRoute
+  AuthenticatedAdminUsageRoute: typeof AuthenticatedAdminUsageRoute
+  AuthenticatedCvIdRoute: typeof AuthenticatedCvIdRoute
+  AuthenticatedCvNewRoute: typeof AuthenticatedCvNewRoute
+  AuthenticatedPlatformAnalyticsRoute: typeof AuthenticatedPlatformAnalyticsRoute
+  AuthenticatedPlatformTenantsRoute: typeof AuthenticatedPlatformTenantsRoute
+  AuthenticatedCvIndexRoute: typeof AuthenticatedCvIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBillingRoute: AuthenticatedBillingRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedJobsRoute: AuthenticatedJobsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedAdminBrandingRoute: AuthenticatedAdminBrandingRoute,
+  AuthenticatedAdminTeamRoute: AuthenticatedAdminTeamRoute,
+  AuthenticatedAdminUsageRoute: AuthenticatedAdminUsageRoute,
+  AuthenticatedCvIdRoute: AuthenticatedCvIdRoute,
+  AuthenticatedCvNewRoute: AuthenticatedCvNewRoute,
+  AuthenticatedPlatformAnalyticsRoute: AuthenticatedPlatformAnalyticsRoute,
+  AuthenticatedPlatformTenantsRoute: AuthenticatedPlatformTenantsRoute,
+  AuthenticatedCvIndexRoute: AuthenticatedCvIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  PricingRoute: PricingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
