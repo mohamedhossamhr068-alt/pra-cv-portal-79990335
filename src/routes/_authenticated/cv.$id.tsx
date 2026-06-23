@@ -36,6 +36,7 @@ function CvViewer() {
   if (isLoading || !data) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
 
   const out = data.output as CvOut;
+  const analysis = (data as any).analysis as CvAnalysis | null;
   const tpl = data.template as string;
   const accent = tenant?.primary_color ?? "#4f46e5";
 
