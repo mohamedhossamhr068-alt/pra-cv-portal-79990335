@@ -66,11 +66,13 @@ export const getTenantPricing = createServerFn({ method: "GET" })
     if (!prof?.tenant_id) return null;
     const { data } = await supabase
       .from("tenants")
-      .select("cv_credit_cost,match_credit_cost,scrape_credit_cost")
+      .select("cv_credit_cost,match_credit_cost,scrape_credit_cost,currency,plan_price_free,plan_price_pro,plan_price_business")
       .eq("id", prof.tenant_id)
       .maybeSingle();
     return data;
   });
+
+const CURRENCIES = ["USD", "EGP", "SAR", "AED", "EUR", "GBP", "KWD", "QAR"] as const;
 
 export const updateTenantPricing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -80,6 +82,10 @@ export const updateTenantPricing = createServerFn({ method: "POST" })
         cv_cost: z.number().int().min(0).max(1000).optional(),
         match_cost: z.number().int().min(0).max(1000).optional(),
         scrape_cost: z.number().int().min(0).max(1000).optional(),
+        currency: z.enum(CURRENCIES).optional(),
+        plan_free: z.number().min(0).max(100000).optional(),
+        plan_pro: z.number().min(0).max(100000).optional(),
+        plan_business: z.number().min(0).max(100000).optional(),
       })
       .parse(d),
   )
@@ -88,6 +94,10 @@ export const updateTenantPricing = createServerFn({ method: "POST" })
       _cv_cost: data.cv_cost ?? null,
       _match_cost: data.match_cost ?? null,
       _scrape_cost: data.scrape_cost ?? null,
+      _currency: data.currency ?? null,
+      _plan_free: data.plan_free ?? null,
+      _plan_pro: data.plan_pro ?? null,
+      _plan_business: data.plan_business ?? null,
     } as any);
     if (error) throw error;
     return { ok: true };
