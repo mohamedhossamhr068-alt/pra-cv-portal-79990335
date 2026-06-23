@@ -291,7 +291,7 @@ ${data.experience}
 
 IMPORTANT: From the "Experience (raw)" text, extract each distinct company/employer the candidate mentions and create one entry per company in the "experience" array, populating "role", "company", and "dates" exactly as the candidate wrote them. Never merge multiple jobs into one entry. If dates are missing for a job, write "Not specified" — do NOT invent dates.
 
-Experience (raw): ${data.experience}
+
 
 Produce an ATS-optimized CV with exactly these JSON keys:
 {
