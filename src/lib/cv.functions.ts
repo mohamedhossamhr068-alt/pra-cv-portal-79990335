@@ -371,13 +371,13 @@ export const updateCvStyle = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const patch: Record<string, any> = {};
+    const patch: { template?: string; accent_color?: string } = {};
     if (data.template) patch.template = data.template;
     if (data.accent_color) patch.accent_color = data.accent_color;
     if (Object.keys(patch).length === 0) return { ok: true };
     const { error } = await supabase
       .from("cv_logs")
-      .update(patch)
+      .update(patch as any)
       .eq("id", data.id)
       .eq("user_id", userId);
     if (error) throw error;
