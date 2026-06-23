@@ -118,16 +118,6 @@ function NewCv() {
       else toast.error(msg || "Failed");
     },
   });
-    onSuccess: (res) => {
-      toast.success(ar ? "تم إنشاء السيرة" : "CV generated");
-      navigate({ to: "/cv/$id", params: { id: res.id } });
-    },
-    onError: (e: any) => {
-      const msg = String(e?.message ?? "");
-      if (msg.includes("QUOTA_REACHED")) toast.error(t("cv.quotaReached"));
-      else toast.error(msg || "Failed");
-    },
-  });
 
   const quotaUsed = (me.data?.quota?.remaining ?? 0) <= 0;
 
