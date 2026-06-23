@@ -184,8 +184,17 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
             <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{daysAgo === 0 ? t("jobs.today") : t("jobs.daysAgo", { n: daysAgo })}</span>
           )}
           {job.source && (
-            <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${sourceColor[job.source] ?? "bg-muted text-foreground"}`}>
-              {job.source}
+            <span
+              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
+              style={{ backgroundColor: src?.bg ?? "hsl(var(--muted))", color: src ? "#fff" : undefined }}
+            >
+              <img
+                src={src?.logo ?? `https://www.google.com/s2/favicons?domain=${srcKey}.com&sz=64`}
+                alt=""
+                className="h-3 w-3 rounded-sm bg-white/10 object-contain"
+                onError={(e) => ((e.currentTarget.style.display = "none"))}
+              />
+              {src?.label ?? job.source}
             </span>
           )}
         </div>
