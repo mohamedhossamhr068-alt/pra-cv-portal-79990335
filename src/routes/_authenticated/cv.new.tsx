@@ -367,10 +367,92 @@ function NewCv() {
             <Label>{ar ? "رابط الأعمال/Portfolio" : "Portfolio URL"}</Label>
             <Input placeholder="https://…" value={form.portfolioUrl} onChange={(e) => setForm({ ...form, portfolioUrl: e.target.value })} />
           </div>
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 space-y-3">
             <Label>{t("cv.experience")}</Label>
-            <Textarea rows={8} placeholder={t("cv.experiencePlaceholder")} value={form.experience} onChange={(e) => setForm({ ...form, experience: e.target.value })} />
+            <p className="text-xs text-muted-foreground">
+              {ar
+                ? "أضف كل وظيفة على حدة: الشركة، المسمى الوظيفي، المدة، ووصف ما كنت تعمله."
+                : "Add each job: company, role, dates, and what you did."}
+            </p>
+            {form.jobs.map((job, idx) => (
+              <div key={idx} className="rounded-lg border bg-card/50 p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {ar ? `وظيفة ${idx + 1}` : `Job ${idx + 1}`}
+                  </span>
+                  {form.jobs.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeJob(idx)}
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
+                    >
+                      <X className="h-3 w-3" /> {ar ? "حذف" : "Remove"}
+                    </button>
+                  )}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label className="text-xs">{ar ? "الشركة" : "Company"}</Label>
+                    <Input
+                      placeholder={ar ? "اسم الشركة" : "Company name"}
+                      value={job.company}
+                      onChange={(e) => updateJob(idx, { company: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">{ar ? "المسمى الوظيفي" : "Job title / Role"}</Label>
+                    <Input
+                      placeholder={ar ? "محاسب أول" : "Senior Accountant"}
+                      value={job.role}
+                      onChange={(e) => updateJob(idx, { role: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">{ar ? "تاريخ البداية" : "Start date"}</Label>
+                    <Input
+                      type="month"
+                      value={job.startDate}
+                      onChange={(e) => updateJob(idx, { startDate: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">{ar ? "تاريخ النهاية" : "End date"}</Label>
+                    <Input
+                      type="month"
+                      value={job.endDate}
+                      disabled={job.current}
+                      onChange={(e) => updateJob(idx, { endDate: e.target.value })}
+                    />
+                    <label className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <input
+                        type="checkbox"
+                        checked={job.current}
+                        onChange={(e) => updateJob(idx, { current: e.target.checked, endDate: e.target.checked ? "" : job.endDate })}
+                      />
+                      {ar ? "أعمل بها حالياً" : "I currently work here"}
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">{ar ? "وصف الدور والمسؤوليات" : "Role description & responsibilities"}</Label>
+                  <Textarea
+                    rows={4}
+                    placeholder={
+                      ar
+                        ? "اشرح ما كنت تعمله: المسؤوليات، الإنجازات، المشاريع، الأرقام إن وجدت…"
+                        : "Explain what you did: responsibilities, achievements, projects, numbers if any…"
+                    }
+                    value={job.description}
+                    onChange={(e) => updateJob(idx, { description: e.target.value })}
+                  />
+                </div>
+              </div>
+            ))}
+            <Button type="button" variant="outline" size="sm" onClick={addJob} className="gap-1.5">
+              + {ar ? "إضافة وظيفة أخرى" : "Add another job"}
+            </Button>
           </div>
+
           <div className="sm:col-span-2">
             <Label>{t("cv.template")}</Label>
             <Select value={form.template} onValueChange={(v: any) => setForm({ ...form, template: v })}>
