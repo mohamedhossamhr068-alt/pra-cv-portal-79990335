@@ -118,7 +118,7 @@ function Jobs() {
             </CardContent>
           </Card>
           <div className="grid gap-3 sm:grid-cols-2">
-            {browseList.map((j: any) => <JobCard key={j.id} job={j} />)}
+            {browseList.map((j: any) => <JobCard key={j.id} job={j} t={t} />)}
           </div>
         </>
       )}
