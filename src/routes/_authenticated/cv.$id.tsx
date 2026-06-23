@@ -31,30 +31,174 @@ type CvAnalysis = {
   platforms: { name: string; url: string; fitScore: number; reason: string }[];
 };
 
-// Compute an ATS compatibility score from CV structure and input metadata
-function computeAtsScore(out: CvOut, input: any): { score: number; checks: { label: string; pass: boolean; weight: number; tip?: string }[] } {
+// Compute a realistic ATS compatibility score with PARTIAL credit per check.
+// Score varies based on actual data quality, not binary pass/fail.
+function computeAtsScore(
+  out: CvOut,
+  input: any,
+): {
+  score: number;
+  checks: { label: string; pass: boolean; partial: boolean; weight: number; tip?: string; detail?: string }[];
+} {
   const ar = input?.locale === "ar";
-  const checks: { label: string; pass: boolean; weight: number; tip?: string }[] = [];
-  const has = (v: any) => typeof v === "string" && v.trim().length > 0;
-  checks.push({ label: ar ? "ملخص مهني واضح" : "Strong professional summary", pass: has(out.summary) && out.summary.length >= 80, weight: 12, tip: ar ? "اكتب ملخص بين 80-200 حرف يلخص خبرتك ومجالك." : "Add an 80–200 char summary." });
-  checks.push({ label: ar ? "كفاءات رئيسية (6+)" : "Core competencies (6+)", pass: (out.competencies?.length ?? 0) >= 6, weight: 10 });
-  checks.push({ label: ar ? "خبرات عملية مفصّلة" : "Structured experience entries", pass: (out.experience?.length ?? 0) >= 1 && out.experience.every((e) => e.bullets?.length >= 2), weight: 16, tip: ar ? "اضف نقطتين على الأقل لكل خبرة." : "At least 2 bullets per role." });
-  const allBullets = (out.experience ?? []).flatMap((e) => e.bullets ?? []).join(" ");
-  const hasMetrics = /\d/.test(allBullets);
-  checks.push({ label: ar ? "أرقام/نتائج قابلة للقياس" : "Quantified achievements", pass: hasMetrics, weight: 14, tip: ar ? "أدخل أرقام (%, ج.م, نسبة نمو، عدد فريق)." : "Add %, $, growth, team size." });
-  checks.push({ label: ar ? "إنجازات بارزة" : "Highlighted achievements", pass: (out.achievements?.length ?? 0) >= 2, weight: 8 });
-  checks.push({ label: ar ? "مهارات مصنّفة" : "Categorized skills matrix", pass: (out.skillsMatrix?.length ?? 0) >= 1, weight: 10 });
-  checks.push({ label: ar ? "بريد إلكتروني" : "Email present", pass: has(input?.email), weight: 8, tip: ar ? "أضف بريد إلكتروني للتواصل." : "Add a contact email." });
-  checks.push({ label: ar ? "رقم هاتف" : "Phone present", pass: has(input?.phone), weight: 6 });
-  checks.push({ label: ar ? "الموقع/المدينة" : "Location present", pass: has(input?.location), weight: 6 });
-  checks.push({ label: ar ? "صورة شخصية" : "Profile photo", pass: has(input?.avatarDataUrl), weight: 4 });
-  const wordCount = allBullets.split(/\s+/).filter(Boolean).length;
-  checks.push({ label: ar ? "محتوى وافٍ (150+ كلمة)" : "Sufficient content (150+ words)", pass: wordCount >= 150, weight: 6 });
+  type Item = { label: string; score: number; max: number; tip?: string; detail?: string };
+  const items: Item[] = [];
 
-  const total = checks.reduce((s, c) => s + c.weight, 0);
-  const earned = checks.reduce((s, c) => s + (c.pass ? c.weight : 0), 0);
-  const score = Math.round((earned / total) * 100);
-  return { score, checks };
+  // 1. Summary length quality (0-12)
+  const sLen = (out.summary || "").trim().length;
+  const summaryScore = sLen >= 120 && sLen <= 320 ? 12 : sLen >= 80 ? 8 : sLen >= 40 ? 4 : 0;
+  items.push({
+    label: ar ? "ملخص مهني (120-320 حرف)" : "Professional summary (120-320 chars)",
+    score: summaryScore, max: 12,
+    tip: summaryScore < 12 ? (ar ? "اكتب ملخص بين 120 و320 حرف يلخص دورك وتأثيرك." : "Write a 120-320 char summary covering role + impact.") : undefined,
+    detail: `${sLen} ${ar ? "حرف" : "chars"}`,
+  });
+
+  // 2. Core competencies count (0-8)
+  const cc = out.competencies?.length ?? 0;
+  items.push({
+    label: ar ? "كفاءات رئيسية (8+)" : "Core competencies (8+)",
+    score: Math.min(8, cc), max: 8, detail: `${cc}`,
+  });
+
+  // 3. Experience entries (0-10)
+  const expCount = out.experience?.length ?? 0;
+  items.push({
+    label: ar ? "عدد الخبرات" : "Experience entries",
+    score: expCount >= 3 ? 10 : expCount === 2 ? 7 : expCount === 1 ? 4 : 0, max: 10,
+    tip: expCount < 2 ? (ar ? "أضف خبرة سابقة واحدة على الأقل لتعزيز السيرة." : "Add at least one past role.") : undefined,
+    detail: `${expCount}`,
+  });
+
+  // 4. Bullet depth (avg per role) (0-10)
+  const allBullets = (out.experience ?? []).flatMap((e) => e.bullets ?? []);
+  const avgBullets = expCount ? allBullets.length / expCount : 0;
+  items.push({
+    label: ar ? "تفاصيل المهام (نقاط لكل خبرة)" : "Bullet depth per role",
+    score: avgBullets >= 4 ? 10 : avgBullets >= 3 ? 7 : avgBullets >= 2 ? 4 : 0, max: 10,
+    detail: `${avgBullets.toFixed(1)}/role`,
+  });
+
+  // 5. Quantified achievements (metric density) (0-16) — heavy weight
+  const totalBul = allBullets.length || 1;
+  const metricBul = allBullets.filter((b) => /\d/.test(b)).length;
+  const ratio = metricBul / totalBul;
+  items.push({
+    label: ar ? "أرقام قابلة للقياس داخل النقاط" : "Quantified bullets (% with numbers)",
+    score: Math.round(ratio * 16), max: 16,
+    tip: ratio < 0.5 ? (ar ? "أدخل أرقام في معظم النقاط (نسب، عملة، حجم فريق…)." : "Add metrics to most bullets (%, $, team size…).") : undefined,
+    detail: `${Math.round(ratio * 100)}%`,
+  });
+
+  // 6. Action verbs (0-6)
+  const verbs = ["led","managed","built","designed","launched","increased","reduced","improved","developed","created","optimized","delivered","drove","spearheaded","قاد","أدار","طوّر","صمّم","نفّذ","حسّن","زاد","قلّل","أطلق"];
+  const verbHits = allBullets.filter((b) => verbs.some((v) => b.toLowerCase().includes(v))).length;
+  items.push({
+    label: ar ? "أفعال إجرائية قوية" : "Strong action verbs",
+    score: Math.min(6, verbHits), max: 6,
+    tip: verbHits < 4 ? (ar ? "ابدأ كل نقطة بفعل قوي (قاد، طوّر، أطلق…)." : "Start bullets with strong verbs (Led, Built, Launched…).") : undefined,
+  });
+
+  // 7. Third-person voice (penalty for "I/my/we") (0-4)
+  const firstPersonRe = /\b(I|my|me|we|our)\b/;
+  const fpHits = allBullets.filter((b) => firstPersonRe.test(b)).length;
+  items.push({
+    label: ar ? "صياغة احترافية (بدون ضمير المتكلم)" : "Third-person voice",
+    score: Math.max(0, 4 - fpHits), max: 4,
+    tip: fpHits > 0 ? (ar ? `احذف ضمير المتكلم من ${fpHits} نقطة.` : `Remove first-person voice from ${fpHits} bullet(s).`) : undefined,
+  });
+
+  // 8. Achievements section (0-6)
+  const ach = out.achievements?.length ?? 0;
+  items.push({
+    label: ar ? "إنجازات بارزة" : "Highlighted achievements",
+    score: ach >= 3 ? 6 : ach === 2 ? 4 : ach === 1 ? 2 : 0, max: 6, detail: `${ach}`,
+  });
+
+  // 9. Skills matrix richness (0-6)
+  const skillsCount = (out.skillsMatrix ?? []).reduce((s, g) => s + (g.skills?.length ?? 0), 0);
+  items.push({
+    label: ar ? "ثراء المهارات المصنّفة" : "Skills matrix richness",
+    score: Math.min(6, Math.round(skillsCount / 3)), max: 6, detail: `${skillsCount} skills`,
+  });
+
+  // 10. Contact info quality (0-8)
+  let contact = 0;
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input?.email || "");
+  const phoneOk = (input?.phone || "").replace(/\D/g, "").length >= 7;
+  if (emailOk) contact += 4; else if ((input?.email || "").length) contact += 1;
+  if (phoneOk) contact += 2;
+  if ((input?.location || "").length > 0) contact += 2;
+  items.push({
+    label: ar ? "بيانات التواصل" : "Contact info",
+    score: contact, max: 8,
+    tip: contact < 8 ? (ar ? "أكمل الإيميل (صيغة صحيحة) والهاتف والموقع." : "Add a valid email, phone, and location.") : undefined,
+  });
+
+  // 11. English proficiency (matters for ATS in EG/GCC market) (0-5)
+  const levels: Record<string, number> = { none: 0, basic: 1, intermediate: 3, advanced: 4, fluent: 5, native: 5 };
+  const elv = levels[(input?.englishLevel ?? "").toLowerCase()] ?? 0;
+  items.push({
+    label: ar ? "مستوى اللغة الإنجليزية" : "English proficiency",
+    score: elv, max: 5,
+    tip: elv < 3 ? (ar ? "ارفع مستوى الإنجليزية إلى متقدم/طلاقة لزيادة الفرص." : "Aim for Advanced/Fluent English to widen reach.") : undefined,
+    detail: input?.englishLevel || "-",
+  });
+
+  // 12. Additional languages (0-3)
+  const langCount = Array.isArray(input?.languages) ? input.languages.length : 0;
+  items.push({
+    label: ar ? "لغات إضافية" : "Additional languages",
+    score: Math.min(3, langCount * 2), max: 3, detail: `${langCount}`,
+  });
+
+  // 13. ERP / systems exposure (0-3)
+  const hasErp = typeof input?.erp === "string" && input.erp.trim().length > 1;
+  items.push({
+    label: ar ? "أنظمة ERP / برامج تخصصية" : "ERP / specialised systems",
+    score: hasErp ? 3 : 0, max: 3,
+    tip: !hasErp ? (ar ? "اذكر أي نظام ERP أو برنامج تخصصي تعرفه." : "List any ERP or domain tooling you know.") : undefined,
+  });
+
+  // 14. Education/Certifications (0-4)
+  const hasEdu = (input?.education || "").length > 5;
+  const hasCert = (input?.certifications || "").length > 2;
+  items.push({
+    label: ar ? "التعليم والشهادات" : "Education & certifications",
+    score: (hasEdu ? 2 : 0) + (hasCert ? 2 : 0), max: 4,
+  });
+
+  // 15. Online presence (LinkedIn/portfolio) (0-3)
+  const hasLi = /linkedin\.com/i.test(input?.linkedinUrl || "");
+  const hasPort = /^https?:\/\//i.test(input?.portfolioUrl || "");
+  items.push({
+    label: ar ? "حضور رقمي (LinkedIn/Portfolio)" : "Online presence (LinkedIn/Portfolio)",
+    score: (hasLi ? 2 : 0) + (hasPort ? 1 : 0), max: 3,
+    tip: !hasLi ? (ar ? "أضف رابط LinkedIn محدّث." : "Add an updated LinkedIn URL.") : undefined,
+  });
+
+  // 16. Content depth (0-4)
+  const totalWords = allBullets.join(" ").split(/\s+/).filter(Boolean).length;
+  items.push({
+    label: ar ? "محتوى وافٍ" : "Content depth",
+    score: totalWords >= 300 ? 4 : totalWords >= 180 ? 3 : totalWords >= 100 ? 2 : totalWords >= 40 ? 1 : 0, max: 4,
+    detail: `${totalWords} ${ar ? "كلمة" : "words"}`,
+  });
+
+  const totalMax = items.reduce((s, i) => s + i.max, 0);
+  const earned = items.reduce((s, i) => s + i.score, 0);
+  const score = Math.round((earned / totalMax) * 100);
+  return {
+    score,
+    checks: items.map((i) => ({
+      label: i.label,
+      pass: i.score >= i.max * 0.7,
+      partial: i.score > 0 && i.score < i.max * 0.7,
+      weight: i.max,
+      tip: i.tip,
+      detail: i.detail,
+    })),
+  };
 }
 
 function CvViewer() {
