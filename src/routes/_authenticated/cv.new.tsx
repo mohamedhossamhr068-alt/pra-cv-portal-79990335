@@ -118,7 +118,7 @@ function NewCv() {
           jobTitle: form.jobTitle,
           industry: form.industry,
           seniority: form.seniority,
-          experience: form.experience,
+          experience: serializeExperience(),
           skills: form.skills,
           template: form.template,
           avatarDataUrl: form.avatarDataUrl || undefined,
