@@ -631,3 +631,184 @@ function Section({
     </section>
   );
 }
+
+const TEMPLATES: { id: string; nameAr: string; nameEn: string; descAr: string; descEn: string }[] = [
+  { id: "classic_executive", nameAr: "كلاسيكي تنفيذي", nameEn: "Classic Executive", descAr: "تدرّج خفيف وتفاصيل أنيقة", descEn: "Soft gradient header, refined details" },
+  { id: "creative_professional", nameAr: "إبداعي احترافي", nameEn: "Creative Pro", descAr: "هيدر ملوّن جريء", descEn: "Bold colored hero header" },
+  { id: "corporate_minimal", nameAr: "مينيمال شركاتي", nameEn: "Corporate Minimal", descAr: "أبيض نظيف بخط لوني", descEn: "Clean white with accent rule" },
+  { id: "modern_sidebar", nameAr: "حديث بشريط جانبي", nameEn: "Modern Sidebar", descAr: "عمود ملوّن للبيانات الجانبية", descEn: "Colored sidebar layout" },
+  { id: "elegant_serif", nameAr: "أنيق سيريف", nameEn: "Elegant Serif", descAr: "خط سيريف ولمسة ورقية", descEn: "Serif typography, paper feel" },
+  { id: "mono_dark", nameAr: "داكن أحادي", nameEn: "Mono Dark", descAr: "هيدر داكن قوي", descEn: "Strong dark hero band" },
+];
+
+const ACCENT_PALETTE = [
+  { name: "Indigo", value: "#4f46e5" },
+  { name: "Royal", value: "#1e3a8a" },
+  { name: "Emerald", value: "#059669" },
+  { name: "Teal", value: "#0d9488" },
+  { name: "Crimson", value: "#dc2626" },
+  { name: "Amber", value: "#d97706" },
+  { name: "Rose", value: "#e11d48" },
+  { name: "Violet", value: "#7c3aed" },
+  { name: "Slate", value: "#0f172a" },
+  { name: "Bronze", value: "#92400e" },
+];
+
+function TemplatePicker({
+  ar, template, accent, onTemplate, onAccent,
+}: {
+  ar: boolean;
+  template: string;
+  accent: string;
+  onTemplate: (id: string) => void;
+  onAccent: (hex: string) => void;
+}) {
+  return (
+    <Card className="mb-4 overflow-hidden border-0 bg-gradient-to-br from-background via-background to-primary/5 ring-1 ring-border print:hidden">
+      <CardContent className="space-y-4 p-5">
+        <div className="flex items-center gap-2">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-primary to-purple-600 text-white shadow">
+            <Palette className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold">{ar ? "اختر تنسيق وألوان السي في" : "Choose CV style & colors"}</h2>
+            <p className="text-[11px] text-muted-foreground">
+              {ar ? "المعاينة والتحميل والطباعة هتطلع بالشكل المختار." : "Preview, download, and print use the selected style."}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            {ar ? "القالب" : "Template"}
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {TEMPLATES.map((tpl) => {
+              const active = tpl.id === template;
+              return (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  onClick={() => onTemplate(tpl.id)}
+                  className={`group relative overflow-hidden rounded-lg border-2 p-0 text-left transition ${active ? "border-primary shadow-md" : "border-border hover:border-primary/50"}`}
+                >
+                  <TemplateThumb id={tpl.id} accent={accent} />
+                  <div className="px-2.5 py-1.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="truncate text-[11.5px] font-semibold">{ar ? tpl.nameAr : tpl.nameEn}</div>
+                      {active && <Check className="h-3.5 w-3.5 text-primary" />}
+                    </div>
+                    <div className="truncate text-[10px] text-muted-foreground">{ar ? tpl.descAr : tpl.descEn}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div>
+          <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            {ar ? "اللون الرئيسي" : "Accent color"}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {ACCENT_PALETTE.map((c) => {
+              const active = c.value.toLowerCase() === accent.toLowerCase();
+              return (
+                <button
+                  key={c.value}
+                  type="button"
+                  title={c.name}
+                  onClick={() => onAccent(c.value)}
+                  className={`relative h-9 w-9 rounded-full ring-2 ring-offset-2 ring-offset-background transition ${active ? "ring-primary scale-110" : "ring-transparent hover:scale-105"}`}
+                  style={{ background: c.value }}
+                >
+                  {active && <Check className="absolute inset-0 m-auto h-4 w-4 text-white drop-shadow" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TemplateThumb({ id, accent }: { id: string; accent: string }) {
+  const base = "h-16 w-full";
+  if (id === "modern_sidebar") {
+    return (
+      <div className={`${base} flex bg-white`}>
+        <div className="w-1/3" style={{ background: accent }} />
+        <div className="flex-1 space-y-1 p-1.5">
+          <div className="h-1.5 w-2/3 rounded bg-neutral-300" />
+          <div className="h-1 w-full rounded bg-neutral-200" />
+          <div className="h-1 w-5/6 rounded bg-neutral-200" />
+          <div className="h-1 w-4/6 rounded bg-neutral-200" />
+        </div>
+      </div>
+    );
+  }
+  if (id === "mono_dark") {
+    return (
+      <div className={`${base} bg-white`}>
+        <div className="h-5 w-full bg-slate-900" />
+        <div className="space-y-1 p-1.5">
+          <div className="h-1 w-3/4 rounded" style={{ background: accent }} />
+          <div className="h-1 w-full rounded bg-neutral-200" />
+          <div className="h-1 w-5/6 rounded bg-neutral-200" />
+        </div>
+      </div>
+    );
+  }
+  if (id === "creative_professional") {
+    return (
+      <div className={`${base} bg-white`}>
+        <div className="h-6 w-full" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}cc)` }} />
+        <div className="space-y-1 p-1.5">
+          <div className="h-1 w-2/3 rounded bg-neutral-300" />
+          <div className="h-1 w-full rounded bg-neutral-200" />
+          <div className="h-1 w-5/6 rounded bg-neutral-200" />
+        </div>
+      </div>
+    );
+  }
+  if (id === "corporate_minimal") {
+    return (
+      <div className={`${base} bg-white`}>
+        <div className="px-1.5 pt-2">
+          <div className="h-1.5 w-2/3 rounded bg-neutral-700" />
+          <div className="mt-1 h-0.5 w-full" style={{ background: accent }} />
+        </div>
+        <div className="space-y-1 p-1.5">
+          <div className="h-1 w-full rounded bg-neutral-200" />
+          <div className="h-1 w-5/6 rounded bg-neutral-200" />
+          <div className="h-1 w-4/6 rounded bg-neutral-200" />
+        </div>
+      </div>
+    );
+  }
+  if (id === "elegant_serif") {
+    return (
+      <div className={`${base}`} style={{ background: "#faf7f2" }}>
+        <div className="space-y-1 p-2">
+          <div className="h-1.5 w-3/5 rounded" style={{ background: accent }} />
+          <div className="h-px w-full" style={{ background: `${accent}55` }} />
+          <div className="mt-1 h-1 w-full rounded bg-neutral-300" />
+          <div className="h-1 w-5/6 rounded bg-neutral-300" />
+          <div className="h-1 w-4/6 rounded bg-neutral-300" />
+        </div>
+      </div>
+    );
+  }
+  // classic_executive
+  return (
+    <div className={`${base} bg-white`}>
+      <div className="h-6 w-full" style={{ background: `linear-gradient(180deg, ${accent}25, transparent)` }} />
+      <div className="space-y-1 p-1.5">
+        <div className="h-1 w-2/3 rounded bg-neutral-300" />
+        <div className="h-1 w-full rounded bg-neutral-200" />
+        <div className="h-1 w-5/6 rounded bg-neutral-200" />
+      </div>
+    </div>
+  );
+}
