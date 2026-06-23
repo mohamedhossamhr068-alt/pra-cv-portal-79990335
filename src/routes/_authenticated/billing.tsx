@@ -23,7 +23,9 @@ function Billing() {
   const me = useMeQuery();
   const currentPlan = me.data?.subscription?.plan ?? "free";
   const getPricing = useServerFn(getTenantPricing);
+  const listOffersFn = useServerFn(listActiveOffers);
   const { data: pricing } = useQuery({ queryKey: ["tenant-pricing"], queryFn: () => getPricing() });
+  const { data: offers = [] } = useQuery({ queryKey: ["offers-active"], queryFn: () => listOffersFn() });
 
   const currency = (pricing as any)?.currency ?? "USD";
   const symbol = SYMBOLS[currency] ?? currency;
