@@ -312,6 +312,59 @@ export type Database = {
         }
         Relationships: []
       }
+      topup_requests: {
+        Row: {
+          admin_note: string | null
+          amount_egp: number
+          created_at: string
+          credits_requested: number
+          id: string
+          reference_number: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          screenshot_path: string
+          status: string
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount_egp: number
+          created_at?: string
+          credits_requested: number
+          id?: string
+          reference_number?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          screenshot_path: string
+          status?: string
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount_egp?: number
+          created_at?: string
+          credits_requested?: number
+          id?: string
+          reference_number?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          screenshot_path?: string
+          status?: string
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topup_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage_events: {
         Row: {
           action_type: string
@@ -414,11 +467,47 @@ export type Database = {
           },
         ]
       }
+      wallet_settings: {
+        Row: {
+          credits_per_egp: number
+          instructions: string | null
+          tenant_id: string
+          updated_at: string
+          vodafone_number: string | null
+        }
+        Insert: {
+          credits_per_egp?: number
+          instructions?: string | null
+          tenant_id: string
+          updated_at?: string
+          vodafone_number?: string | null
+        }
+        Update: {
+          credits_per_egp?: number
+          instructions?: string | null
+          tenant_id?: string
+          updated_at?: string
+          vodafone_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_review_topup: {
+        Args: { _approve: boolean; _note?: string; _request_id: string }
+        Returns: undefined
+      }
       admin_update_pricing: {
         Args: { _cv_cost?: number; _match_cost?: number; _scrape_cost?: number }
         Returns: undefined
