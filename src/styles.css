@@ -92,9 +92,11 @@
   --sidebar-border: oklch(0.92 0.01 255);
   --sidebar-ring: oklch(0.55 0.18 265);
   --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-glow));
-  --gradient-hero: linear-gradient(135deg, oklch(0.45 0.22 265) 0%, oklch(0.55 0.2 280) 50%, oklch(0.62 0.21 270) 100%);
-  --shadow-elegant: 0 10px 30px -10px color-mix(in oklab, var(--primary) 25%, transparent);
-  --shadow-glow: 0 0 40px color-mix(in oklab, var(--primary-glow) 35%, transparent);
+  --gradient-hero: linear-gradient(135deg, oklch(0.42 0.22 265) 0%, oklch(0.5 0.22 280) 45%, oklch(0.62 0.21 305) 100%);
+  --gradient-subtle: linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.97 0.01 260) 100%);
+  --shadow-elegant: 0 12px 32px -12px color-mix(in oklab, var(--primary) 28%, transparent), 0 2px 6px -2px color-mix(in oklab, var(--primary) 12%, transparent);
+  --shadow-luxe: 0 28px 80px -24px color-mix(in oklab, var(--primary) 45%, transparent), 0 8px 24px -8px color-mix(in oklab, var(--primary-glow) 25%, transparent);
+  --shadow-glow: 0 0 48px color-mix(in oklab, var(--primary-glow) 35%, transparent);
 }
 
 .dark {
