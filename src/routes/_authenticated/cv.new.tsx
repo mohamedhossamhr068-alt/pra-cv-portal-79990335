@@ -211,9 +211,113 @@ function NewCv() {
               </SelectContent>
             </Select>
           </div>
+          <div>
+            <Label>{ar ? "سنوات الخبرة" : "Years of experience"}</Label>
+            <Input
+              type="number"
+              min={0}
+              max={60}
+              placeholder="0"
+              value={form.yearsExperience}
+              onChange={(e) => setForm({ ...form, yearsExperience: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>{ar ? "مستوى الإنجليزية" : "English level"}</Label>
+            <Select value={form.englishLevel} onValueChange={(v: any) => setForm({ ...form, englishLevel: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">{ar ? "لا يوجد" : "None"}</SelectItem>
+                <SelectItem value="basic">{ar ? "مبتدئ" : "Basic"}</SelectItem>
+                <SelectItem value="intermediate">{ar ? "متوسط" : "Intermediate"}</SelectItem>
+                <SelectItem value="advanced">{ar ? "متقدم" : "Advanced"}</SelectItem>
+                <SelectItem value="fluent">{ar ? "طلاقة" : "Fluent"}</SelectItem>
+                <SelectItem value="native">{ar ? "لغة أم" : "Native"}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="sm:col-span-2">
+            <Label>{ar ? "اللغات الإضافية" : "Additional languages"}</Label>
+            <div className="flex flex-wrap gap-2">
+              {form.languages.map((l, i) => (
+                <span key={i} className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs">
+                  <span className="font-medium">{l.name}</span>
+                  <span className="text-muted-foreground">· {l.level}</span>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, languages: form.languages.filter((_, j) => j !== i) })}
+                    className="ms-1 grid h-4 w-4 place-items-center rounded-full bg-destructive/15 text-destructive"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="mt-2 flex gap-2">
+              <Input
+                placeholder={ar ? "اسم اللغة (مثل: فرنسي)" : "Language name (e.g. French)"}
+                value={langDraft.name}
+                onChange={(e) => setLangDraft({ ...langDraft, name: e.target.value })}
+                className="flex-1"
+              />
+              <Select value={langDraft.level} onValueChange={(v) => setLangDraft({ ...langDraft, level: v })}>
+                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="basic">{ar ? "مبتدئ" : "Basic"}</SelectItem>
+                  <SelectItem value="intermediate">{ar ? "متوسط" : "Intermediate"}</SelectItem>
+                  <SelectItem value="advanced">{ar ? "متقدم" : "Advanced"}</SelectItem>
+                  <SelectItem value="fluent">{ar ? "طلاقة" : "Fluent"}</SelectItem>
+                  <SelectItem value="native">{ar ? "لغة أم" : "Native"}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  if (!langDraft.name.trim() || form.languages.length >= 8) return;
+                  setForm({ ...form, languages: [...form.languages, { name: langDraft.name.trim(), level: langDraft.level }] });
+                  setLangDraft({ name: "", level: "intermediate" });
+                }}
+              >
+                {ar ? "إضافة" : "Add"}
+              </Button>
+            </div>
+          </div>
+          <div className="sm:col-span-2">
+            <Label>{ar ? "أنظمة ERP / برامج (اختياري)" : "ERP / systems (optional)"}</Label>
+            <Input
+              placeholder={ar ? "SAP, Oracle, Odoo, Microsoft Dynamics…" : "SAP, Oracle, Odoo, Microsoft Dynamics…"}
+              value={form.erp}
+              onChange={(e) => setForm({ ...form, erp: e.target.value })}
+            />
+          </div>
           <div className="sm:col-span-2">
             <Label>{t("cv.skills")}</Label>
             <Input placeholder="React, TypeScript, PostgreSQL…" value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} />
+          </div>
+          <div>
+            <Label>{ar ? "الشهادات (اختياري)" : "Certifications (optional)"}</Label>
+            <Input
+              placeholder={ar ? "PMP, AWS, ITIL…" : "PMP, AWS, ITIL…"}
+              value={form.certifications}
+              onChange={(e) => setForm({ ...form, certifications: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>{ar ? "التعليم (اختياري)" : "Education (optional)"}</Label>
+            <Input
+              placeholder={ar ? "بكالوريوس هندسة - جامعة القاهرة 2020" : "B.Sc. Engineering — Cairo University 2020"}
+              value={form.education}
+              onChange={(e) => setForm({ ...form, education: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>LinkedIn</Label>
+            <Input placeholder="https://linkedin.com/in/…" value={form.linkedinUrl} onChange={(e) => setForm({ ...form, linkedinUrl: e.target.value })} />
+          </div>
+          <div>
+            <Label>{ar ? "رابط الأعمال/Portfolio" : "Portfolio URL"}</Label>
+            <Input placeholder="https://…" value={form.portfolioUrl} onChange={(e) => setForm({ ...form, portfolioUrl: e.target.value })} />
           </div>
           <div className="sm:col-span-2">
             <Label>{t("cv.experience")}</Label>
