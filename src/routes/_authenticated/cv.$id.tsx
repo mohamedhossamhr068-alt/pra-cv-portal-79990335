@@ -419,10 +419,8 @@ function CvViewer() {
         children.push(new Paragraph({ bidirectional: rtl, alignment: rtl ? AlignmentType.RIGHT : AlignmentType.LEFT, children: [run(`${g.category}: `, { bold: true }), run(g.skills.join(", "))], spacing: { after: 80 } }));
       });
 
-      if (out.recommendations.length) {
-        children.push(h(cvLang === "ar" ? "توصيات للتطوير" : "Recommendations"));
-        out.recommendations.forEach((r) => children.push(bullet(r)));
-      }
+      // Career recommendations are shown inside the app analytics panel,
+      // not in the exported CV document itself.
 
       const doc = new Document({
         styles: rtl ? { default: { document: { run: { font: arabicFont } } } } : undefined,
