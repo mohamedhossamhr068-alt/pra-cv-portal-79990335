@@ -2,13 +2,16 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
+const MATCH_CREDIT_COST = 1;
+
 export const listJobs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data } = await context.supabase
       .from("job_listings")
       .select("*")
-      .order("created_at", { ascending: false })
+      .eq("country", "EG")
+      .order("posted_at", { ascending: false })
       .limit(100);
     return data ?? [];
   });
@@ -17,6 +20,14 @@ export const runMatch = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("credits,is_blocked")
+      .eq("id", userId)
+      .maybeSingle();
+    if (profile?.is_blocked) throw new Error("ACCOUNT_BLOCKED");
+    if ((profile?.credits ?? 0) < MATCH_CREDIT_COST) throw new Error("NO_CREDITS");
+
     const { data: cvs } = await supabase
       .from("cv_logs")
       .select("output")
@@ -30,7 +41,7 @@ export const runMatch = createServerFn({ method: "POST" })
       (out?.skillsMatrix ?? []).flatMap((g: any) => g.skills ?? []).map((s: string) => s.toLowerCase()),
     );
 
-    const { data: jobs } = await supabase.from("job_listings").select("*").limit(200);
+    const { data: jobs } = await supabase.from("job_listings").select("*").eq("country", "EG").limit(200);
     const titleTokens = new Set<string>(
       String(((out as any)?.experience?.[0]?.role ?? "") + " " + ((out as any)?.summary ?? ""))
         .toLowerCase()
@@ -63,6 +74,11 @@ export const runMatch = createServerFn({ method: "POST" })
         top.map((t) => ({ user_id: userId, job_id: t.job_id, score: t.score, reasoning: t.reasoning })),
       );
     }
+    // Deduct credits
+    await supabase
+      .from("profiles")
+      .update({ credits: (profile?.credits ?? 0) - MATCH_CREDIT_COST })
+      .eq("id", userId);
     return { matched: top.length };
   });
 

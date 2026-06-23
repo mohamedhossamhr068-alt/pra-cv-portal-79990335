@@ -127,6 +127,72 @@ function normalizeCvOutput(raw: unknown, input: CvInput): CvOutput {
 }
 
 
+const CV_CREDIT_COST = 5;
+
+async function generateAnalysis(
+  gateway: ReturnType<typeof createLovableAiGatewayProvider>,
+  cv: CvOutput,
+  input: CvInput,
+) {
+  const lang = input.locale === "ar" ? "Arabic" : "English";
+  try {
+    const result = await generateText({
+      model: gateway("google/gemini-3-flash-preview"),
+      maxOutputTokens: 4096,
+      system: `You are a senior career coach. Output only one JSON object in ${lang}. Keys: strengths (array of 4-6 strings), weaknesses (array of 3-5 strings), interviewQuestions (array of 6-8 objects each {question, hint}), improvementPlan (array of 4-6 strings), platforms (array of 4-6 objects each {name, url, fitScore: number 0-100, reason}). The platforms must be real Egypt job boards (LinkedIn, Wuzzuf, Bayt, Forasna, Indeed Egypt, NaukriGulf, Tanqeeb). Score how well this candidate fits each platform.`,
+      prompt: `Candidate: ${input.fullName}, Role: ${input.jobTitle}, Industry: ${input.industry}, Seniority: ${input.seniority}\nSummary: ${cv.summary}\nSkills: ${cv.competencies.join(", ")}`,
+    });
+    return normalizeAnalysis(extractJsonObject(result.text), input);
+  } catch {
+    return normalizeAnalysis(null, input);
+  }
+}
+
+function normalizeAnalysis(raw: unknown, input: CvInput) {
+  const c = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const ar = input.locale === "ar";
+  const platforms = Array.isArray(c.platforms) ? c.platforms : [];
+  const defaultPlatforms = [
+    { name: "LinkedIn", url: "https://linkedin.com/jobs", fitScore: 88, reason: ar ? "أقوى منصة للوظائف الاحترافية في مصر." : "Strongest professional network in Egypt." },
+    { name: "Wuzzuf", url: "https://wuzzuf.net", fitScore: 92, reason: ar ? "المنصة الأشهر للوظائف المحلية في مصر." : "Leading local Egyptian job board." },
+    { name: "Bayt", url: "https://www.bayt.com/en/egypt", fitScore: 78, reason: ar ? "وظائف الشرق الأوسط، مناسبة لو بتفكر في الخليج." : "MENA-wide reach if open to Gulf relocation." },
+    { name: "Forasna", url: "https://forasna.com", fitScore: 70, reason: ar ? "وظائف ذوي الياقات الزرقاء والمتوسطة." : "Blue/mid-collar opportunities in Egypt." },
+  ];
+  return {
+    strengths: stringArray(c.strengths).length ? stringArray(c.strengths) : [
+      ar ? "خلفية واضحة في المجال المستهدف." : "Clear background in the target field.",
+      ar ? "مهارات تقنية تتطابق مع متطلبات السوق." : "Technical skills aligned with market demand.",
+    ],
+    weaknesses: stringArray(c.weaknesses).length ? stringArray(c.weaknesses) : [
+      ar ? "بعض الإنجازات تحتاج أرقام قابلة للقياس." : "Quantify achievements with metrics.",
+      ar ? "أضف شهادات معتمدة لتعزيز المصداقية." : "Add certifications for credibility.",
+    ],
+    interviewQuestions: Array.isArray(c.interviewQuestions) && c.interviewQuestions.length
+      ? c.interviewQuestions.map((q: any) => ({
+          question: String(q?.question ?? "").trim(),
+          hint: String(q?.hint ?? "").trim(),
+        })).filter((q: any) => q.question)
+      : [
+          { question: ar ? "احكيلي عن نفسك في دقيقتين." : "Tell me about yourself in 2 minutes.", hint: ar ? "ابدأ بدور حالي → خبرة سابقة → سبب اهتمامك بالدور." : "Current → past → why this role." },
+          { question: ar ? "إيه أكبر تحدي قابلته وحليته إزاي؟" : "Biggest challenge and how you solved it?", hint: ar ? "استخدم STAR: Situation, Task, Action, Result." : "Use STAR framework." },
+          { question: ar ? "ليه الشركة دي بالذات؟" : "Why this company?", hint: ar ? "اربط بمنتجها وقيمها وخطتك معاها." : "Tie product, values, your plan." },
+        ],
+    improvementPlan: stringArray(c.improvementPlan).length ? stringArray(c.improvementPlan) : [
+      ar ? "أكمل شهادة معتمدة خلال 60 يوم." : "Complete one certification in 60 days.",
+      ar ? "اعمل بروجكت portfolio منشور خلال شهر." : "Ship a public portfolio project in 30 days.",
+      ar ? "حدّث الـ LinkedIn بنفس الكلمات المفتاحية." : "Mirror these keywords on LinkedIn.",
+    ],
+    platforms: platforms.length
+      ? platforms.map((p: any) => ({
+          name: String(p?.name ?? "").trim(),
+          url: String(p?.url ?? "").trim(),
+          fitScore: Math.min(100, Math.max(0, Number(p?.fitScore ?? 70))),
+          reason: String(p?.reason ?? "").trim(),
+        })).filter((p: any) => p.name && p.url)
+      : defaultPlatforms,
+  };
+}
+
 export const generateCv = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => CvInputSchema.parse(data))
@@ -135,7 +201,15 @@ export const generateCv = createServerFn({ method: "POST" })
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI gateway is not configured.");
 
-    const { data: profile } = await supabase.from("profiles").select("tenant_id").eq("id", userId).maybeSingle();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("tenant_id,credits,is_blocked")
+      .eq("id", userId)
+      .maybeSingle();
+    if (profile?.is_blocked) throw new Error("ACCOUNT_BLOCKED");
+    const credits = profile?.credits ?? 0;
+    if (credits < CV_CREDIT_COST) throw new Error("NO_CREDITS");
+
     const tenantId = profile?.tenant_id ?? null;
     const { data: sub } = tenantId
       ? await supabase.from("subscriptions").select("plan").eq("tenant_id", tenantId).maybeSingle()
@@ -198,6 +272,8 @@ Produce an ATS-optimized CV with exactly these JSON keys:
       cvOutput = normalizeCvOutput(null, data);
     }
 
+    const analysis = await generateAnalysis(gateway, cvOutput, data);
+
     const { data: inserted, error: insertErr } = await supabase
       .from("cv_logs")
       .insert({
@@ -207,11 +283,14 @@ Produce an ATS-optimized CV with exactly these JSON keys:
         template: data.template,
         input: data as any,
         output: cvOutput as any,
+        analysis: analysis as any,
       })
       .select()
       .single();
     if (insertErr) throw insertErr;
 
+    // Deduct credits + bump usage
+    await supabase.from("profiles").update({ credits: credits - CV_CREDIT_COST }).eq("id", userId);
     await supabase.from("usage_quotas").upsert(
       {
         user_id: userId,
@@ -222,16 +301,16 @@ Produce an ATS-optimized CV with exactly these JSON keys:
       },
       { onConflict: "user_id,period_month" },
     );
-
     await supabase.from("usage_events").insert({
       user_id: userId,
       tenant_id: tenantId,
       action_type: "cv_generated",
-      metadata: { template: data.template, locale: data.locale } as any,
+      metadata: { template: data.template, locale: data.locale, cost: CV_CREDIT_COST } as any,
     });
 
-    return { id: inserted.id, output: cvOutput };
+    return { id: inserted.id, output: cvOutput, analysis, creditsLeft: credits - CV_CREDIT_COST };
   });
+
 
 export const listCvs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

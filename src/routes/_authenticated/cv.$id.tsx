@@ -7,7 +7,7 @@ import { useMeQuery } from "@/lib/me.hooks";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Download, ArrowLeft, Mail, Phone, Sparkles, Award, Briefcase, Wrench, Target } from "lucide-react";
+import { Download, ArrowLeft, Sparkles, Award, Briefcase, Wrench, Target, MessageCircle, TrendingUp, Globe2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/cv/$id")({
@@ -23,6 +23,14 @@ type CvOut = {
   recommendations: string[];
 };
 
+type CvAnalysis = {
+  strengths: string[];
+  weaknesses: string[];
+  interviewQuestions: { question: string; hint: string }[];
+  improvementPlan: string[];
+  platforms: { name: string; url: string; fitScore: number; reason: string }[];
+};
+
 function CvViewer() {
   const { t } = useTranslation();
   const { id } = useParams({ from: "/_authenticated/cv/$id" });
@@ -36,6 +44,7 @@ function CvViewer() {
   if (isLoading || !data) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
 
   const out = data.output as CvOut;
+  const analysis = (data as any).analysis as CvAnalysis | null;
   const tpl = data.template as string;
   const accent = tenant?.primary_color ?? "#4f46e5";
 
@@ -96,9 +105,119 @@ function CvViewer() {
           </div>
         </CardContent>
       </Card>
+
+      {analysis && <AnalysisSection analysis={analysis} accent={accent} />}
     </div>
   );
 }
+
+function AnalysisSection({ analysis, accent }: { analysis: CvAnalysis; accent: string }) {
+  return (
+    <div className="mt-6 grid gap-4 print:hidden">
+      <Card>
+        <CardContent className="space-y-4 pt-6">
+          <div className="flex items-center gap-2">
+            <div className="grid h-9 w-9 place-items-center rounded-lg" style={{ background: `${accent}15`, color: accent }}>
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <h2 className="text-lg font-bold">تحليل ذكي للسيرة الذاتية</h2>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <InsightBox title="نقاط القوة" items={analysis.strengths} color="emerald" icon={<Award className="h-4 w-4" />} />
+            <InsightBox title="نقاط للتحسين" items={analysis.weaknesses} color="amber" icon={<TrendingUp className="h-4 w-4" />} />
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+              <MessageCircle className="h-4 w-4 text-primary" /> أسئلة محتملة في الإنترفيو
+            </div>
+            <div className="grid gap-2">
+              {analysis.interviewQuestions.map((q, i) => (
+                <details key={i} className="group rounded-lg border bg-card p-3 transition hover:border-primary/50">
+                  <summary className="cursor-pointer list-none text-sm font-medium">
+                    <span className="me-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                      {i + 1}
+                    </span>
+                    {q.question}
+                  </summary>
+                  <p className="mt-2 ps-7 text-xs text-muted-foreground">💡 {q.hint}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+              <TrendingUp className="h-4 w-4 text-emerald-600" /> خطة تطوير مقترحة
+            </div>
+            <ol className="space-y-1.5 ps-5 text-sm">
+              {analysis.improvementPlan.map((s, i) => (
+                <li key={i} className="list-decimal text-muted-foreground"><span className="text-foreground">{s}</span></li>
+              ))}
+            </ol>
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+              <Globe2 className="h-4 w-4 text-primary" /> منصات مرشحة للتقديم
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {analysis.platforms.map((p) => {
+                let host = p.url;
+                try { host = new URL(p.url).hostname.replace(/^www\./, ""); } catch {}
+                const logo = `https://logo.clearbit.com/${host}`;
+                return (
+                  <a
+                    key={p.name}
+                    href={p.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group flex items-center gap-3 rounded-lg border bg-card p-3 transition hover:border-primary/50 hover:shadow-md"
+                  >
+                    <img src={logo} alt="" className="h-10 w-10 rounded object-contain bg-white p-1" onError={(e) => (e.currentTarget.style.opacity = "0.3")} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="truncate text-sm font-semibold">{p.name}</div>
+                        <div
+                          className="rounded-full px-2 py-0.5 text-[10px] font-bold"
+                          style={{
+                            background: p.fitScore >= 80 ? "#dcfce7" : p.fitScore >= 60 ? "#fef3c7" : "#fee2e2",
+                            color: p.fitScore >= 80 ? "#15803d" : p.fitScore >= 60 ? "#a16207" : "#b91c1c",
+                          }}
+                        >
+                          {p.fitScore}%
+                        </div>
+                      </div>
+                      <div className="truncate text-[11px] text-muted-foreground">{p.reason}</div>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function InsightBox({ title, items, color, icon }: { title: string; items: string[]; color: "emerald" | "amber"; icon: React.ReactNode }) {
+  const palette = color === "emerald"
+    ? { bg: "bg-emerald-50 dark:bg-emerald-950/30", border: "border-emerald-200 dark:border-emerald-900", text: "text-emerald-700 dark:text-emerald-400" }
+    : { bg: "bg-amber-50 dark:bg-amber-950/30", border: "border-amber-200 dark:border-amber-900", text: "text-amber-700 dark:text-amber-400" };
+  return (
+    <div className={`rounded-lg border p-3 ${palette.bg} ${palette.border}`}>
+      <div className={`mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider ${palette.text}`}>
+        {icon} {title}
+      </div>
+      <ul className="space-y-1 text-sm">
+        {items.map((s, i) => <li key={i} className="flex gap-2"><span className={palette.text}>•</span><span>{s}</span></li>)}
+      </ul>
+    </div>
+  );
+}
+
 
 function CvTemplate({
   output,

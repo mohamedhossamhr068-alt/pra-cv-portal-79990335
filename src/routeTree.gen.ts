@@ -22,6 +22,7 @@ import { Route as AuthenticatedPlatformTenantsRouteImport } from './routes/_auth
 import { Route as AuthenticatedPlatformAnalyticsRouteImport } from './routes/_authenticated/platform.analytics'
 import { Route as AuthenticatedCvNewRouteImport } from './routes/_authenticated/cv.new'
 import { Route as AuthenticatedCvIdRouteImport } from './routes/_authenticated/cv.$id'
+import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminUsageRouteImport } from './routes/_authenticated/admin.usage'
 import { Route as AuthenticatedAdminTeamRouteImport } from './routes/_authenticated/admin.team'
 import { Route as AuthenticatedAdminBrandingRouteImport } from './routes/_authenticated/admin.branding'
@@ -92,6 +93,11 @@ const AuthenticatedCvIdRoute = AuthenticatedCvIdRouteImport.update({
   path: '/cv/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminUsageRoute = AuthenticatedAdminUsageRouteImport.update({
   id: '/admin/usage',
   path: '/admin/usage',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/admin/branding': typeof AuthenticatedAdminBrandingRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/usage': typeof AuthenticatedAdminUsageRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/cv/$id': typeof AuthenticatedCvIdRoute
   '/cv/new': typeof AuthenticatedCvNewRoute
   '/platform/analytics': typeof AuthenticatedPlatformAnalyticsRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/admin/branding': typeof AuthenticatedAdminBrandingRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/usage': typeof AuthenticatedAdminUsageRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/cv/$id': typeof AuthenticatedCvIdRoute
   '/cv/new': typeof AuthenticatedCvNewRoute
   '/platform/analytics': typeof AuthenticatedPlatformAnalyticsRoute
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/branding': typeof AuthenticatedAdminBrandingRoute
   '/_authenticated/admin/team': typeof AuthenticatedAdminTeamRoute
   '/_authenticated/admin/usage': typeof AuthenticatedAdminUsageRoute
+  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/cv/$id': typeof AuthenticatedCvIdRoute
   '/_authenticated/cv/new': typeof AuthenticatedCvNewRoute
   '/_authenticated/platform/analytics': typeof AuthenticatedPlatformAnalyticsRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/admin/branding'
     | '/admin/team'
     | '/admin/usage'
+    | '/admin/users'
     | '/cv/$id'
     | '/cv/new'
     | '/platform/analytics'
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/admin/branding'
     | '/admin/team'
     | '/admin/usage'
+    | '/admin/users'
     | '/cv/$id'
     | '/cv/new'
     | '/platform/analytics'
@@ -210,6 +221,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/branding'
     | '/_authenticated/admin/team'
     | '/_authenticated/admin/usage'
+    | '/_authenticated/admin/users'
     | '/_authenticated/cv/$id'
     | '/_authenticated/cv/new'
     | '/_authenticated/platform/analytics'
@@ -317,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCvIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/users': {
+      id: '/_authenticated/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/usage': {
       id: '/_authenticated/admin/usage'
       path: '/admin/usage'
@@ -349,6 +368,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminBrandingRoute: typeof AuthenticatedAdminBrandingRoute
   AuthenticatedAdminTeamRoute: typeof AuthenticatedAdminTeamRoute
   AuthenticatedAdminUsageRoute: typeof AuthenticatedAdminUsageRoute
+  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedCvIdRoute: typeof AuthenticatedCvIdRoute
   AuthenticatedCvNewRoute: typeof AuthenticatedCvNewRoute
   AuthenticatedPlatformAnalyticsRoute: typeof AuthenticatedPlatformAnalyticsRoute
@@ -364,6 +384,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminBrandingRoute: AuthenticatedAdminBrandingRoute,
   AuthenticatedAdminTeamRoute: AuthenticatedAdminTeamRoute,
   AuthenticatedAdminUsageRoute: AuthenticatedAdminUsageRoute,
+  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedCvIdRoute: AuthenticatedCvIdRoute,
   AuthenticatedCvNewRoute: AuthenticatedCvNewRoute,
   AuthenticatedPlatformAnalyticsRoute: AuthenticatedPlatformAnalyticsRoute,

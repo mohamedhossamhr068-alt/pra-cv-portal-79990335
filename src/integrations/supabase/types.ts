@@ -54,6 +54,7 @@ export type Database = {
       }
       cv_logs: {
         Row: {
+          analysis: Json | null
           created_at: string
           id: string
           input: Json
@@ -65,6 +66,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          analysis?: Json | null
           created_at?: string
           id?: string
           input: Json
@@ -76,6 +78,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          analysis?: Json | null
           created_at?: string
           id?: string
           input?: Json
@@ -99,12 +102,16 @@ export type Database = {
       job_listings: {
         Row: {
           company: string
+          company_logo: string | null
+          country: string | null
           created_at: string
           description: string | null
+          employment_type: string | null
           external_url: string | null
           id: string
           industry: string | null
           location: string | null
+          posted_at: string | null
           seniority: string | null
           skills: string[] | null
           source: string | null
@@ -112,12 +119,16 @@ export type Database = {
         }
         Insert: {
           company: string
+          company_logo?: string | null
+          country?: string | null
           created_at?: string
           description?: string | null
+          employment_type?: string | null
           external_url?: string | null
           id?: string
           industry?: string | null
           location?: string | null
+          posted_at?: string | null
           seniority?: string | null
           skills?: string[] | null
           source?: string | null
@@ -125,12 +136,16 @@ export type Database = {
         }
         Update: {
           company?: string
+          company_logo?: string | null
+          country?: string | null
           created_at?: string
           description?: string | null
+          employment_type?: string | null
           external_url?: string | null
           id?: string
           industry?: string | null
           location?: string | null
+          posted_at?: string | null
           seniority?: string | null
           skills?: string[] | null
           source?: string | null
@@ -176,25 +191,31 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          credits: number
           email: string
           full_name: string | null
           id: string
+          is_blocked: boolean
           locale: string
           tenant_id: string | null
         }
         Insert: {
           created_at?: string
+          credits?: number
           email: string
           full_name?: string | null
           id: string
+          is_blocked?: boolean
           locale?: string
           tenant_id?: string | null
         }
         Update: {
           created_at?: string
+          credits?: number
           email?: string
           full_name?: string | null
           id?: string
+          is_blocked?: boolean
           locale?: string
           tenant_id?: string | null
         }
@@ -389,6 +410,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_update_user: {
+        Args: {
+          _credits?: number
+          _grant_admin?: boolean
+          _is_blocked?: boolean
+          _target_user: string
+        }
+        Returns: undefined
+      }
       get_user_tenant: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {

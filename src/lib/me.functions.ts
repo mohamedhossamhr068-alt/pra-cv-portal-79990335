@@ -38,5 +38,7 @@ export const getMe = createServerFn({ method: "GET" })
       subscription,
       roles: (roles ?? []).map((r) => r.role as string),
       quota: { used, limit, remaining: Math.max(0, limit - used), month: monthKey },
+      credits: profile?.credits ?? 0,
+      isBlocked: profile?.is_blocked ?? false,
     };
   });
