@@ -254,35 +254,54 @@ function CvViewer() {
     if (!pdfRef.current) return;
     setDownloading(true);
     try {
-      // Use html2canvas-pro (oklch-aware) + jsPDF to actually DOWNLOAD a PDF file,
-      // not just open the browser print dialog.
       const [{ default: html2canvas }, jsPDFmod] = await Promise.all([
         import("html2canvas-pro"),
         import("jspdf"),
       ]);
       const jsPDF = (jsPDFmod as any).jsPDF ?? (jsPDFmod as any).default;
       const node = pdfRef.current;
+
+      // A4 @ 96dpi ≈ 794 × 1123 px. Lock render width so the layout matches A4.
+      const A4_W_PX = 794;
+      const A4_H_PX = 1123;
+
       const canvas = await html2canvas(node, {
-        scale: 2,
+        scale: 3,
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
+        windowWidth: A4_W_PX,
+        width: A4_W_PX,
       });
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const imgH = (canvas.height * pageW) / canvas.width;
-      let heightLeft = imgH;
-      let position = 0;
-      pdf.addImage(imgData, "JPEG", 0, position, pageW, imgH);
-      heightLeft -= pageH;
-      while (heightLeft > 0) {
-        position = heightLeft - imgH;
-        pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, position, pageW, imgH);
-        heightLeft -= pageH;
+
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
+      const pageWmm = pdf.internal.pageSize.getWidth();
+      const pageHmm = pdf.internal.pageSize.getHeight();
+      const pxPerMm = canvas.width / pageWmm;
+      const pageHpx = Math.floor(A4_H_PX * (canvas.width / A4_W_PX));
+
+      // Slice the tall canvas into clean A4-sized pages so text stays crisp
+      // and pages don't get stretched into a single huge image.
+      let renderedPx = 0;
+      let pageIndex = 0;
+      while (renderedPx < canvas.height) {
+        const sliceH = Math.min(pageHpx, canvas.height - renderedPx);
+        const pageCanvas = document.createElement("canvas");
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = sliceH;
+        const ctx = pageCanvas.getContext("2d");
+        if (!ctx) break;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        ctx.drawImage(canvas, 0, renderedPx, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        const imgData = pageCanvas.toDataURL("image/png");
+        if (pageIndex > 0) pdf.addPage();
+        const sliceHmm = sliceH / pxPerMm;
+        pdf.addImage(imgData, "PNG", 0, 0, pageWmm, Math.min(sliceHmm, pageHmm));
+        renderedPx += sliceH;
+        pageIndex += 1;
       }
+
       const filename = `${data.title.replace(/[^\w\s-]/g, "").trim() || "cv"}.pdf`;
       pdf.save(filename);
     } catch (err) {
@@ -400,10 +419,8 @@ function CvViewer() {
         children.push(new Paragraph({ bidirectional: rtl, alignment: rtl ? AlignmentType.RIGHT : AlignmentType.LEFT, children: [run(`${g.category}: `, { bold: true }), run(g.skills.join(", "))], spacing: { after: 80 } }));
       });
 
-      if (out.recommendations.length) {
-        children.push(h(cvLang === "ar" ? "توصيات للتطوير" : "Recommendations"));
-        out.recommendations.forEach((r) => children.push(bullet(r)));
-      }
+      // Career recommendations are shown inside the app analytics panel,
+      // not in the exported CV document itself.
 
       const doc = new Document({
         styles: rtl ? { default: { document: { run: { font: arabicFont } } } } : undefined,
@@ -518,7 +535,7 @@ function CvViewer() {
         </CardContent>
       </Card>
 
-      {analysis && <AnalysisSection analysis={analysis} accent={accent} ar={ar} />}
+      {analysis && <AnalysisSection analysis={analysis} recommendations={out.recommendations ?? []} accent={accent} ar={ar} />}
     </div>
   );
 }
@@ -595,7 +612,7 @@ function AtsScoreCard({ score, checks, ar }: { score: number; checks: { label: s
   );
 }
 
-function AnalysisSection({ analysis, accent, ar }: { analysis: CvAnalysis; accent: string; ar: boolean }) {
+function AnalysisSection({ analysis, recommendations, accent, ar }: { analysis: CvAnalysis; recommendations: string[]; accent: string; ar: boolean }) {
   return (
     <div className="mt-6 grid gap-4 print:hidden">
       <Card>
@@ -641,6 +658,21 @@ function AnalysisSection({ analysis, accent, ar }: { analysis: CvAnalysis; accen
               ))}
             </ol>
           </div>
+
+          {recommendations.length > 0 && (
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                <Sparkles className="h-4 w-4" style={{ color: accent }} /> {ar ? "توصيات مهنية لك" : "Career recommendations"}
+              </div>
+              <div className="rounded-lg border bg-card p-3">
+                <ul className="space-y-1.5 ps-5 text-sm">
+                  {recommendations.map((r, i) => (
+                    <li key={i} className="list-disc text-muted-foreground"><span className="text-foreground">{r}</span></li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
 
           <div>
             <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
@@ -799,11 +831,7 @@ function CvTemplate({
               <ul className="ms-4 list-disc space-y-1 text-neutral-700">{output.achievements.map((a, i) => (<li key={i}>{a}</li>))}</ul>
             </Section>
           )}
-          {output.recommendations.length > 0 && (
-            <Section icon={<Sparkles className="h-4 w-4" />} title={t("cv.recommendations")} accent={accent}>
-              <ul className="ms-4 list-disc space-y-1 text-neutral-700">{output.recommendations.map((r, i) => (<li key={i}>{r}</li>))}</ul>
-            </Section>
-          )}
+          {/* Career recommendations live in the in-app analysis, not the CV. */}
         </main>
       </div>
     );
@@ -852,11 +880,7 @@ function CvTemplate({
                 ))}
               </div>
             )}
-            {tenantName && (
-              <div className="mt-2 text-[10px] uppercase tracking-[0.18em]" style={{ color: isCreative ? "rgba(255,255,255,0.7)" : "#94a3b8" }}>
-                {tenantName}
-              </div>
-            )}
+            {/* Tenant/portal stamp removed from CV — keep the document candidate-focused. */}
           </div>
         </div>
       </header>
@@ -917,15 +941,7 @@ function CvTemplate({
           </div>
         </Section>
 
-        {output.recommendations.length > 0 && (
-          <Section icon={<Sparkles className="h-4 w-4" />} title={t("cv.recommendations")} accent={accent}>
-            <div className="rounded-lg border-l-4 p-4" style={{ borderColor: accent, background: `${accent}08` }}>
-              <ul className="ms-4 list-disc space-y-1.5 text-neutral-700">
-                {output.recommendations.map((r, i) => (<li key={i}>{r}</li>))}
-              </ul>
-            </div>
-          </Section>
-        )}
+        {/* Career recommendations are rendered in the in-app analysis panel, not in the CV. */}
       </div>
     </div>
   );
