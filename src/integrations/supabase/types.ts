@@ -276,29 +276,38 @@ export type Database = {
       tenants: {
         Row: {
           created_at: string
+          cv_credit_cost: number
           id: string
           industry: string | null
           logo_url: string | null
+          match_credit_cost: number
           name: string
           primary_color: string | null
+          scrape_credit_cost: number
           slug: string
         }
         Insert: {
           created_at?: string
+          cv_credit_cost?: number
           id?: string
           industry?: string | null
           logo_url?: string | null
+          match_credit_cost?: number
           name: string
           primary_color?: string | null
+          scrape_credit_cost?: number
           slug: string
         }
         Update: {
           created_at?: string
+          cv_credit_cost?: number
           id?: string
           industry?: string | null
           logo_url?: string | null
+          match_credit_cost?: number
           name?: string
           primary_color?: string | null
+          scrape_credit_cost?: number
           slug?: string
         }
         Relationships: []
@@ -410,6 +419,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_update_pricing: {
+        Args: { _cv_cost?: number; _match_cost?: number; _scrape_cost?: number }
+        Returns: undefined
+      }
       admin_update_user: {
         Args: {
           _credits?: number

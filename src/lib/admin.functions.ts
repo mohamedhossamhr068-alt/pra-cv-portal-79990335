@@ -57,3 +57,38 @@ export const adminUpdateUser = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+export const getTenantPricing = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: prof } = await supabase.from("profiles").select("tenant_id").eq("id", userId).maybeSingle();
+    if (!prof?.tenant_id) return null;
+    const { data } = await supabase
+      .from("tenants")
+      .select("cv_credit_cost,match_credit_cost,scrape_credit_cost")
+      .eq("id", prof.tenant_id)
+      .maybeSingle();
+    return data;
+  });
+
+export const updateTenantPricing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        cv_cost: z.number().int().min(0).max(1000).optional(),
+        match_cost: z.number().int().min(0).max(1000).optional(),
+        scrape_cost: z.number().int().min(0).max(1000).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("admin_update_pricing", {
+      _cv_cost: data.cv_cost ?? null,
+      _match_cost: data.match_cost ?? null,
+      _scrape_cost: data.scrape_cost ?? null,
+    } as any);
+    if (error) throw error;
+    return { ok: true };
+  });

@@ -2,7 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-const MATCH_CREDIT_COST = 1;
+async function getMatchCost(supabase: any, userId: string): Promise<number> {
+  const { data: prof } = await supabase.from("profiles").select("tenant_id").eq("id", userId).maybeSingle();
+  if (!prof?.tenant_id) return 1;
+  const { data: t } = await supabase.from("tenants").select("match_credit_cost").eq("id", prof.tenant_id).maybeSingle();
+  return (t as any)?.match_credit_cost ?? 1;
+}
 
 export const listJobs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -26,6 +31,7 @@ export const runMatch = createServerFn({ method: "POST" })
       .eq("id", userId)
       .maybeSingle();
     if (profile?.is_blocked) throw new Error("ACCOUNT_BLOCKED");
+    const MATCH_CREDIT_COST = await getMatchCost(supabase, userId);
     if ((profile?.credits ?? 0) < MATCH_CREDIT_COST) throw new Error("NO_CREDITS");
 
     const { data: cvs } = await supabase

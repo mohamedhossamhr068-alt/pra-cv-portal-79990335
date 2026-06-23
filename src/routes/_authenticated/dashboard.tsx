@@ -68,6 +68,7 @@ function Dashboard() {
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <AdminTile to="/admin/users" icon={Users} title="المستخدمين" desc="رصيد · حظر · ترقية" />
+            <AdminTile to="/admin/pricing" icon={Coins} title="أسعار الخدمات" desc="حدد تكلفة كل عملية" />
             <AdminTile to="/admin/team" icon={Users} title="الفريق" desc="دعوات وأعضاء" />
             <AdminTile to="/admin/usage" icon={BarChart3} title="الاستخدام" desc="إحصائيات شهرية" />
             <AdminTile to="/admin/branding" icon={Palette} title="الهوية" desc="ألوان وشعار" />
