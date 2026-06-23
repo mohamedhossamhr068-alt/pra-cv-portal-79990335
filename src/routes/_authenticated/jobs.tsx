@@ -218,8 +218,21 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
               className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
               style={{ backgroundColor: src?.bg ?? "hsl(var(--muted))", color: src ? "#fff" : undefined }}
             >
-              <img
-                src={src?.logo ?? `https://www.google.com/s2/favicons?domain=${srcKey}.com&sz=64`}
+              {(() => {
+                const badgeDomain = src?.domain ?? `${srcKey}.com`;
+                const badgeChain = logoChain(badgeDomain);
+                return (
+                  <img
+                    src={badgeChain[0]}
+                    alt=""
+                    referrerPolicy="no-referrer"
+                    data-idx="0"
+                    onError={(e) => advanceLogo(e, badgeChain)}
+                    className="h-3 w-3 rounded-sm bg-white object-contain p-[1px]"
+                  />
+                );
+              })()}
+
                 alt=""
                 className="h-3 w-3 rounded-sm bg-white object-contain p-[1px]"
                 onError={(e) => ((e.currentTarget.style.display = "none"))}
