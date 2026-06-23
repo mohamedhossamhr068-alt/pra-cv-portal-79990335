@@ -48,7 +48,7 @@ export const updateBranding = createServerFn({ method: "POST" })
       _tenant_id: prof.tenant_id,
     });
     must(!!isAdmin);
-    const patch: Record<string, any> = {};
+    const patch: { name?: string; logo_url?: string | null; primary_color?: string } = {};
     if (data.name !== undefined) patch.name = data.name;
     if (data.logo_url !== undefined) patch.logo_url = data.logo_url || null;
     if (data.primary_color !== undefined) patch.primary_color = data.primary_color;
