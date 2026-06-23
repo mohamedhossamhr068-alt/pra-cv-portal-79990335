@@ -304,7 +304,7 @@ const ar: typeof en = {
     senioritySenior: "خبير",
     seniorityLead: "قيادي/تنفيذي",
     experience: "الخبرات (نص حر)",
-    experiencePlaceholder: "صف بإيجاز أدوارك، الشركات، ومسؤولياتك الرئيسية…",
+    experiencePlaceholder: "اذكر كل شركة في سطر مستقل. الصيغة: المسمى — الشركة — التواريخ (مثال: محاسب أول — شركة XYZ — يناير 2022 حتى الآن). ثم اكتب 2-4 سطور عن مسؤولياتك.",
     skills: "المهارات (مفصولة بفواصل)",
     template: "القالب",
     templateModern: "تنفيذي حديث",
