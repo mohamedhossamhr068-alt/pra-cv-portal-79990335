@@ -272,6 +272,14 @@ export const generateCv = createServerFn({ method: "POST" })
 Target role: ${data.jobTitle}
 Industry: ${data.industry}
 Seniority: ${data.seniority}
+Years of experience: ${data.yearsExperience ?? "not provided"}
+English level: ${data.englishLevel ?? "not provided"}
+Other languages: ${(data.languages ?? []).map((l) => `${l.name} (${l.level})`).join(", ") || "not provided"}
+ERP / Systems: ${data.erp || "not provided"}
+Education: ${data.education || "not provided"}
+Certifications: ${data.certifications || "not provided"}
+LinkedIn: ${data.linkedinUrl || "not provided"}
+Portfolio: ${data.portfolioUrl || "not provided"}
 Skills (raw): ${data.skills}
 Experience (raw): ${data.experience}
 
@@ -283,7 +291,8 @@ Produce an ATS-optimized CV with exactly these JSON keys:
   "achievements": ["string"],
   "skillsMatrix": [{ "category": "string", "skills": ["string"] }],
   "recommendations": ["string"]
-}`,
+}
+If languages or ERP systems were provided, include them as their own skillsMatrix categories ("Languages", "ERP & Systems"). Do not invent numbers; reflect the candidate's English level and ERP exposure faithfully.`,
       });
       cvOutput = normalizeCvOutput(extractJsonObject(result.text), data);
       CvOutputSchema.parse(cvOutput);
