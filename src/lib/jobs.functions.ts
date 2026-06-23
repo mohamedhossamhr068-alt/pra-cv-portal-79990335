@@ -20,6 +20,14 @@ export const runMatch = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("credits,is_blocked")
+      .eq("id", userId)
+      .maybeSingle();
+    if (profile?.is_blocked) throw new Error("ACCOUNT_BLOCKED");
+    if ((profile?.credits ?? 0) < MATCH_CREDIT_COST) throw new Error("NO_CREDITS");
+
     const { data: cvs } = await supabase
       .from("cv_logs")
       .select("output")
