@@ -131,14 +131,14 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
   const posted = job.posted_at ? new Date(job.posted_at) : null;
   const daysAgo = posted ? Math.floor((Date.now() - posted.getTime()) / 86400000) : null;
   const sourceMeta: Record<string, { label: string; bg: string; logo: string; domain: string }> = {
-    linkedin: { label: "LinkedIn", bg: "#0A66C2", logo: "https://cdn.simpleicons.org/linkedin/ffffff", domain: "linkedin.com" },
-    wuzzuf:   { label: "Wuzzuf",   bg: "#059669", logo: "https://www.google.com/s2/favicons?domain=wuzzuf.net&sz=64", domain: "wuzzuf.net" },
-    bayt:     { label: "Bayt",     bg: "#e11d48", logo: "https://www.google.com/s2/favicons?domain=bayt.com&sz=64", domain: "bayt.com" },
-    forasna:  { label: "Forasna",  bg: "#ea580c", logo: "https://www.google.com/s2/favicons?domain=forasna.com&sz=64", domain: "forasna.com" },
-    indeed:   { label: "Indeed",   bg: "#2557a7", logo: "https://cdn.simpleicons.org/indeed/ffffff", domain: "indeed.com" },
-    glassdoor:{ label: "Glassdoor",bg: "#0CAA41", logo: "https://cdn.simpleicons.org/glassdoor/ffffff", domain: "glassdoor.com" },
-    naukrigulf:{label: "NaukriGulf",bg: "#1e40af", logo: "https://www.google.com/s2/favicons?domain=naukrigulf.com&sz=64", domain: "naukrigulf.com" },
-    tanqeeb:  { label: "Tanqeeb",  bg: "#0f766e", logo: "https://www.google.com/s2/favicons?domain=tanqeeb.com&sz=64", domain: "tanqeeb.com" },
+    linkedin:  { label: "LinkedIn",   bg: "#0A66C2", domain: "linkedin.com",   logo: "https://www.google.com/s2/favicons?domain=linkedin.com&sz=128" },
+    wuzzuf:    { label: "Wuzzuf",     bg: "#059669", domain: "wuzzuf.net",     logo: "https://www.google.com/s2/favicons?domain=wuzzuf.net&sz=128" },
+    bayt:      { label: "Bayt",       bg: "#e11d48", domain: "bayt.com",       logo: "https://www.google.com/s2/favicons?domain=bayt.com&sz=128" },
+    forasna:   { label: "Forasna",    bg: "#ea580c", domain: "forasna.com",    logo: "https://www.google.com/s2/favicons?domain=forasna.com&sz=128" },
+    indeed:    { label: "Indeed",     bg: "#2557a7", domain: "indeed.com",     logo: "https://www.google.com/s2/favicons?domain=indeed.com&sz=128" },
+    glassdoor: { label: "Glassdoor",  bg: "#0CAA41", domain: "glassdoor.com",  logo: "https://www.google.com/s2/favicons?domain=glassdoor.com&sz=128" },
+    naukrigulf:{ label: "NaukriGulf", bg: "#1e40af", domain: "naukrigulf.com", logo: "https://www.google.com/s2/favicons?domain=naukrigulf.com&sz=128" },
+    tanqeeb:   { label: "Tanqeeb",    bg: "#0f766e", domain: "tanqeeb.com",    logo: "https://www.google.com/s2/favicons?domain=tanqeeb.com&sz=128" },
   };
   const srcKey = String(job.source ?? "").toLowerCase();
   const src = sourceMeta[srcKey];
@@ -209,7 +209,7 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
               <img
                 src={src?.logo ?? `https://www.google.com/s2/favicons?domain=${srcKey}.com&sz=64`}
                 alt=""
-                className="h-3 w-3 rounded-sm bg-white/10 object-contain"
+                className="h-3 w-3 rounded-sm bg-white object-contain p-[1px]"
                 onError={(e) => ((e.currentTarget.style.display = "none"))}
               />
               {src?.label ?? job.source}

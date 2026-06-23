@@ -254,17 +254,29 @@ function CvViewer() {
     if (!pdfRef.current) return;
     setDownloading(true);
     try {
-      const html2pdf = (await import("html2pdf.js")).default;
-      await html2pdf()
-        .set({
-          margin: 0,
-          filename: `${data.title.replace(/[^\w\s-]/g, "")}.pdf`,
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        } as any)
-        .from(pdfRef.current)
-        .save();
+      // Use the browser's native print pipeline (renders Tailwind v4 oklch / RTL
+      // / web fonts correctly — unlike html2canvas which silently produces blank PDFs).
+      const styles = Array.from(
+        document.querySelectorAll('link[rel="stylesheet"], style')
+      )
+        .map((n) => n.outerHTML)
+        .join("\n");
+      const iframe = document.createElement("iframe");
+      iframe.style.cssText =
+        "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
+      document.body.appendChild(iframe);
+      const idoc = iframe.contentDocument!;
+      idoc.open();
+      idoc.write(`<!doctype html><html dir="${cvDir}" lang="${cvLang}"><head><meta charset="utf-8"><title>${data.title.replace(/[<>&"']/g, "")}</title>${styles}<style>@page{size:A4;margin:0}html,body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}</style></head><body>${pdfRef.current.outerHTML}</body></html>`);
+      idoc.close();
+      await new Promise<void>((resolve) => {
+        const ready = () => setTimeout(resolve, 500);
+        if (idoc.readyState === "complete") ready();
+        else iframe.onload = ready;
+      });
+      iframe.contentWindow!.focus();
+      iframe.contentWindow!.print();
+      setTimeout(() => iframe.remove(), 1500);
     } catch {
       toast.error(ar ? "تعذر إنشاء PDF" : "Could not generate PDF.");
     } finally {
@@ -278,27 +290,49 @@ function CvViewer() {
       const docx = await import("docx");
       const { saveAs } = await import("file-saver");
       const { Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType } = docx;
+      const rtl = cvLang === "ar";
+      const arabicFont = "Arial";
 
+      const run = (text: string, opts: any = {}) =>
+        new TextRun({ text, rightToLeft: rtl, font: rtl ? arabicFont : undefined, ...opts });
       const para = (text: string, opts: any = {}) =>
-        new Paragraph({ children: [new TextRun({ text, ...opts })], spacing: { after: 120 } });
+        new Paragraph({
+          bidirectional: rtl,
+          alignment: rtl ? AlignmentType.RIGHT : AlignmentType.LEFT,
+          children: [run(text, opts)],
+          spacing: { after: 120 },
+        });
       const h = (text: string, level: any = HeadingLevel.HEADING_2) =>
-        new Paragraph({ heading: level, children: [new TextRun({ text, bold: true })], spacing: { before: 240, after: 120 } });
+        new Paragraph({
+          heading: level,
+          bidirectional: rtl,
+          alignment: rtl ? AlignmentType.RIGHT : AlignmentType.LEFT,
+          children: [run(text, { bold: true })],
+          spacing: { before: 240, after: 120 },
+        });
       const bullet = (text: string) =>
-        new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text })] });
+        new Paragraph({
+          bullet: { level: 0 },
+          bidirectional: rtl,
+          alignment: rtl ? AlignmentType.RIGHT : AlignmentType.LEFT,
+          children: [run(text)],
+        });
 
       const children: any[] = [
         new Paragraph({
           alignment: AlignmentType.CENTER,
-          children: [new TextRun({ text: input.fullName || data.title.split(" — ")[0] || "", bold: true, size: 40 })],
+          bidirectional: rtl,
+          children: [run(input.fullName || data.title.split(" — ")[0] || "", { bold: true, size: 40 })],
         }),
         new Paragraph({
           alignment: AlignmentType.CENTER,
-          children: [new TextRun({ text: input.jobTitle || data.title.split(" — ")[1] || "", size: 26, color: "555555" })],
+          bidirectional: rtl,
+          children: [run(input.jobTitle || data.title.split(" — ")[1] || "", { size: 26, color: "555555" })],
           spacing: { after: 120 },
         }),
       ];
       const contact = [input.email, input.phone, input.location].filter(Boolean).join(" • ");
-      if (contact) children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: contact, size: 20, color: "777777" })], spacing: { after: 240 } }));
+      if (contact) children.push(new Paragraph({ alignment: AlignmentType.CENTER, bidirectional: rtl, children: [run(contact, { size: 20, color: "777777" })], spacing: { after: 240 } }));
 
       children.push(h(cvLang === "ar" ? "الملخص المهني" : "Summary"));
       children.push(para(out.summary));
@@ -308,8 +342,8 @@ function CvViewer() {
 
       children.push(h(cvLang === "ar" ? "الخبرة العملية" : "Professional Experience"));
       out.experience.forEach((e) => {
-        children.push(new Paragraph({ children: [new TextRun({ text: `${e.role} — ${e.company}`, bold: true })] }));
-        children.push(new Paragraph({ children: [new TextRun({ text: e.dates, italics: true, color: "888888" })], spacing: { after: 80 } }));
+        children.push(new Paragraph({ bidirectional: rtl, alignment: rtl ? AlignmentType.RIGHT : AlignmentType.LEFT, children: [run(`${e.role} — ${e.company}`, { bold: true })] }));
+        children.push(new Paragraph({ bidirectional: rtl, alignment: rtl ? AlignmentType.RIGHT : AlignmentType.LEFT, children: [run(e.dates, { italics: true, color: "888888" })], spacing: { after: 80 } }));
         e.bullets.forEach((b) => children.push(bullet(b)));
       });
 
@@ -320,7 +354,7 @@ function CvViewer() {
 
       children.push(h(cvLang === "ar" ? "المهارات" : "Skills"));
       out.skillsMatrix.forEach((g) => {
-        children.push(new Paragraph({ children: [new TextRun({ text: `${g.category}: `, bold: true }), new TextRun({ text: g.skills.join(", ") })], spacing: { after: 80 } }));
+        children.push(new Paragraph({ bidirectional: rtl, alignment: rtl ? AlignmentType.RIGHT : AlignmentType.LEFT, children: [run(`${g.category}: `, { bold: true }), run(g.skills.join(", "))], spacing: { after: 80 } }));
       });
 
       if (out.recommendations.length) {
@@ -328,7 +362,10 @@ function CvViewer() {
         out.recommendations.forEach((r) => children.push(bullet(r)));
       }
 
-      const doc = new Document({ sections: [{ children }] });
+      const doc = new Document({
+        styles: rtl ? { default: { document: { run: { font: arabicFont } } } } : undefined,
+        sections: [{ properties: {}, children }],
+      });
       const blob = await Packer.toBlob(doc);
       saveAs(blob, `${data.title.replace(/[^\w\s-]/g, "")}.docx`);
     } catch (e) {
