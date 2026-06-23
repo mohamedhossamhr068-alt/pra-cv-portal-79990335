@@ -254,17 +254,29 @@ function CvViewer() {
     if (!pdfRef.current) return;
     setDownloading(true);
     try {
-      const html2pdf = (await import("html2pdf.js")).default;
-      await html2pdf()
-        .set({
-          margin: 0,
-          filename: `${data.title.replace(/[^\w\s-]/g, "")}.pdf`,
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        } as any)
-        .from(pdfRef.current)
-        .save();
+      // Use the browser's native print pipeline (renders Tailwind v4 oklch / RTL
+      // / web fonts correctly — unlike html2canvas which silently produces blank PDFs).
+      const styles = Array.from(
+        document.querySelectorAll('link[rel="stylesheet"], style')
+      )
+        .map((n) => n.outerHTML)
+        .join("\n");
+      const iframe = document.createElement("iframe");
+      iframe.style.cssText =
+        "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
+      document.body.appendChild(iframe);
+      const idoc = iframe.contentDocument!;
+      idoc.open();
+      idoc.write(`<!doctype html><html dir="${cvDir}" lang="${cvLang}"><head><meta charset="utf-8"><title>${data.title.replace(/[<>&"']/g, "")}</title>${styles}<style>@page{size:A4;margin:0}html,body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}</style></head><body>${pdfRef.current.outerHTML}</body></html>`);
+      idoc.close();
+      await new Promise<void>((resolve) => {
+        const ready = () => setTimeout(resolve, 500);
+        if (idoc.readyState === "complete") ready();
+        else iframe.onload = ready;
+      });
+      iframe.contentWindow!.focus();
+      iframe.contentWindow!.print();
+      setTimeout(() => iframe.remove(), 1500);
     } catch {
       toast.error(ar ? "تعذر إنشاء PDF" : "Could not generate PDF.");
     } finally {
