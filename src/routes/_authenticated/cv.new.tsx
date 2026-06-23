@@ -53,14 +53,23 @@ function NewCv() {
     jobTitle: "",
     industry: "",
     seniority: "mid" as "junior" | "mid" | "senior" | "lead",
+    yearsExperience: "" as string,
     experience: "",
     skills: "",
+    education: "",
+    certifications: "",
+    englishLevel: "intermediate" as "none" | "basic" | "intermediate" | "advanced" | "fluent" | "native",
+    languages: [] as { name: string; level: string }[],
+    erp: "",
+    linkedinUrl: "",
+    portfolioUrl: "",
     template: "modern_executive" as "modern_executive" | "corporate_minimal" | "creative_professional",
     avatarDataUrl: "" as string,
     email: "",
     phone: "",
     location: "",
   });
+  const [langDraft, setLangDraft] = useState<{ name: string; level: string }>({ name: "", level: "intermediate" });
 
   const onPickAvatar = async (file: File) => {
     if (!file.type.startsWith("image/")) { toast.error(ar ? "ملف غير صالح" : "Invalid image"); return; }
