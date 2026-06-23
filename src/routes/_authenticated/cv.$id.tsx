@@ -1,13 +1,13 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { getCv } from "@/lib/cv.functions";
 import { useMeQuery } from "@/lib/me.hooks";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Download, ArrowLeft, Sparkles, Award, Briefcase, Wrench, Target, MessageCircle, TrendingUp, Globe2 } from "lucide-react";
+import { Download, ArrowLeft, Sparkles, Award, Briefcase, Wrench, Target, MessageCircle, TrendingUp, Globe2, Mail, Phone, MapPin, FileText, Gauge } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/cv/$id")({
@@ -31,8 +31,35 @@ type CvAnalysis = {
   platforms: { name: string; url: string; fitScore: number; reason: string }[];
 };
 
+// Compute an ATS compatibility score from CV structure and input metadata
+function computeAtsScore(out: CvOut, input: any): { score: number; checks: { label: string; pass: boolean; weight: number; tip?: string }[] } {
+  const ar = input?.locale === "ar";
+  const checks: { label: string; pass: boolean; weight: number; tip?: string }[] = [];
+  const has = (v: any) => typeof v === "string" && v.trim().length > 0;
+  checks.push({ label: ar ? "ملخص مهني واضح" : "Strong professional summary", pass: has(out.summary) && out.summary.length >= 80, weight: 12, tip: ar ? "اكتب ملخص بين 80-200 حرف يلخص خبرتك ومجالك." : "Add an 80–200 char summary." });
+  checks.push({ label: ar ? "كفاءات رئيسية (6+)" : "Core competencies (6+)", pass: (out.competencies?.length ?? 0) >= 6, weight: 10 });
+  checks.push({ label: ar ? "خبرات عملية مفصّلة" : "Structured experience entries", pass: (out.experience?.length ?? 0) >= 1 && out.experience.every((e) => e.bullets?.length >= 2), weight: 16, tip: ar ? "اضف نقطتين على الأقل لكل خبرة." : "At least 2 bullets per role." });
+  const allBullets = (out.experience ?? []).flatMap((e) => e.bullets ?? []).join(" ");
+  const hasMetrics = /\d/.test(allBullets);
+  checks.push({ label: ar ? "أرقام/نتائج قابلة للقياس" : "Quantified achievements", pass: hasMetrics, weight: 14, tip: ar ? "أدخل أرقام (%, ج.م, نسبة نمو، عدد فريق)." : "Add %, $, growth, team size." });
+  checks.push({ label: ar ? "إنجازات بارزة" : "Highlighted achievements", pass: (out.achievements?.length ?? 0) >= 2, weight: 8 });
+  checks.push({ label: ar ? "مهارات مصنّفة" : "Categorized skills matrix", pass: (out.skillsMatrix?.length ?? 0) >= 1, weight: 10 });
+  checks.push({ label: ar ? "بريد إلكتروني" : "Email present", pass: has(input?.email), weight: 8, tip: ar ? "أضف بريد إلكتروني للتواصل." : "Add a contact email." });
+  checks.push({ label: ar ? "رقم هاتف" : "Phone present", pass: has(input?.phone), weight: 6 });
+  checks.push({ label: ar ? "الموقع/المدينة" : "Location present", pass: has(input?.location), weight: 6 });
+  checks.push({ label: ar ? "صورة شخصية" : "Profile photo", pass: has(input?.avatarDataUrl), weight: 4 });
+  const wordCount = allBullets.split(/\s+/).filter(Boolean).length;
+  checks.push({ label: ar ? "محتوى وافٍ (150+ كلمة)" : "Sufficient content (150+ words)", pass: wordCount >= 150, weight: 6 });
+
+  const total = checks.reduce((s, c) => s + c.weight, 0);
+  const earned = checks.reduce((s, c) => s + (c.pass ? c.weight : 0), 0);
+  const score = Math.round((earned / total) * 100);
+  return { score, checks };
+}
+
 function CvViewer() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const ar = i18n.language === "ar";
   const { id } = useParams({ from: "/_authenticated/cv/$id" });
   const fn = useServerFn(getCv);
   const { data, isLoading } = useQuery({ queryKey: ["cv", id], queryFn: () => fn({ data: { id } }) });
@@ -40,10 +67,14 @@ function CvViewer() {
   const tenant = me.data?.tenant;
   const pdfRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
+  const [exportingDocx, setExportingDocx] = useState(false);
 
-  if (isLoading || !data) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
+  const out = (data?.output as CvOut) ?? null;
+  const input = (data as any)?.input ?? {};
+  const ats = useMemo(() => (out ? computeAtsScore(out, input) : null), [out, input]);
 
-  const out = data.output as CvOut;
+  if (isLoading || !data || !out) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
+
   const analysis = (data as any).analysis as CvAnalysis | null;
   const tpl = data.template as string;
   const accent = tenant?.primary_color ?? "#4f46e5";
@@ -63,33 +94,102 @@ function CvViewer() {
         } as any)
         .from(pdfRef.current)
         .save();
-
-    } catch (e: any) {
-      toast.error("Could not generate PDF. Try the print option.");
+    } catch {
+      toast.error(ar ? "تعذر إنشاء PDF" : "Could not generate PDF.");
     } finally {
       setDownloading(false);
     }
   };
 
+  const handleDownloadDocx = async () => {
+    setExportingDocx(true);
+    try {
+      const docx = await import("docx");
+      const { saveAs } = await import("file-saver");
+      const { Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType } = docx;
+
+      const para = (text: string, opts: any = {}) =>
+        new Paragraph({ children: [new TextRun({ text, ...opts })], spacing: { after: 120 } });
+      const h = (text: string, level: any = HeadingLevel.HEADING_2) =>
+        new Paragraph({ heading: level, children: [new TextRun({ text, bold: true })], spacing: { before: 240, after: 120 } });
+      const bullet = (text: string) =>
+        new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text })] });
+
+      const children: any[] = [
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: input.fullName || data.title.split(" — ")[0] || "", bold: true, size: 40 })],
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: input.jobTitle || data.title.split(" — ")[1] || "", size: 26, color: "555555" })],
+          spacing: { after: 120 },
+        }),
+      ];
+      const contact = [input.email, input.phone, input.location].filter(Boolean).join(" • ");
+      if (contact) children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: contact, size: 20, color: "777777" })], spacing: { after: 240 } }));
+
+      children.push(h(ar ? "الملخص المهني" : "Summary"));
+      children.push(para(out.summary));
+
+      children.push(h(ar ? "الكفاءات الأساسية" : "Core Competencies"));
+      children.push(para(out.competencies.join(" • ")));
+
+      children.push(h(ar ? "الخبرة العملية" : "Professional Experience"));
+      out.experience.forEach((e) => {
+        children.push(new Paragraph({ children: [new TextRun({ text: `${e.role} — ${e.company}`, bold: true })] }));
+        children.push(new Paragraph({ children: [new TextRun({ text: e.dates, italics: true, color: "888888" })], spacing: { after: 80 } }));
+        e.bullets.forEach((b) => children.push(bullet(b)));
+      });
+
+      if (out.achievements.length) {
+        children.push(h(ar ? "أبرز الإنجازات" : "Key Achievements"));
+        out.achievements.forEach((a) => children.push(bullet(a)));
+      }
+
+      children.push(h(ar ? "المهارات" : "Skills"));
+      out.skillsMatrix.forEach((g) => {
+        children.push(new Paragraph({ children: [new TextRun({ text: `${g.category}: `, bold: true }), new TextRun({ text: g.skills.join(", ") })], spacing: { after: 80 } }));
+      });
+
+      if (out.recommendations.length) {
+        children.push(h(ar ? "توصيات للتطوير" : "Recommendations"));
+        out.recommendations.forEach((r) => children.push(bullet(r)));
+      }
+
+      const doc = new Document({ sections: [{ children }] });
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `${data.title.replace(/[^\w\s-]/g, "")}.docx`);
+    } catch (e) {
+      toast.error(ar ? "تعذر إنشاء ملف وورد" : "Could not export Word file");
+    } finally {
+      setExportingDocx(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="mb-4 flex items-center justify-between gap-2 print:hidden">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
         <Link to="/cv">
           <Button variant="ghost" size="sm" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
-            Back
+            {ar ? "رجوع" : "Back"}
           </Button>
         </Link>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => window.print()} className="gap-2">
-            Print
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => window.print()} className="gap-2">{ar ? "طباعة" : "Print"}</Button>
+          <Button variant="outline" onClick={handleDownloadDocx} disabled={exportingDocx} className="gap-2">
+            <FileText className="h-4 w-4" />
+            {exportingDocx ? (ar ? "جارٍ التحضير…" : "Preparing…") : "Word (.docx)"}
           </Button>
-          <Button onClick={handleDownload} disabled={downloading} className="gap-2">
+          <Button onClick={handleDownload} disabled={downloading} className="gap-2 bg-gradient-to-r from-primary to-purple-600 text-white">
             <Download className="h-4 w-4" />
-            {downloading ? "Preparing…" : "Download PDF"}
+            {downloading ? (ar ? "جارٍ التحضير…" : "Preparing…") : "PDF"}
           </Button>
         </div>
       </div>
+
+      {ats && <AtsScoreCard score={ats.score} checks={ats.checks} ar={ar} />}
 
       <Card className="overflow-hidden print:border-0 print:shadow-none">
         <CardContent className="p-0">
@@ -101,17 +201,79 @@ function CvViewer() {
               title={data.title}
               tenantName={tenant?.name}
               logoUrl={tenant?.logo_url}
+              input={input}
             />
           </div>
         </CardContent>
       </Card>
 
-      {analysis && <AnalysisSection analysis={analysis} accent={accent} />}
+      {analysis && <AnalysisSection analysis={analysis} accent={accent} ar={ar} />}
     </div>
   );
 }
 
-function AnalysisSection({ analysis, accent }: { analysis: CvAnalysis; accent: string }) {
+function AtsScoreCard({ score, checks, ar }: { score: number; checks: { label: string; pass: boolean; weight: number; tip?: string }[]; ar: boolean }) {
+  const tier = score >= 85 ? { label: ar ? "ممتاز" : "Excellent", color: "#16a34a", glow: "from-emerald-400 to-green-600" }
+    : score >= 70 ? { label: ar ? "جيد جداً" : "Strong", color: "#0284c7", glow: "from-sky-400 to-blue-600" }
+    : score >= 55 ? { label: ar ? "متوسط" : "Average", color: "#d97706", glow: "from-amber-400 to-orange-600" }
+    : { label: ar ? "يحتاج تطوير" : "Needs work", color: "#dc2626", glow: "from-rose-400 to-red-600" };
+  const failed = checks.filter((c) => !c.pass && c.tip);
+  const C = 2 * Math.PI * 42;
+  const offset = C - (score / 100) * C;
+
+  return (
+    <Card className="mb-4 overflow-hidden border-0 bg-gradient-to-br from-background via-background to-primary/5 ring-1 ring-border print:hidden">
+      <CardContent className="grid gap-5 p-5 sm:grid-cols-[auto_1fr] sm:items-center">
+        <div className="relative mx-auto h-28 w-28">
+          <svg viewBox="0 0 100 100" className="h-28 w-28 -rotate-90">
+            <circle cx="50" cy="50" r="42" stroke="hsl(var(--muted))" strokeWidth="8" fill="none" />
+            <circle
+              cx="50" cy="50" r="42" stroke={tier.color} strokeWidth="8" fill="none" strokeLinecap="round"
+              strokeDasharray={C} strokeDashoffset={offset}
+              style={{ transition: "stroke-dashoffset 800ms ease" }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="text-3xl font-black tabular-nums" style={{ color: tier.color }}>{score}</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">ATS</div>
+          </div>
+        </div>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className={`inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r ${tier.glow} px-2.5 py-1 text-[11px] font-bold text-white shadow`}>
+              <Gauge className="h-3 w-3" />
+              {tier.label}
+            </div>
+            <h2 className="text-base font-bold">{ar ? "نتيجة توافق ATS" : "ATS Compatibility Score"}</h2>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {ar ? "تحليل مدى توافق سيرتك مع أنظمة فرز السير الذاتية المؤتمتة." : "How well your CV passes automated applicant tracking systems."}
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+            {checks.map((c, i) => (
+              <div key={i} className={`flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10.5px] ${c.pass ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300" : "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300"}`}>
+                <span>{c.pass ? "✓" : "○"}</span>
+                <span className="truncate">{c.label}</span>
+              </div>
+            ))}
+          </div>
+          {failed.length > 0 && (
+            <details className="mt-3 rounded-lg border bg-card p-3 text-xs">
+              <summary className="cursor-pointer font-semibold text-foreground">
+                💡 {ar ? `اقتراحات لرفع النتيجة (${failed.length})` : `Tips to boost your score (${failed.length})`}
+              </summary>
+              <ul className="mt-2 space-y-1 ps-4 text-muted-foreground">
+                {failed.map((f, i) => <li key={i} className="list-disc"><span className="text-foreground font-medium">{f.label}:</span> {f.tip}</li>)}
+              </ul>
+            </details>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AnalysisSection({ analysis, accent, ar }: { analysis: CvAnalysis; accent: string; ar: boolean }) {
   return (
     <div className="mt-6 grid gap-4 print:hidden">
       <Card>
@@ -120,17 +282,17 @@ function AnalysisSection({ analysis, accent }: { analysis: CvAnalysis; accent: s
             <div className="grid h-9 w-9 place-items-center rounded-lg" style={{ background: `${accent}15`, color: accent }}>
               <Sparkles className="h-4 w-4" />
             </div>
-            <h2 className="text-lg font-bold">تحليل ذكي للسيرة الذاتية</h2>
+            <h2 className="text-lg font-bold">{ar ? "تحليل ذكي للسيرة الذاتية" : "AI Career Insights"}</h2>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <InsightBox title="نقاط القوة" items={analysis.strengths} color="emerald" icon={<Award className="h-4 w-4" />} />
-            <InsightBox title="نقاط للتحسين" items={analysis.weaknesses} color="amber" icon={<TrendingUp className="h-4 w-4" />} />
+            <InsightBox title={ar ? "نقاط القوة" : "Strengths"} items={analysis.strengths} color="emerald" icon={<Award className="h-4 w-4" />} />
+            <InsightBox title={ar ? "نقاط للتحسين" : "Areas to improve"} items={analysis.weaknesses} color="amber" icon={<TrendingUp className="h-4 w-4" />} />
           </div>
 
           <div>
             <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
-              <MessageCircle className="h-4 w-4 text-primary" /> أسئلة محتملة في الإنترفيو
+              <MessageCircle className="h-4 w-4 text-primary" /> {ar ? "أسئلة محتملة في الإنترفيو" : "Likely interview questions"}
             </div>
             <div className="grid gap-2">
               {analysis.interviewQuestions.map((q, i) => (
@@ -149,7 +311,7 @@ function AnalysisSection({ analysis, accent }: { analysis: CvAnalysis; accent: s
 
           <div>
             <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
-              <TrendingUp className="h-4 w-4 text-emerald-600" /> خطة تطوير مقترحة
+              <TrendingUp className="h-4 w-4 text-emerald-600" /> {ar ? "خطة تطوير مقترحة" : "Improvement plan"}
             </div>
             <ol className="space-y-1.5 ps-5 text-sm">
               {analysis.improvementPlan.map((s, i) => (
@@ -160,7 +322,7 @@ function AnalysisSection({ analysis, accent }: { analysis: CvAnalysis; accent: s
 
           <div>
             <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
-              <Globe2 className="h-4 w-4 text-primary" /> منصات مرشحة للتقديم
+              <Globe2 className="h-4 w-4 text-primary" /> {ar ? "منصات مرشحة للتقديم" : "Recommended job platforms"}
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               {analysis.platforms.map((p) => {
@@ -226,6 +388,7 @@ function CvTemplate({
   title,
   tenantName,
   logoUrl,
+  input,
 }: {
   output: CvOut;
   template: string;
@@ -233,11 +396,18 @@ function CvTemplate({
   title: string;
   tenantName?: string;
   logoUrl?: string | null;
+  input: any;
 }) {
   const { t } = useTranslation();
   const [name, target] = title.split(" — ");
   const isCreative = template === "creative_professional";
   const isMinimal = template === "corporate_minimal";
+  const avatar = input?.avatarDataUrl as string | undefined;
+  const contactItems = [
+    input?.email ? { icon: <Mail className="h-3 w-3" />, text: input.email } : null,
+    input?.phone ? { icon: <Phone className="h-3 w-3" />, text: input.phone } : null,
+    input?.location ? { icon: <MapPin className="h-3 w-3" />, text: input.location } : null,
+  ].filter(Boolean) as { icon: any; text: string }[];
 
   return (
     <div className="font-sans text-[12.5px] leading-[1.6] text-neutral-800" style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}>
@@ -254,8 +424,16 @@ function CvTemplate({
           borderBottom: isMinimal ? `2px solid ${accent}` : "none",
         }}
       >
-        <div className="flex items-start gap-4">
-          {logoUrl && <img src={logoUrl} alt="" className="h-12 w-12 rounded-lg object-contain bg-white/90 p-1" />}
+        <div className="flex items-start gap-5">
+          {avatar && (
+            <img
+              src={avatar}
+              alt=""
+              className="h-24 w-24 shrink-0 rounded-full object-cover"
+              style={{ border: `3px solid ${isCreative ? "rgba(255,255,255,0.8)" : accent}`, boxShadow: "0 4px 12px rgba(0,0,0,0.12)" }}
+            />
+          )}
+          {!avatar && logoUrl && <img src={logoUrl} alt="" className="h-12 w-12 rounded-lg object-contain bg-white/90 p-1" />}
           <div className="min-w-0 flex-1">
             <h1 className="text-3xl font-bold tracking-tight" style={{ color: isCreative ? "#fff" : "#0f172a" }}>
               {name}
@@ -263,8 +441,15 @@ function CvTemplate({
             <div className="mt-1 text-base font-medium" style={{ color: isCreative ? "rgba(255,255,255,0.92)" : accent }}>
               {target}
             </div>
+            {contactItems.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px]" style={{ color: isCreative ? "rgba(255,255,255,0.88)" : "#475569" }}>
+                {contactItems.map((c, i) => (
+                  <span key={i} className="inline-flex items-center gap-1.5">{c.icon}{c.text}</span>
+                ))}
+              </div>
+            )}
             {tenantName && (
-              <div className="mt-2 text-xs uppercase tracking-[0.18em]" style={{ color: isCreative ? "rgba(255,255,255,0.75)" : "#64748b" }}>
+              <div className="mt-2 text-[10px] uppercase tracking-[0.18em]" style={{ color: isCreative ? "rgba(255,255,255,0.7)" : "#94a3b8" }}>
                 {tenantName}
               </div>
             )}
@@ -273,35 +458,25 @@ function CvTemplate({
       </header>
 
       <div className="px-10 py-8 space-y-7">
-        {/* Summary */}
         <Section icon={<Sparkles className="h-4 w-4" />} title={t("cv.summary")} accent={accent}>
           <p className="text-[13px] leading-[1.7] text-neutral-700">{output.summary}</p>
         </Section>
 
-        {/* Competencies */}
         <Section icon={<Target className="h-4 w-4" />} title={t("cv.competencies")} accent={accent}>
           <div className="flex flex-wrap gap-1.5">
             {output.competencies.map((c) => (
-              <span
-                key={c}
-                className="rounded-md px-2.5 py-1 text-[11px] font-medium"
-                style={{ background: `${accent}15`, color: accent }}
-              >
+              <span key={c} className="rounded-md px-2.5 py-1 text-[11px] font-medium" style={{ background: `${accent}15`, color: accent }}>
                 {c}
               </span>
             ))}
           </div>
         </Section>
 
-        {/* Experience */}
         <Section icon={<Briefcase className="h-4 w-4" />} title={t("cv.professional")} accent={accent}>
           <div className="space-y-5">
             {output.experience.map((e, i) => (
               <div key={i} className="relative ps-4" style={{ borderInlineStart: `2px solid ${accent}30` }}>
-                <div
-                  className="absolute top-1.5 h-2 w-2 rounded-full"
-                  style={{ background: accent, insetInlineStart: "-5px" }}
-                />
+                <div className="absolute top-1.5 h-2 w-2 rounded-full" style={{ background: accent, insetInlineStart: "-5px" }} />
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <div className="font-semibold text-neutral-900">
                     {e.role}
@@ -310,27 +485,21 @@ function CvTemplate({
                   <div className="text-[11px] font-medium uppercase tracking-wider text-neutral-500">{e.dates}</div>
                 </div>
                 <ul className="ms-4 mt-1.5 list-disc space-y-1 text-neutral-700">
-                  {e.bullets.map((b, j) => (
-                    <li key={j}>{b}</li>
-                  ))}
+                  {e.bullets.map((b, j) => (<li key={j}>{b}</li>))}
                 </ul>
               </div>
             ))}
           </div>
         </Section>
 
-        {/* Achievements */}
         {output.achievements.length > 0 && (
           <Section icon={<Award className="h-4 w-4" />} title={t("cv.achievements")} accent={accent}>
             <ul className="ms-4 list-disc space-y-1 text-neutral-700">
-              {output.achievements.map((a, i) => (
-                <li key={i}>{a}</li>
-              ))}
+              {output.achievements.map((a, i) => (<li key={i}>{a}</li>))}
             </ul>
           </Section>
         )}
 
-        {/* Skills matrix */}
         <Section icon={<Wrench className="h-4 w-4" />} title={t("cv.skillsMatrix")} accent={accent}>
           <div className="grid gap-3 sm:grid-cols-2">
             {output.skillsMatrix.map((g) => (
@@ -344,17 +513,11 @@ function CvTemplate({
           </div>
         </Section>
 
-        {/* AI Recommendations */}
         {output.recommendations.length > 0 && (
           <Section icon={<Sparkles className="h-4 w-4" />} title={t("cv.recommendations")} accent={accent}>
-            <div
-              className="rounded-lg border-l-4 p-4"
-              style={{ borderColor: accent, background: `${accent}08` }}
-            >
+            <div className="rounded-lg border-l-4 p-4" style={{ borderColor: accent, background: `${accent}08` }}>
               <ul className="ms-4 list-disc space-y-1.5 text-neutral-700">
-                {output.recommendations.map((r, i) => (
-                  <li key={i}>{r}</li>
-                ))}
+                {output.recommendations.map((r, i) => (<li key={i}>{r}</li>))}
               </ul>
             </div>
           </Section>
@@ -365,15 +528,9 @@ function CvTemplate({
 }
 
 function Section({
-  icon,
-  title,
-  accent,
-  children,
+  icon, title, accent, children,
 }: {
-  icon: React.ReactNode;
-  title: string;
-  accent: string;
-  children: React.ReactNode;
+  icon: React.ReactNode; title: string; accent: string; children: React.ReactNode;
 }) {
   return (
     <section>
