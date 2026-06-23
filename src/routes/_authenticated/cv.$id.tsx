@@ -254,35 +254,54 @@ function CvViewer() {
     if (!pdfRef.current) return;
     setDownloading(true);
     try {
-      // Use html2canvas-pro (oklch-aware) + jsPDF to actually DOWNLOAD a PDF file,
-      // not just open the browser print dialog.
       const [{ default: html2canvas }, jsPDFmod] = await Promise.all([
         import("html2canvas-pro"),
         import("jspdf"),
       ]);
       const jsPDF = (jsPDFmod as any).jsPDF ?? (jsPDFmod as any).default;
       const node = pdfRef.current;
+
+      // A4 @ 96dpi ≈ 794 × 1123 px. Lock render width so the layout matches A4.
+      const A4_W_PX = 794;
+      const A4_H_PX = 1123;
+
       const canvas = await html2canvas(node, {
-        scale: 2,
+        scale: 3,
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
+        windowWidth: A4_W_PX,
+        width: A4_W_PX,
       });
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const imgH = (canvas.height * pageW) / canvas.width;
-      let heightLeft = imgH;
-      let position = 0;
-      pdf.addImage(imgData, "JPEG", 0, position, pageW, imgH);
-      heightLeft -= pageH;
-      while (heightLeft > 0) {
-        position = heightLeft - imgH;
-        pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, position, pageW, imgH);
-        heightLeft -= pageH;
+
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
+      const pageWmm = pdf.internal.pageSize.getWidth();
+      const pageHmm = pdf.internal.pageSize.getHeight();
+      const pxPerMm = canvas.width / pageWmm;
+      const pageHpx = Math.floor(A4_H_PX * (canvas.width / A4_W_PX));
+
+      // Slice the tall canvas into clean A4-sized pages so text stays crisp
+      // and pages don't get stretched into a single huge image.
+      let renderedPx = 0;
+      let pageIndex = 0;
+      while (renderedPx < canvas.height) {
+        const sliceH = Math.min(pageHpx, canvas.height - renderedPx);
+        const pageCanvas = document.createElement("canvas");
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = sliceH;
+        const ctx = pageCanvas.getContext("2d");
+        if (!ctx) break;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        ctx.drawImage(canvas, 0, renderedPx, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        const imgData = pageCanvas.toDataURL("image/png");
+        if (pageIndex > 0) pdf.addPage();
+        const sliceHmm = sliceH / pxPerMm;
+        pdf.addImage(imgData, "PNG", 0, 0, pageWmm, Math.min(sliceHmm, pageHmm));
+        renderedPx += sliceH;
+        pageIndex += 1;
       }
+
       const filename = `${data.title.replace(/[^\w\s-]/g, "").trim() || "cv"}.pdf`;
       pdf.save(filename);
     } catch (err) {
