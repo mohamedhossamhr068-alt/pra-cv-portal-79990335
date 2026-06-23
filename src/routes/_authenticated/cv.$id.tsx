@@ -346,6 +346,8 @@ function CvViewer() {
     if (translatedLang && otherLang === baseLang) {
       setTranslated(null);
       setTranslatedLang(null);
+      // Persist that the user prefers the original locale for print
+      saveStyleFn({ data: { id, print_locale: baseLang } }).catch(() => {});
       return;
     }
     setTranslating(true);
@@ -353,12 +355,32 @@ function CvViewer() {
       const res: any = await translateFn({ data: { id, target: otherLang } });
       setTranslated({ output: res.output, analysis: res.analysis ?? null });
       setTranslatedLang(otherLang);
+      // Persist the chosen print/display language
+      saveStyleFn({ data: { id, print_locale: otherLang } }).catch(() => {});
     } catch (e: any) {
       toast.error(e?.message ?? (ar ? "تعذر الترجمة" : "Translation failed"));
     } finally {
       setTranslating(false);
     }
   };
+
+  // On first load, if the user previously chose a different print language, auto-translate to it
+  useEffect(() => {
+    const saved = (data as any)?.print_locale as "ar" | "en" | undefined;
+    if (!saved) return;
+    if (translatedLang) return;
+    if (saved === baseLang) return;
+    if (translating) return;
+    setTranslating(true);
+    translateFn({ data: { id, target: saved } })
+      .then((res: any) => {
+        setTranslated({ output: res.output, analysis: res.analysis ?? null });
+        setTranslatedLang(saved);
+      })
+      .catch(() => {})
+      .finally(() => setTranslating(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
 
   return (
     <div className="mx-auto max-w-4xl">
