@@ -254,42 +254,52 @@ function CvViewer() {
     if (!pdfRef.current) return;
     setDownloading(true);
     try {
-      // Use the browser's native print pipeline (renders Tailwind v4 oklch / RTL
-      // / web fonts correctly — unlike html2canvas which silently produces blank PDFs).
-      const styles = Array.from(
-        document.querySelectorAll('link[rel="stylesheet"], style')
-      )
-        .map((n) => n.outerHTML)
-        .join("\n");
-      const iframe = document.createElement("iframe");
-      iframe.style.cssText =
-        "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
-      document.body.appendChild(iframe);
-      const idoc = iframe.contentDocument!;
-      idoc.open();
-      idoc.write(`<!doctype html><html dir="${cvDir}" lang="${cvLang}"><head><meta charset="utf-8"><title>${data.title.replace(/[<>&"']/g, "")}</title>${styles}<style>@page{size:A4;margin:0}html,body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}</style></head><body>${pdfRef.current.outerHTML}</body></html>`);
-      idoc.close();
-      await new Promise<void>((resolve) => {
-        const ready = () => setTimeout(resolve, 500);
-        if (idoc.readyState === "complete") ready();
-        else iframe.onload = ready;
+      // Use html2canvas-pro (oklch-aware) + jsPDF to actually DOWNLOAD a PDF file,
+      // not just open the browser print dialog.
+      const [{ default: html2canvas }, jsPDFmod] = await Promise.all([
+        import("html2canvas-pro"),
+        import("jspdf"),
+      ]);
+      const jsPDF = (jsPDFmod as any).jsPDF ?? (jsPDFmod as any).default;
+      const node = pdfRef.current;
+      const canvas = await html2canvas(node, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
       });
-      iframe.contentWindow!.focus();
-      iframe.contentWindow!.print();
-      setTimeout(() => iframe.remove(), 1500);
-    } catch {
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgH = (canvas.height * pageW) / canvas.width;
+      let heightLeft = imgH;
+      let position = 0;
+      pdf.addImage(imgData, "JPEG", 0, position, pageW, imgH);
+      heightLeft -= pageH;
+      while (heightLeft > 0) {
+        position = heightLeft - imgH;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, position, pageW, imgH);
+        heightLeft -= pageH;
+      }
+      const filename = `${data.title.replace(/[^\w\s-]/g, "").trim() || "cv"}.pdf`;
+      pdf.save(filename);
+    } catch (err) {
+      console.error("PDF export failed", err);
       toast.error(ar ? "تعذر إنشاء PDF" : "Could not generate PDF.");
     } finally {
       setDownloading(false);
     }
   };
 
+
   const handleDownloadDocx = async () => {
     setExportingDocx(true);
     try {
       const docx = await import("docx");
       const { saveAs } = await import("file-saver");
-      const { Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType } = docx;
+      const { Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType, ImageRun } = docx;
       const rtl = cvLang === "ar";
       const arabicFont = "Arial";
 
@@ -318,7 +328,34 @@ function CvViewer() {
           children: [run(text)],
         });
 
-      const children: any[] = [
+      const children: any[] = [];
+
+      // Embed profile photo at the top (if user uploaded one).
+      const avatarDataUrl = (input?.avatarDataUrl as string | undefined) || "";
+      if (avatarDataUrl.startsWith("data:image/")) {
+        try {
+          const m = avatarDataUrl.match(/^data:image\/(png|jpeg|jpg|gif|webp);base64,(.+)$/i);
+          if (m) {
+            const ext = m[1].toLowerCase();
+            const type = (ext === "jpg" ? "jpeg" : ext) as "png" | "jpeg" | "gif" | "webp";
+            const binary = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0));
+            children.push(
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                  new ImageRun({
+                    type,
+                    data: binary,
+                    transformation: { width: 110, height: 110 },
+                  } as any),
+                ],
+              }),
+            );
+          }
+        } catch {}
+      }
+
+      children.push(
         new Paragraph({
           alignment: AlignmentType.CENTER,
           bidirectional: rtl,
@@ -330,9 +367,15 @@ function CvViewer() {
           children: [run(input.jobTitle || data.title.split(" — ")[1] || "", { size: 26, color: "555555" })],
           spacing: { after: 120 },
         }),
-      ];
+      );
       const contact = [input.email, input.phone, input.location].filter(Boolean).join(" • ");
-      if (contact) children.push(new Paragraph({ alignment: AlignmentType.CENTER, bidirectional: rtl, children: [run(contact, { size: 20, color: "777777" })], spacing: { after: 240 } }));
+      if (contact) children.push(new Paragraph({ alignment: AlignmentType.CENTER, bidirectional: rtl, children: [run(contact, { size: 20, color: "777777" })], spacing: { after: 120 } }));
+      const personal = [
+        input.birthDate ? `${rtl ? "تاريخ الميلاد" : "DOB"}: ${input.birthDate}` : null,
+        input.maritalStatus ? `${rtl ? "الحالة الاجتماعية" : "Marital status"}: ${input.maritalStatus}` : null,
+      ].filter(Boolean).join(" • ");
+      if (personal) children.push(new Paragraph({ alignment: AlignmentType.CENTER, bidirectional: rtl, children: [run(personal, { size: 18, color: "888888" })], spacing: { after: 240 } }));
+
 
       children.push(h(cvLang === "ar" ? "الملخص المهني" : "Summary"));
       children.push(para(out.summary));
@@ -685,11 +728,17 @@ function CvTemplate({
   const isElegant = template === "elegant_serif";
   const isMono = template === "mono_dark";
   const avatar = input?.avatarDataUrl as string | undefined;
+  const personalLabels = (input?.locale === "ar")
+    ? { dob: "تاريخ الميلاد", marital: "الحالة الاجتماعية" }
+    : { dob: "DOB", marital: "Marital status" };
   const contactItems = [
     input?.email ? { icon: <Mail className="h-3 w-3" />, text: input.email } : null,
     input?.phone ? { icon: <Phone className="h-3 w-3" />, text: input.phone } : null,
     input?.location ? { icon: <MapPin className="h-3 w-3" />, text: input.location } : null,
+    input?.birthDate ? { icon: <FileText className="h-3 w-3" />, text: `${personalLabels.dob}: ${input.birthDate}` } : null,
+    input?.maritalStatus ? { icon: <FileText className="h-3 w-3" />, text: `${personalLabels.marital}: ${input.maritalStatus}` } : null,
   ].filter(Boolean) as { icon: any; text: string }[];
+
 
   // Sidebar layout: completely different structure
   if (isSidebar) {

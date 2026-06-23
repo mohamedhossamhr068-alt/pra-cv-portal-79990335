@@ -63,12 +63,15 @@ function NewCv() {
     erp: "",
     linkedinUrl: "",
     portfolioUrl: "",
+    birthDate: "",
+    maritalStatus: "" as "" | "single" | "married" | "divorced" | "widowed",
     template: "modern_executive" as "modern_executive" | "corporate_minimal" | "creative_professional",
     avatarDataUrl: "" as string,
     email: "",
     phone: "",
     location: "",
   });
+
   const [langDraft, setLangDraft] = useState<{ name: string; level: string }>({ name: "", level: "intermediate" });
 
   const onPickAvatar = async (file: File) => {
@@ -105,9 +108,12 @@ function NewCv() {
           certifications: form.certifications || undefined,
           linkedinUrl: form.linkedinUrl || undefined,
           portfolioUrl: form.portfolioUrl || undefined,
+          birthDate: form.birthDate || undefined,
+          maritalStatus: form.maritalStatus || undefined,
           locale: (ar ? "ar" : "en") as "en" | "ar",
         },
       }),
+
     onSuccess: (res) => {
       toast.success(ar ? "تم إنشاء السيرة" : "CV generated");
       navigate({ to: "/cv/$id", params: { id: res.id } });
@@ -196,9 +202,26 @@ function NewCv() {
             <Input placeholder={ar ? "القاهرة، مصر" : "Cairo, Egypt"} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
           </div>
           <div>
+            <Label>{ar ? "تاريخ الميلاد" : "Date of birth"}</Label>
+            <Input type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} />
+          </div>
+          <div>
+            <Label>{ar ? "الحالة الاجتماعية" : "Marital status"}</Label>
+            <Select value={form.maritalStatus} onValueChange={(v: any) => setForm({ ...form, maritalStatus: v })}>
+              <SelectTrigger><SelectValue placeholder={ar ? "اختر" : "Select"} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="single">{ar ? "أعزب/عزباء" : "Single"}</SelectItem>
+                <SelectItem value="married">{ar ? "متزوج/ة" : "Married"}</SelectItem>
+                <SelectItem value="divorced">{ar ? "مطلق/ة" : "Divorced"}</SelectItem>
+                <SelectItem value="widowed">{ar ? "أرمل/ة" : "Widowed"}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <Label>{t("cv.industry")}</Label>
             <Input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} />
           </div>
+
           <div className="sm:col-span-2">
             <Label>{t("cv.seniority")}</Label>
             <Select value={form.seniority} onValueChange={(v: any) => setForm({ ...form, seniority: v })}>

@@ -46,7 +46,10 @@ const CvInputSchema = z.object({
   certifications: z.string().max(600).optional(),
   linkedinUrl: z.string().max(200).optional(),
   portfolioUrl: z.string().max(200).optional(),
+  birthDate: z.string().max(40).optional(),
+  maritalStatus: z.string().max(40).optional(),
 });
+
 
 type CvInput = z.infer<typeof CvInputSchema>;
 type CvOutput = z.infer<typeof CvOutputSchema>;
@@ -280,8 +283,15 @@ Education: ${data.education || "not provided"}
 Certifications: ${data.certifications || "not provided"}
 LinkedIn: ${data.linkedinUrl || "not provided"}
 Portfolio: ${data.portfolioUrl || "not provided"}
+Date of birth: ${data.birthDate || "not provided"}
+Marital status: ${data.maritalStatus || "not provided"}
 Skills (raw): ${data.skills}
-Experience (raw): ${data.experience}
+Experience (raw — companies, dates, responsibilities described by candidate):
+${data.experience}
+
+IMPORTANT: From the "Experience (raw)" text, extract each distinct company/employer the candidate mentions and create one entry per company in the "experience" array, populating "role", "company", and "dates" exactly as the candidate wrote them. Never merge multiple jobs into one entry. If dates are missing for a job, write "Not specified" — do NOT invent dates.
+
+
 
 Produce an ATS-optimized CV with exactly these JSON keys:
 {
