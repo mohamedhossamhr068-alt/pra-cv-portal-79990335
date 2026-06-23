@@ -217,7 +217,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           )}
           <Button
-          <Button
             variant="outline"
             size="sm"
             onClick={() => setLocale(i18n.language === "ar" ? "en" : "ar")}
