@@ -175,7 +175,7 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
           <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{job.location}</span>
           {job.employment_type && <span>· {job.employment_type}</span>}
           {daysAgo !== null && (
-            <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{daysAgo === 0 ? "اليوم" : `قبل ${daysAgo} يوم`}</span>
+            <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{daysAgo === 0 ? t("jobs.today") : t("jobs.daysAgo", { n: daysAgo })}</span>
           )}
           {job.source && (
             <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${sourceColor[job.source] ?? "bg-muted text-foreground"}`}>
