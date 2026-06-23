@@ -107,7 +107,7 @@ function Jobs() {
       ) : showMatches ? (
         <div className="grid gap-3 sm:grid-cols-2">
           {data!.map((m: any) => (
-            <JobCard key={m.job_id} job={m.job} score={m.score} reasoning={m.reasoning} />
+            <JobCard key={m.job_id} job={m.job} score={m.score} reasoning={m.reasoning} t={t} />
           ))}
         </div>
       ) : (
