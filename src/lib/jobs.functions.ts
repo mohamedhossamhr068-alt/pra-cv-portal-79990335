@@ -41,7 +41,7 @@ export const runMatch = createServerFn({ method: "POST" })
       (out?.skillsMatrix ?? []).flatMap((g: any) => g.skills ?? []).map((s: string) => s.toLowerCase()),
     );
 
-    const { data: jobs } = await supabase.from("job_listings").select("*").limit(200);
+    const { data: jobs } = await supabase.from("job_listings").select("*").eq("country", "EG").limit(200);
     const titleTokens = new Set<string>(
       String(((out as any)?.experience?.[0]?.role ?? "") + " " + ((out as any)?.summary ?? ""))
         .toLowerCase()
@@ -74,6 +74,11 @@ export const runMatch = createServerFn({ method: "POST" })
         top.map((t) => ({ user_id: userId, job_id: t.job_id, score: t.score, reasoning: t.reasoning })),
       );
     }
+    // Deduct credits
+    await supabase
+      .from("profiles")
+      .update({ credits: (profile?.credits ?? 0) - MATCH_CREDIT_COST })
+      .eq("id", userId);
     return { matched: top.length };
   });
 
