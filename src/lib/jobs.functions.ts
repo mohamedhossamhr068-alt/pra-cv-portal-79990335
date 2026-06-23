@@ -31,18 +31,31 @@ export const runMatch = createServerFn({ method: "POST" })
     );
 
     const { data: jobs } = await supabase.from("job_listings").select("*").limit(200);
+    const titleTokens = new Set<string>(
+      String(((out as any)?.experience?.[0]?.role ?? "") + " " + ((out as any)?.summary ?? ""))
+        .toLowerCase()
+        .split(/[^a-z0-9]+/)
+        .filter((t) => t.length > 2),
+    );
     const scored = (jobs ?? []).map((job) => {
       const skills: string[] = job.skills ?? [];
       const overlap = skills.filter((s) => userSkills.has(s.toLowerCase())).length;
-      const score = skills.length ? Math.round((overlap / skills.length) * 100) : 0;
+      const titleHit = String(job.title ?? "")
+        .toLowerCase()
+        .split(/\s+/)
+        .some((t) => titleTokens.has(t))
+        ? 15
+        : 0;
+      const skillScore = skills.length ? Math.round((overlap / skills.length) * 100) : 0;
+      const score = Math.min(99, skillScore + titleHit);
       return {
         job_id: job.id,
         score,
-        reasoning: `${overlap} of ${skills.length} required skills overlap.`,
+        reasoning: `${overlap} of ${skills.length} required skills overlap${titleHit ? " · role title match" : ""}.`,
       };
     });
     scored.sort((a, b) => b.score - a.score);
-    const top = scored.slice(0, 20).filter((s) => s.score > 0);
+    const top = scored.slice(0, 20);
 
     if (top.length > 0) {
       await supabase.from("job_matches").delete().eq("user_id", userId);
@@ -52,6 +65,7 @@ export const runMatch = createServerFn({ method: "POST" })
     }
     return { matched: top.length };
   });
+
 
 export const listMatches = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

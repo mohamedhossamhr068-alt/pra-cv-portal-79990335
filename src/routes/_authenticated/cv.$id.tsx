@@ -1,12 +1,14 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useRef, useState } from "react";
 import { getCv } from "@/lib/cv.functions";
 import { useMeQuery } from "@/lib/me.hooks";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Printer, ArrowLeft } from "lucide-react";
+import { Download, ArrowLeft, Mail, Phone, Sparkles, Award, Briefcase, Wrench, Target } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/cv/$id")({
   component: CvViewer,
@@ -28,6 +30,8 @@ function CvViewer() {
   const { data, isLoading } = useQuery({ queryKey: ["cv", id], queryFn: () => fn({ data: { id } }) });
   const me = useMeQuery();
   const tenant = me.data?.tenant;
+  const pdfRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
 
   if (isLoading || !data) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
 
@@ -35,20 +39,60 @@ function CvViewer() {
   const tpl = data.template as string;
   const accent = tenant?.primary_color ?? "#4f46e5";
 
+  const handleDownload = async () => {
+    if (!pdfRef.current) return;
+    setDownloading(true);
+    try {
+      const html2pdf = (await import("html2pdf.js")).default;
+      await html2pdf()
+        .set({
+          margin: 0,
+          filename: `${data.title.replace(/[^\w\s-]/g, "")}.pdf`,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        } as any)
+        .from(pdfRef.current)
+        .save();
+
+    } catch (e: any) {
+      toast.error("Could not generate PDF. Try the print option.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-4 flex items-center justify-between gap-2 print:hidden">
-        <Link to="/cv"><Button variant="ghost" size="sm" className="gap-2"><ArrowLeft className="h-4 w-4" />Back</Button></Link>
-        <Button onClick={() => window.print()} className="gap-2"><Printer className="h-4 w-4" />{t("cv.print")}</Button>
+        <Link to="/cv">
+          <Button variant="ghost" size="sm" className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+        </Link>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => window.print()} className="gap-2">
+            Print
+          </Button>
+          <Button onClick={handleDownload} disabled={downloading} className="gap-2">
+            <Download className="h-4 w-4" />
+            {downloading ? "Preparing…" : "Download PDF"}
+          </Button>
+        </div>
       </div>
 
       <Card className="overflow-hidden print:border-0 print:shadow-none">
-        <CardContent className={`p-0`}>
-          <div
-            className={`p-10 ${tpl === "creative_professional" ? "bg-card" : "bg-card"}`}
-            style={{ minHeight: 1000 }}
-          >
-            <CvTemplate output={out} template={tpl} accent={accent} title={data.title} tenantName={tenant?.name} logoUrl={tenant?.logo_url} />
+        <CardContent className="p-0">
+          <div ref={pdfRef} className="bg-white text-neutral-900" style={{ width: "100%" }}>
+            <CvTemplate
+              output={out}
+              template={tpl}
+              accent={accent}
+              title={data.title}
+              tenantName={tenant?.name}
+              logoUrl={tenant?.logo_url}
+            />
           </div>
         </CardContent>
       </Card>
@@ -77,82 +121,150 @@ function CvTemplate({
   const isMinimal = template === "corporate_minimal";
 
   return (
-    <div className="font-sans text-[13px] leading-relaxed text-foreground">
+    <div className="font-sans text-[12.5px] leading-[1.6] text-neutral-800" style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}>
+      {/* Header */}
       <header
-        className={`mb-6 flex items-center gap-4 ${isCreative ? "rounded-xl p-5 text-white" : "border-b pb-4"}`}
-        style={isCreative ? { background: `linear-gradient(135deg, ${accent}, ${accent}cc)` } : {}}
+        className="px-10 py-8"
+        style={{
+          background: isCreative
+            ? `linear-gradient(135deg, ${accent} 0%, ${accent}dd 100%)`
+            : isMinimal
+            ? "#ffffff"
+            : `linear-gradient(180deg, ${accent}10 0%, transparent 100%)`,
+          color: isCreative ? "#ffffff" : "#0f172a",
+          borderBottom: isMinimal ? `2px solid ${accent}` : "none",
+        }}
       >
-        {logoUrl ? <img src={logoUrl} alt="" className="h-10 w-10 rounded object-contain" /> : null}
-        <div className="min-w-0 flex-1">
-          <h1 className={`truncate text-2xl font-bold ${isCreative ? "text-white" : ""}`}>{name}</h1>
-          <div className={`text-sm ${isCreative ? "text-white/90" : "text-muted-foreground"}`}>{target}</div>
+        <div className="flex items-start gap-4">
+          {logoUrl && <img src={logoUrl} alt="" className="h-12 w-12 rounded-lg object-contain bg-white/90 p-1" />}
+          <div className="min-w-0 flex-1">
+            <h1 className="text-3xl font-bold tracking-tight" style={{ color: isCreative ? "#fff" : "#0f172a" }}>
+              {name}
+            </h1>
+            <div className="mt-1 text-base font-medium" style={{ color: isCreative ? "rgba(255,255,255,0.92)" : accent }}>
+              {target}
+            </div>
+            {tenantName && (
+              <div className="mt-2 text-xs uppercase tracking-[0.18em]" style={{ color: isCreative ? "rgba(255,255,255,0.75)" : "#64748b" }}>
+                {tenantName}
+              </div>
+            )}
+          </div>
         </div>
-        {tenantName && !isCreative && <div className="text-xs text-muted-foreground">{tenantName}</div>}
       </header>
 
-      <Section title={t("cv.summary")} accent={accent} minimal={isMinimal}>
-        <p>{output.summary}</p>
-      </Section>
+      <div className="px-10 py-8 space-y-7">
+        {/* Summary */}
+        <Section icon={<Sparkles className="h-4 w-4" />} title={t("cv.summary")} accent={accent}>
+          <p className="text-[13px] leading-[1.7] text-neutral-700">{output.summary}</p>
+        </Section>
 
-      <Section title={t("cv.competencies")} accent={accent} minimal={isMinimal}>
-        <div className="flex flex-wrap gap-2">
-          {output.competencies.map((c) => (
-            <span key={c} className="rounded-full border px-2.5 py-0.5 text-xs" style={{ borderColor: accent + "55", color: accent }}>{c}</span>
-          ))}
-        </div>
-      </Section>
+        {/* Competencies */}
+        <Section icon={<Target className="h-4 w-4" />} title={t("cv.competencies")} accent={accent}>
+          <div className="flex flex-wrap gap-1.5">
+            {output.competencies.map((c) => (
+              <span
+                key={c}
+                className="rounded-md px-2.5 py-1 text-[11px] font-medium"
+                style={{ background: `${accent}15`, color: accent }}
+              >
+                {c}
+              </span>
+            ))}
+          </div>
+        </Section>
 
-      <Section title={t("cv.professional")} accent={accent} minimal={isMinimal}>
-        <div className="space-y-4">
-          {output.experience.map((e, i) => (
-            <div key={i}>
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <div className="font-semibold">{e.role} · <span className="font-normal text-muted-foreground">{e.company}</span></div>
-                <div className="text-xs text-muted-foreground">{e.dates}</div>
+        {/* Experience */}
+        <Section icon={<Briefcase className="h-4 w-4" />} title={t("cv.professional")} accent={accent}>
+          <div className="space-y-5">
+            {output.experience.map((e, i) => (
+              <div key={i} className="relative ps-4" style={{ borderInlineStart: `2px solid ${accent}30` }}>
+                <div
+                  className="absolute top-1.5 h-2 w-2 rounded-full"
+                  style={{ background: accent, insetInlineStart: "-5px" }}
+                />
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <div className="font-semibold text-neutral-900">
+                    {e.role}
+                    <span className="font-normal text-neutral-500"> · {e.company}</span>
+                  </div>
+                  <div className="text-[11px] font-medium uppercase tracking-wider text-neutral-500">{e.dates}</div>
+                </div>
+                <ul className="ms-4 mt-1.5 list-disc space-y-1 text-neutral-700">
+                  {e.bullets.map((b, j) => (
+                    <li key={j}>{b}</li>
+                  ))}
+                </ul>
               </div>
-              <ul className="ms-5 mt-1 list-disc space-y-0.5">
-                {e.bullets.map((b, j) => <li key={j}>{b}</li>)}
+            ))}
+          </div>
+        </Section>
+
+        {/* Achievements */}
+        {output.achievements.length > 0 && (
+          <Section icon={<Award className="h-4 w-4" />} title={t("cv.achievements")} accent={accent}>
+            <ul className="ms-4 list-disc space-y-1 text-neutral-700">
+              {output.achievements.map((a, i) => (
+                <li key={i}>{a}</li>
+              ))}
+            </ul>
+          </Section>
+        )}
+
+        {/* Skills matrix */}
+        <Section icon={<Wrench className="h-4 w-4" />} title={t("cv.skillsMatrix")} accent={accent}>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {output.skillsMatrix.map((g) => (
+              <div key={g.category} className="rounded-lg p-3" style={{ background: `${accent}08` }}>
+                <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: accent }}>
+                  {g.category}
+                </div>
+                <div className="text-[12px] text-neutral-700">{g.skills.join(" · ")}</div>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        {/* AI Recommendations */}
+        {output.recommendations.length > 0 && (
+          <Section icon={<Sparkles className="h-4 w-4" />} title={t("cv.recommendations")} accent={accent}>
+            <div
+              className="rounded-lg border-l-4 p-4"
+              style={{ borderColor: accent, background: `${accent}08` }}
+            >
+              <ul className="ms-4 list-disc space-y-1.5 text-neutral-700">
+                {output.recommendations.map((r, i) => (
+                  <li key={i}>{r}</li>
+                ))}
               </ul>
             </div>
-          ))}
-        </div>
-      </Section>
-
-      <Section title={t("cv.achievements")} accent={accent} minimal={isMinimal}>
-        <ul className="ms-5 list-disc space-y-0.5">
-          {output.achievements.map((a, i) => <li key={i}>{a}</li>)}
-        </ul>
-      </Section>
-
-      <Section title={t("cv.skillsMatrix")} accent={accent} minimal={isMinimal}>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {output.skillsMatrix.map((g) => (
-            <div key={g.category}>
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{g.category}</div>
-              <div className="text-sm">{g.skills.join(" · ")}</div>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      <Section title={t("cv.recommendations")} accent={accent} minimal={isMinimal}>
-        <ul className="ms-5 list-disc space-y-0.5">
-          {output.recommendations.map((r, i) => <li key={i}>{r}</li>)}
-        </ul>
-      </Section>
+          </Section>
+        )}
+      </div>
     </div>
   );
 }
 
-function Section({ title, accent, minimal, children }: { title: string; accent: string; minimal: boolean; children: React.ReactNode }) {
+function Section({
+  icon,
+  title,
+  accent,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  accent: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section className="mb-5">
-      <h2
-        className={`mb-2 text-xs font-bold uppercase tracking-[0.15em] ${minimal ? "text-foreground" : ""}`}
-        style={minimal ? {} : { color: accent }}
-      >
-        {title}
-      </h2>
+    <section>
+      <div className="mb-3 flex items-center gap-2">
+        <span style={{ color: accent }}>{icon}</span>
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: accent }}>
+          {title}
+        </h2>
+        <div className="ms-2 h-px flex-1" style={{ background: `${accent}25` }} />
+      </div>
       {children}
     </section>
   );

@@ -89,6 +89,22 @@ function normalizeCvOutput(raw: unknown, input: CvInput): CvOutput {
         .filter((item) => item.category && item.skills.length)
     : [];
 
+  const recos = stringArray(candidate.recommendations);
+  const fallbackRecos =
+    input.locale === "ar"
+      ? [
+          "أضف مقاييس قابلة للقياس (نسب نمو، توفير تكلفة، حجم فريق) لكل إنجاز.",
+          "ادعم ملفك بشهادات معتمدة في مجالك لزيادة الثقة لدى صاحب العمل.",
+          "حدّث ملفك على لينكدإن ليطابق الكلمات المفتاحية في هذه السيرة.",
+          "أضف رابط أعمالك أو منصة GitHub لإظهار نتائج ملموسة.",
+        ]
+      : [
+          "Quantify every achievement with metrics (%, $, team size, time saved).",
+          "Add 1–2 industry certifications relevant to the target role to strengthen credibility.",
+          "Mirror these keywords on your LinkedIn headline and About section.",
+          "Link a portfolio, GitHub, or case study to show tangible outcomes.",
+        ];
+
   return {
     summary: String(candidate.summary || fallbackSummary).trim(),
     competencies: stringArray(candidate.competencies).length ? stringArray(candidate.competencies) : skills,
@@ -106,9 +122,10 @@ function normalizeCvOutput(raw: unknown, input: CvInput): CvOutput {
     skillsMatrix: skillsMatrix.length
       ? skillsMatrix
       : [{ category: input.locale === "ar" ? "المهارات الأساسية" : "Core skills", skills }],
-    recommendations: stringArray(candidate.recommendations),
+    recommendations: recos.length ? recos : fallbackRecos,
   };
 }
+
 
 export const generateCv = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
