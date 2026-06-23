@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { useMeQuery } from "@/lib/me.hooks";
+import { getTenantPricing } from "@/lib/admin.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
@@ -9,10 +12,24 @@ export const Route = createFileRoute("/_authenticated/billing")({
   component: Billing,
 });
 
+const SYMBOLS: Record<string, string> = {
+  USD: "$", EGP: "ج.م", SAR: "ر.س", AED: "د.إ", EUR: "€", GBP: "£", KWD: "د.ك", QAR: "ر.ق",
+};
+
 function Billing() {
   const { t } = useTranslation();
   const me = useMeQuery();
   const currentPlan = me.data?.subscription?.plan ?? "free";
+  const getPricing = useServerFn(getTenantPricing);
+  const { data: pricing } = useQuery({ queryKey: ["tenant-pricing"], queryFn: () => getPricing() });
+
+  const currency = (pricing as any)?.currency ?? "USD";
+  const symbol = SYMBOLS[currency] ?? currency;
+  const prices: Record<string, number> = {
+    free: Number((pricing as any)?.plan_price_free ?? 0),
+    pro: Number((pricing as any)?.plan_price_pro ?? 29),
+    business: Number((pricing as any)?.plan_price_business ?? 99),
+  };
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -37,7 +54,8 @@ function Billing() {
                   )}
                 </CardTitle>
                 <div className="text-2xl font-bold">
-                  {id === "free" ? "$0" : id === "pro" ? "$29" : "$99"}
+                  <span className="text-base font-medium text-muted-foreground me-1">{symbol}</span>
+                  {prices[id].toLocaleString(undefined, { maximumFractionDigits: 2 })}
                   <span className="text-xs font-normal text-muted-foreground">/mo</span>
                 </div>
               </CardHeader>
@@ -65,3 +83,4 @@ function Billing() {
     </div>
   );
 }
+
