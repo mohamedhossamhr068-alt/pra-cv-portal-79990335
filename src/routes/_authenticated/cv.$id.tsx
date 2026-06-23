@@ -193,6 +193,14 @@ function CvViewer() {
 
       {ats && <AtsScoreCard score={ats.score} checks={ats.checks} ar={ar} />}
 
+      <TemplatePicker
+        ar={ar}
+        template={tpl}
+        accent={accent}
+        onTemplate={setSelectedTemplate}
+        onAccent={setSelectedAccent}
+      />
+
       <Card className="overflow-hidden print:border-0 print:shadow-none">
         <CardContent className="p-0">
           <div ref={pdfRef} className="bg-white text-neutral-900" style={{ width: "100%" }}>
