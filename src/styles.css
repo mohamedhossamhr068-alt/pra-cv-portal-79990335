@@ -137,8 +137,10 @@
   --sidebar-accent-foreground: oklch(0.98 0.003 250);
   --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: oklch(0.7 0.2 265);
-  --gradient-hero: linear-gradient(135deg, oklch(0.32 0.18 265) 0%, oklch(0.4 0.18 280) 50%, oklch(0.5 0.2 270) 100%);
-  --shadow-elegant: 0 10px 30px -10px color-mix(in oklab, var(--primary) 40%, transparent);
+  --gradient-hero: linear-gradient(135deg, oklch(0.28 0.18 265) 0%, oklch(0.38 0.2 285) 45%, oklch(0.5 0.22 310) 100%);
+  --gradient-subtle: linear-gradient(180deg, oklch(0.18 0.025 265) 0%, oklch(0.16 0.02 265) 100%);
+  --shadow-elegant: 0 12px 32px -12px color-mix(in oklab, var(--primary) 45%, transparent), 0 2px 6px -2px oklch(0 0 0 / 40%);
+  --shadow-luxe: 0 28px 80px -24px color-mix(in oklab, var(--primary) 55%, transparent), 0 8px 24px -8px oklch(0 0 0 / 50%);
 }
 
 @layer base {
