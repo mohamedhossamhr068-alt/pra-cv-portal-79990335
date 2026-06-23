@@ -388,14 +388,16 @@ export const updateCvStyle = createServerFn({ method: "POST" })
         id: z.string().uuid(),
         template: z.string().min(1).max(60).optional(),
         accent_color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+        print_locale: z.enum(["ar", "en"]).optional(),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const patch: { template?: string; accent_color?: string } = {};
+    const patch: { template?: string; accent_color?: string; print_locale?: string } = {};
     if (data.template) patch.template = data.template;
     if (data.accent_color) patch.accent_color = data.accent_color;
+    if (data.print_locale) patch.print_locale = data.print_locale;
     if (Object.keys(patch).length === 0) return { ok: true };
     const { error } = await supabase
       .from("cv_logs")
