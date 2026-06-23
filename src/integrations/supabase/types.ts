@@ -188,6 +188,59 @@ export type Database = {
           },
         ]
       }
+      payment_methods: {
+        Row: {
+          account_name: string | null
+          account_number: string
+          bank_name: string | null
+          created_at: string
+          id: string
+          instructions: string | null
+          is_active: boolean
+          label: string
+          sort_order: number
+          tenant_id: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_number: string
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          label: string
+          sort_order?: number
+          tenant_id: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+          tenant_id?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -319,6 +372,7 @@ export type Database = {
           created_at: string
           credits_requested: number
           id: string
+          payment_method_id: string | null
           reference_number: string | null
           reviewed_at: string | null
           reviewed_by: string | null
@@ -333,6 +387,7 @@ export type Database = {
           created_at?: string
           credits_requested: number
           id?: string
+          payment_method_id?: string | null
           reference_number?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -347,6 +402,7 @@ export type Database = {
           created_at?: string
           credits_requested?: number
           id?: string
+          payment_method_id?: string | null
           reference_number?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -356,6 +412,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "topup_requests_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "topup_requests_tenant_id_fkey"
             columns: ["tenant_id"]
