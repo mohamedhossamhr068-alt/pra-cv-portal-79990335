@@ -475,10 +475,12 @@ function NewCv() {
                   toast.error(ar ? "أضف مهارة واحدة على الأقل." : "Please list at least one skill.");
                   return;
                 }
-                if (form.experience.trim().length < 20) {
-                  toast.error(ar ? "اكتب وصف خبرتك بـ 20 حرف على الأقل." : "Please describe your experience in at least 20 characters.");
+                const expText = serializeExperience();
+                if (expText.length < 20) {
+                  toast.error(ar ? "أضف وظيفة واحدة على الأقل مع وصف مختصر." : "Add at least one job with a short description.");
                   return;
                 }
+
                 mut.mutate();
               }}
               disabled={mut.isPending || quotaUsed}
