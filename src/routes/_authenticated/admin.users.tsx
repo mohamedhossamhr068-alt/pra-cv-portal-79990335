@@ -146,7 +146,7 @@ function UserRow({ user, onUpdate, pending }: { user: any; onUpdate: (p: any) =>
           className="gap-1.5"
         >
           {isAdmin ? <ShieldOff className="h-3.5 w-3.5" /> : <Shield className="h-3.5 w-3.5" />}
-          {isAdmin ? "إزالة Admin" : "ترقية لـ Admin"}
+          {isAdmin ? "إزالة صلاحيات الأدمن" : "ترقية لأدمن"}
         </Button>
 
         <Button
