@@ -54,7 +54,9 @@ function NewCv() {
     industry: "",
     seniority: "mid" as "junior" | "mid" | "senior" | "lead",
     yearsExperience: "" as string,
-    experience: "",
+    jobs: [
+      { company: "", role: "", startDate: "", endDate: "", current: false, description: "" },
+    ] as { company: string; role: string; startDate: string; endDate: string; current: boolean; description: string }[],
     skills: "",
     education: "",
     certifications: "",
@@ -72,7 +74,30 @@ function NewCv() {
     location: "",
   });
 
+  const updateJob = (idx: number, patch: Partial<(typeof form.jobs)[number]>) => {
+    setForm((f) => ({ ...f, jobs: f.jobs.map((j, i) => (i === idx ? { ...j, ...patch } : j)) }));
+  };
+  const addJob = () =>
+    setForm((f) => ({
+      ...f,
+      jobs: [...f.jobs, { company: "", role: "", startDate: "", endDate: "", current: false, description: "" }],
+    }));
+  const removeJob = (idx: number) =>
+    setForm((f) => ({ ...f, jobs: f.jobs.length > 1 ? f.jobs.filter((_, i) => i !== idx) : f.jobs }));
+
+  const serializeExperience = () =>
+    form.jobs
+      .filter((j) => j.company.trim() || j.role.trim() || j.description.trim())
+      .map((j) => {
+        const dates = j.current
+          ? `${j.startDate || "?"} — ${ar ? "حتى الآن" : "Present"}`
+          : `${j.startDate || "?"} — ${j.endDate || "?"}`;
+        return `• ${j.role || "-"} @ ${j.company || "-"} (${dates})\n${j.description || ""}`.trim();
+      })
+      .join("\n\n");
+
   const [langDraft, setLangDraft] = useState<{ name: string; level: string }>({ name: "", level: "intermediate" });
+
 
   const onPickAvatar = async (file: File) => {
     if (!file.type.startsWith("image/")) { toast.error(ar ? "ملف غير صالح" : "Invalid image"); return; }
