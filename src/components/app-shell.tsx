@@ -73,6 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isSuper = me.data?.roles?.includes("superadmin");
 
   const adminItems: NavItem[] = [
+    { to: "/admin/users", key: "users", label: "المستخدمين", icon: Users },
     { to: "/admin/team", key: "team", label: t("nav.team"), icon: Users },
     { to: "/admin/usage", key: "usage", label: t("nav.usage"), icon: BarChart3 },
     { to: "/admin/branding", key: "branding", label: t("nav.branding"), icon: Palette },
