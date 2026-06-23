@@ -816,11 +816,7 @@ function CvTemplate({
               <ul className="ms-4 list-disc space-y-1 text-neutral-700">{output.achievements.map((a, i) => (<li key={i}>{a}</li>))}</ul>
             </Section>
           )}
-          {output.recommendations.length > 0 && (
-            <Section icon={<Sparkles className="h-4 w-4" />} title={t("cv.recommendations")} accent={accent}>
-              <ul className="ms-4 list-disc space-y-1 text-neutral-700">{output.recommendations.map((r, i) => (<li key={i}>{r}</li>))}</ul>
-            </Section>
-          )}
+          {/* Career recommendations live in the in-app analysis, not the CV. */}
         </main>
       </div>
     );
