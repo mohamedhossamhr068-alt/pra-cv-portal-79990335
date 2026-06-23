@@ -194,6 +194,28 @@ function CvViewer() {
     }
   };
 
+  const baseLang: "ar" | "en" = (input?.locale === "ar") ? "ar" : "en";
+  const otherLang: "ar" | "en" = cvLang === "ar" ? "en" : "ar";
+
+  const handleTranslate = async () => {
+    // Toggle back to original
+    if (translatedLang && otherLang === baseLang) {
+      setTranslated(null);
+      setTranslatedLang(null);
+      return;
+    }
+    setTranslating(true);
+    try {
+      const res: any = await translateFn({ data: { id, target: otherLang } });
+      setTranslated({ output: res.output, analysis: res.analysis ?? null });
+      setTranslatedLang(otherLang);
+    } catch (e: any) {
+      toast.error(e?.message ?? (ar ? "تعذر الترجمة" : "Translation failed"));
+    } finally {
+      setTranslating(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
@@ -204,6 +226,14 @@ function CvViewer() {
           </Button>
         </Link>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={handleTranslate} disabled={translating} className="gap-2">
+            <Languages className="h-4 w-4" />
+            {translating
+              ? (ar ? "جارٍ الترجمة…" : "Translating…")
+              : otherLang === "ar"
+                ? (ar ? "ترجمة إلى العربية" : "Translate to Arabic")
+                : (ar ? "Translate to English" : "Translate to English")}
+          </Button>
           <Button variant="outline" onClick={() => window.print()} className="gap-2">{ar ? "طباعة" : "Print"}</Button>
           <Button variant="outline" onClick={handleDownloadDocx} disabled={exportingDocx} className="gap-2">
             <FileText className="h-4 w-4" />
