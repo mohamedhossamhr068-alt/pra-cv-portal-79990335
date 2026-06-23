@@ -180,26 +180,19 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
           {(() => {
             let host = "";
             try { host = job.external_url ? new URL(job.external_url).hostname.replace(/^www\./, "") : ""; } catch {}
-            const fallback = host
-              ? `https://www.google.com/s2/favicons?domain=${host}&sz=128`
-              : (src ? src.logo : "");
-            const logoSrc = job.company_logo || fallback;
+            const domain = host || src?.domain || "";
+            const chain = domain ? logoChain(domain) : [];
+            const initial = job.company_logo || chain[0] || "";
             return (
               <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-lg border bg-white">
-                {logoSrc ? (
+                {initial ? (
                   <img
-                    src={logoSrc}
+                    src={initial}
                     alt={job.company || ""}
+                    referrerPolicy="no-referrer"
                     className="h-full w-full object-contain p-1"
-                    onError={(e) => {
-                      const el = e.currentTarget;
-                      if (el.dataset.fb !== "1" && fallback && el.src !== fallback) {
-                        el.dataset.fb = "1";
-                        el.src = fallback;
-                      } else {
-                        el.style.display = "none";
-                      }
-                    }}
+                    data-idx={job.company_logo ? "-1" : "0"}
+                    onError={(e) => advanceLogo(e, chain)}
                   />
                 ) : (
                   <Building2 className="h-6 w-6 text-muted-foreground" />
@@ -207,6 +200,7 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
               </div>
             );
           })()}
+
           <div className="min-w-0 flex-1 pe-14">
             <div className="truncate text-sm font-semibold">{job.title}</div>
             <div className="truncate text-xs text-muted-foreground">{job.company}</div>
