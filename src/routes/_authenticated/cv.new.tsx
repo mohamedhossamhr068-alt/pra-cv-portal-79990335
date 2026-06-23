@@ -107,7 +107,25 @@ function NewCv() {
             </Select>
           </div>
           <div className="sm:col-span-2 flex justify-end">
-            <Button onClick={() => mut.mutate()} disabled={mut.isPending || quotaUsed} className="gap-2">
+            <Button
+              onClick={() => {
+                if (!form.fullName.trim() || !form.jobTitle.trim() || !form.industry.trim()) {
+                  toast.error("Please fill in name, job title, and industry.");
+                  return;
+                }
+                if (form.skills.trim().length < 1) {
+                  toast.error("Please list at least one skill.");
+                  return;
+                }
+                if (form.experience.trim().length < 20) {
+                  toast.error("Please describe your experience in at least 20 characters.");
+                  return;
+                }
+                mut.mutate();
+              }}
+              disabled={mut.isPending || quotaUsed}
+              className="gap-2"
+            >
               <Sparkles className="h-4 w-4" />
               {mut.isPending ? t("cv.generating") : t("cv.generate")}
             </Button>
