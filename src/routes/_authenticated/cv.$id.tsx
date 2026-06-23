@@ -659,6 +659,21 @@ function AnalysisSection({ analysis, recommendations, accent, ar }: { analysis: 
             </ol>
           </div>
 
+          {recommendations.length > 0 && (
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                <Sparkles className="h-4 w-4" style={{ color: accent }} /> {ar ? "توصيات مهنية لك" : "Career recommendations"}
+              </div>
+              <div className="rounded-lg border bg-card p-3">
+                <ul className="space-y-1.5 ps-5 text-sm">
+                  {recommendations.map((r, i) => (
+                    <li key={i} className="list-disc text-muted-foreground"><span className="text-foreground">{r}</span></li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
           <div>
             <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
               <Globe2 className="h-4 w-4 text-primary" /> {ar ? "منصات مرشحة للتقديم" : "Recommended job platforms"}
