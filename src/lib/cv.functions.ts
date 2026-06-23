@@ -383,3 +383,38 @@ export const updateCvStyle = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+export const translateCv = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      target: z.enum(["ar", "en"]),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("AI gateway is not configured.");
+
+    const { data: cv } = await supabase
+      .from("cv_logs").select("output,analysis,input")
+      .eq("id", data.id).eq("user_id", userId).maybeSingle();
+    if (!cv) throw new Error("Not found");
+
+    const langName = data.target === "ar" ? "Arabic (Egyptian/MSA)" : "English";
+    const payload = { output: (cv as any).output, analysis: (cv as any).analysis };
+    const gateway = createLovableAiGatewayProvider(apiKey);
+
+    const result = await generateText({
+      model: gateway("google/gemini-3-flash-preview"),
+      maxOutputTokens: 8192,
+      system: `You translate CV JSON into ${langName}. Output ONLY one JSON object with the SAME shape and keys as the input. Translate every human-readable string value (summary, competencies, role, company, dates labels, bullets, achievements, category, skills, recommendations, strengths, weaknesses, question, hint, improvementPlan, reason). DO NOT translate URLs, brand names (LinkedIn, Wuzzuf, Bayt, Forasna, Indeed), proper nouns of people/companies, or numeric values. Keep array lengths and structure identical.`,
+      prompt: JSON.stringify(payload),
+    });
+    const parsed = extractJsonObject(result.text);
+    return {
+      output: parsed?.output ?? payload.output,
+      analysis: parsed?.analysis ?? payload.analysis,
+    };
+  });

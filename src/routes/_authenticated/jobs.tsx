@@ -130,12 +130,18 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
   if (!job) return null;
   const posted = job.posted_at ? new Date(job.posted_at) : null;
   const daysAgo = posted ? Math.floor((Date.now() - posted.getTime()) / 86400000) : null;
-  const sourceColor: Record<string, string> = {
-    linkedin: "bg-[#0A66C2] text-white",
-    wuzzuf: "bg-emerald-600 text-white",
-    bayt: "bg-rose-600 text-white",
-    forasna: "bg-orange-600 text-white",
+  const sourceMeta: Record<string, { label: string; bg: string; logo: string; domain: string }> = {
+    linkedin: { label: "LinkedIn", bg: "#0A66C2", logo: "https://cdn.simpleicons.org/linkedin/ffffff", domain: "linkedin.com" },
+    wuzzuf:   { label: "Wuzzuf",   bg: "#059669", logo: "https://www.google.com/s2/favicons?domain=wuzzuf.net&sz=64", domain: "wuzzuf.net" },
+    bayt:     { label: "Bayt",     bg: "#e11d48", logo: "https://www.google.com/s2/favicons?domain=bayt.com&sz=64", domain: "bayt.com" },
+    forasna:  { label: "Forasna",  bg: "#ea580c", logo: "https://www.google.com/s2/favicons?domain=forasna.com&sz=64", domain: "forasna.com" },
+    indeed:   { label: "Indeed",   bg: "#2557a7", logo: "https://cdn.simpleicons.org/indeed/ffffff", domain: "indeed.com" },
+    glassdoor:{ label: "Glassdoor",bg: "#0CAA41", logo: "https://cdn.simpleicons.org/glassdoor/ffffff", domain: "glassdoor.com" },
+    naukrigulf:{label: "NaukriGulf",bg: "#1e40af", logo: "https://www.google.com/s2/favicons?domain=naukrigulf.com&sz=64", domain: "naukrigulf.com" },
+    tanqeeb:  { label: "Tanqeeb",  bg: "#0f766e", logo: "https://www.google.com/s2/favicons?domain=tanqeeb.com&sz=64", domain: "tanqeeb.com" },
   };
+  const srcKey = String(job.source ?? "").toLowerCase();
+  const src = sourceMeta[srcKey];
 
   return (
     <Card className="group relative overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5">
@@ -153,18 +159,36 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
       )}
       <CardContent className="space-y-3 pt-5">
         <div className="flex items-start gap-3">
-          <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-lg border bg-white">
-            {job.company_logo ? (
-              <img
-                src={job.company_logo}
-                alt={job.company}
-                className="h-full w-full object-contain p-1"
-                onError={(e) => ((e.currentTarget.style.display = "none"))}
-              />
-            ) : (
-              <Building2 className="h-6 w-6 text-muted-foreground" />
-            )}
-          </div>
+          {(() => {
+            let host = "";
+            try { host = job.external_url ? new URL(job.external_url).hostname.replace(/^www\./, "") : ""; } catch {}
+            const fallback = host
+              ? `https://www.google.com/s2/favicons?domain=${host}&sz=128`
+              : (src ? src.logo : "");
+            const logoSrc = job.company_logo || fallback;
+            return (
+              <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-lg border bg-white">
+                {logoSrc ? (
+                  <img
+                    src={logoSrc}
+                    alt={job.company || ""}
+                    className="h-full w-full object-contain p-1"
+                    onError={(e) => {
+                      const el = e.currentTarget;
+                      if (el.dataset.fb !== "1" && fallback && el.src !== fallback) {
+                        el.dataset.fb = "1";
+                        el.src = fallback;
+                      } else {
+                        el.style.display = "none";
+                      }
+                    }}
+                  />
+                ) : (
+                  <Building2 className="h-6 w-6 text-muted-foreground" />
+                )}
+              </div>
+            );
+          })()}
           <div className="min-w-0 flex-1 pe-14">
             <div className="truncate text-sm font-semibold">{job.title}</div>
             <div className="truncate text-xs text-muted-foreground">{job.company}</div>
@@ -178,8 +202,17 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
             <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{daysAgo === 0 ? t("jobs.today") : t("jobs.daysAgo", { n: daysAgo })}</span>
           )}
           {job.source && (
-            <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${sourceColor[job.source] ?? "bg-muted text-foreground"}`}>
-              {job.source}
+            <span
+              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
+              style={{ backgroundColor: src?.bg ?? "hsl(var(--muted))", color: src ? "#fff" : undefined }}
+            >
+              <img
+                src={src?.logo ?? `https://www.google.com/s2/favicons?domain=${srcKey}.com&sz=64`}
+                alt=""
+                className="h-3 w-3 rounded-sm bg-white/10 object-contain"
+                onError={(e) => ((e.currentTarget.style.display = "none"))}
+              />
+              {src?.label ?? job.source}
             </span>
           )}
         </div>

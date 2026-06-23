@@ -2,12 +2,12 @@ import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getCv, updateCvStyle } from "@/lib/cv.functions";
+import { getCv, updateCvStyle, translateCv } from "@/lib/cv.functions";
 import { useMeQuery } from "@/lib/me.hooks";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Download, ArrowLeft, Sparkles, Award, Briefcase, Wrench, Target, MessageCircle, TrendingUp, Globe2, Mail, Phone, MapPin, FileText, Gauge, Palette, Check } from "lucide-react";
+import { Download, ArrowLeft, Sparkles, Award, Briefcase, Wrench, Target, MessageCircle, TrendingUp, Globe2, Mail, Phone, MapPin, FileText, Gauge, Palette, Check, Languages } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/cv/$id")({
@@ -63,6 +63,7 @@ function CvViewer() {
   const { id } = useParams({ from: "/_authenticated/cv/$id" });
   const fn = useServerFn(getCv);
   const saveStyleFn = useServerFn(updateCvStyle);
+  const translateFn = useServerFn(translateCv);
   const { data, isLoading } = useQuery({ queryKey: ["cv", id], queryFn: () => fn({ data: { id } }) });
   const me = useMeQuery();
   const tenant = me.data?.tenant;
@@ -71,8 +72,12 @@ function CvViewer() {
   const [exportingDocx, setExportingDocx] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [selectedAccent, setSelectedAccent] = useState<string | null>(null);
+  const [translated, setTranslated] = useState<{ output: CvOut; analysis: CvAnalysis | null } | null>(null);
+  const [translatedLang, setTranslatedLang] = useState<"ar" | "en" | null>(null);
+  const [translating, setTranslating] = useState(false);
 
-  const out = (data?.output as CvOut) ?? null;
+  const baseOut = (data?.output as CvOut) ?? null;
+  const out = (translated?.output as CvOut) ?? baseOut;
   const input = (data as any)?.input ?? {};
   const ats = useMemo(() => (out ? computeAtsScore(out, input) : null), [out, input]);
 
@@ -94,7 +99,10 @@ function CvViewer() {
 
   if (isLoading || !data || !out) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
 
-  const analysis = (data as any).analysis as CvAnalysis | null;
+  const baseAnalysis = (data as any).analysis as CvAnalysis | null;
+  const analysis = translated?.analysis ?? baseAnalysis;
+  const cvLang: "ar" | "en" = translatedLang ?? ((input?.locale === "ar") ? "ar" : "en");
+  const cvDir: "rtl" | "ltr" = cvLang === "ar" ? "rtl" : "ltr";
   const tpl = selectedTemplate ?? (data.template as string);
   const accent = selectedAccent ?? (data as any).accent_color ?? tenant?.primary_color ?? "#4f46e5";
 
@@ -148,13 +156,13 @@ function CvViewer() {
       const contact = [input.email, input.phone, input.location].filter(Boolean).join(" • ");
       if (contact) children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: contact, size: 20, color: "777777" })], spacing: { after: 240 } }));
 
-      children.push(h(ar ? "الملخص المهني" : "Summary"));
+      children.push(h(cvLang === "ar" ? "الملخص المهني" : "Summary"));
       children.push(para(out.summary));
 
-      children.push(h(ar ? "الكفاءات الأساسية" : "Core Competencies"));
+      children.push(h(cvLang === "ar" ? "الكفاءات الأساسية" : "Core Competencies"));
       children.push(para(out.competencies.join(" • ")));
 
-      children.push(h(ar ? "الخبرة العملية" : "Professional Experience"));
+      children.push(h(cvLang === "ar" ? "الخبرة العملية" : "Professional Experience"));
       out.experience.forEach((e) => {
         children.push(new Paragraph({ children: [new TextRun({ text: `${e.role} — ${e.company}`, bold: true })] }));
         children.push(new Paragraph({ children: [new TextRun({ text: e.dates, italics: true, color: "888888" })], spacing: { after: 80 } }));
@@ -162,17 +170,17 @@ function CvViewer() {
       });
 
       if (out.achievements.length) {
-        children.push(h(ar ? "أبرز الإنجازات" : "Key Achievements"));
+        children.push(h(cvLang === "ar" ? "أبرز الإنجازات" : "Key Achievements"));
         out.achievements.forEach((a) => children.push(bullet(a)));
       }
 
-      children.push(h(ar ? "المهارات" : "Skills"));
+      children.push(h(cvLang === "ar" ? "المهارات" : "Skills"));
       out.skillsMatrix.forEach((g) => {
         children.push(new Paragraph({ children: [new TextRun({ text: `${g.category}: `, bold: true }), new TextRun({ text: g.skills.join(", ") })], spacing: { after: 80 } }));
       });
 
       if (out.recommendations.length) {
-        children.push(h(ar ? "توصيات للتطوير" : "Recommendations"));
+        children.push(h(cvLang === "ar" ? "توصيات للتطوير" : "Recommendations"));
         out.recommendations.forEach((r) => children.push(bullet(r)));
       }
 
@@ -186,6 +194,28 @@ function CvViewer() {
     }
   };
 
+  const baseLang: "ar" | "en" = (input?.locale === "ar") ? "ar" : "en";
+  const otherLang: "ar" | "en" = cvLang === "ar" ? "en" : "ar";
+
+  const handleTranslate = async () => {
+    // Toggle back to original
+    if (translatedLang && otherLang === baseLang) {
+      setTranslated(null);
+      setTranslatedLang(null);
+      return;
+    }
+    setTranslating(true);
+    try {
+      const res: any = await translateFn({ data: { id, target: otherLang } });
+      setTranslated({ output: res.output, analysis: res.analysis ?? null });
+      setTranslatedLang(otherLang);
+    } catch (e: any) {
+      toast.error(e?.message ?? (ar ? "تعذر الترجمة" : "Translation failed"));
+    } finally {
+      setTranslating(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
@@ -196,6 +226,14 @@ function CvViewer() {
           </Button>
         </Link>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={handleTranslate} disabled={translating} className="gap-2">
+            <Languages className="h-4 w-4" />
+            {translating
+              ? (ar ? "جارٍ الترجمة…" : "Translating…")
+              : otherLang === "ar"
+                ? (ar ? "ترجمة إلى العربية" : "Translate to Arabic")
+                : (ar ? "Translate to English" : "Translate to English")}
+          </Button>
           <Button variant="outline" onClick={() => window.print()} className="gap-2">{ar ? "طباعة" : "Print"}</Button>
           <Button variant="outline" onClick={handleDownloadDocx} disabled={exportingDocx} className="gap-2">
             <FileText className="h-4 w-4" />
@@ -220,7 +258,7 @@ function CvViewer() {
 
       <Card className="overflow-hidden print:border-0 print:shadow-none">
         <CardContent className="p-0">
-          <div ref={pdfRef} className="bg-white text-neutral-900" style={{ width: "100%" }}>
+          <div ref={pdfRef} dir={cvDir} lang={cvLang} className="bg-white text-neutral-900" style={{ width: "100%" }}>
             <CvTemplate
               output={out}
               template={tpl}
