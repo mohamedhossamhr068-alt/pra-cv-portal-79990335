@@ -28,6 +28,7 @@ import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminUsageRouteImport } from './routes/_authenticated/admin.usage'
 import { Route as AuthenticatedAdminTeamRouteImport } from './routes/_authenticated/admin.team'
 import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authenticated/admin.pricing'
+import { Route as AuthenticatedAdminOffersRouteImport } from './routes/_authenticated/admin.offers'
 import { Route as AuthenticatedAdminBrandingRouteImport } from './routes/_authenticated/admin.branding'
 
 const PricingRoute = PricingRouteImport.update({
@@ -129,6 +130,12 @@ const AuthenticatedAdminPricingRoute =
     path: '/admin/pricing',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminOffersRoute =
+  AuthenticatedAdminOffersRouteImport.update({
+    id: '/admin/offers',
+    path: '/admin/offers',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminBrandingRoute =
   AuthenticatedAdminBrandingRouteImport.update({
     id: '/admin/branding',
@@ -145,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/jobs': typeof AuthenticatedJobsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/admin/branding': typeof AuthenticatedAdminBrandingRoute
+  '/admin/offers': typeof AuthenticatedAdminOffersRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/usage': typeof AuthenticatedAdminUsageRoute
@@ -166,6 +174,7 @@ export interface FileRoutesByTo {
   '/jobs': typeof AuthenticatedJobsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/admin/branding': typeof AuthenticatedAdminBrandingRoute
+  '/admin/offers': typeof AuthenticatedAdminOffersRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/usage': typeof AuthenticatedAdminUsageRoute
@@ -189,6 +198,7 @@ export interface FileRoutesById {
   '/_authenticated/jobs': typeof AuthenticatedJobsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/admin/branding': typeof AuthenticatedAdminBrandingRoute
+  '/_authenticated/admin/offers': typeof AuthenticatedAdminOffersRoute
   '/_authenticated/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/_authenticated/admin/team': typeof AuthenticatedAdminTeamRoute
   '/_authenticated/admin/usage': typeof AuthenticatedAdminUsageRoute
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/settings'
     | '/admin/branding'
+    | '/admin/offers'
     | '/admin/pricing'
     | '/admin/team'
     | '/admin/usage'
@@ -233,6 +244,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/settings'
     | '/admin/branding'
+    | '/admin/offers'
     | '/admin/pricing'
     | '/admin/team'
     | '/admin/usage'
@@ -255,6 +267,7 @@ export interface FileRouteTypes {
     | '/_authenticated/jobs'
     | '/_authenticated/settings'
     | '/_authenticated/admin/branding'
+    | '/_authenticated/admin/offers'
     | '/_authenticated/admin/pricing'
     | '/_authenticated/admin/team'
     | '/_authenticated/admin/usage'
@@ -410,6 +423,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPricingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/offers': {
+      id: '/_authenticated/admin/offers'
+      path: '/admin/offers'
+      fullPath: '/admin/offers'
+      preLoaderRoute: typeof AuthenticatedAdminOffersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/branding': {
       id: '/_authenticated/admin/branding'
       path: '/admin/branding'
@@ -437,6 +457,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedAdminBrandingRoute: typeof AuthenticatedAdminBrandingRoute
+  AuthenticatedAdminOffersRoute: typeof AuthenticatedAdminOffersRoute
   AuthenticatedAdminPricingRoute: typeof AuthenticatedAdminPricingRoute
   AuthenticatedAdminTeamRoute: typeof AuthenticatedAdminTeamRoute
   AuthenticatedAdminUsageRoute: typeof AuthenticatedAdminUsageRoute
@@ -455,6 +476,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedJobsRoute: AuthenticatedJobsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedAdminBrandingRoute: AuthenticatedAdminBrandingRoute,
+  AuthenticatedAdminOffersRoute: AuthenticatedAdminOffersRoute,
   AuthenticatedAdminPricingRoute: AuthenticatedAdminPricingRoute,
   AuthenticatedAdminTeamRoute: AuthenticatedAdminTeamRoute,
   AuthenticatedAdminUsageRoute: AuthenticatedAdminUsageRoute,
