@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMeQuery } from "@/lib/me.hooks";
 import { Button } from "@/components/ui/button";
-import { FileText, Sparkles, Briefcase, Users, ArrowRight } from "lucide-react";
+import { FileText, Sparkles, Briefcase, Users, ArrowRight, Shield, Coins, BarChart3, Palette } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -13,26 +13,37 @@ function Dashboard() {
   const { t } = useTranslation();
   const me = useMeQuery();
   const quota = me.data?.quota;
+  const isAdmin = me.data?.roles?.includes("company_admin");
 
   const stats = [
     { label: t("dashboard.cvsThisMonth"), value: quota?.used ?? 0, icon: FileText, accent: "bg-primary/10 text-primary" },
+    { label: "الرصيد", value: me.data?.credits ?? 0, icon: Coins, accent: "bg-amber-500/15 text-amber-600" },
     { label: t("dashboard.quotaRemaining"), value: quota?.remaining ?? 0, icon: Sparkles, accent: "bg-accent/15 text-accent" },
-    { label: t("dashboard.teamMembers"), value: 1, icon: Users, accent: "bg-success/15 text-success" },
     { label: t("nav.jobs"), value: "—", icon: Briefcase, accent: "bg-warning/15 text-warning" },
   ];
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t("dashboard.title")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t("dashboard.sub")}</p>
+      <div className="rounded-2xl border bg-[image:var(--gradient-primary)] p-6 text-primary-foreground shadow-[var(--shadow-elegant)] sm:p-8">
+        <div className="text-xs uppercase tracking-widest opacity-80">{me.data?.tenant?.name ?? ""}</div>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+          أهلاً، {me.data?.profile?.full_name ?? me.data?.profile?.email}
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm opacity-90">{t("dashboard.sub")}</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link to="/cv/new"><Button size="sm" variant="secondary" className="gap-1.5"><Sparkles className="h-4 w-4" /> {t("dashboard.actionNewCv")}</Button></Link>
+          <Link to="/jobs"><Button size="sm" variant="secondary" className="gap-1.5"><Briefcase className="h-4 w-4" /> {t("dashboard.actionFindJobs")}</Button></Link>
+          {isAdmin && (
+            <Link to="/admin/users"><Button size="sm" variant="secondary" className="gap-1.5"><Shield className="h-4 w-4" /> لوحة الأدمن</Button></Link>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => {
           const Icon = s.icon;
           return (
-            <Card key={s.label}>
+            <Card key={s.label} className="transition hover:-translate-y-0.5 hover:shadow-md">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
                   <div className="min-w-0">
@@ -49,6 +60,21 @@ function Dashboard() {
         })}
       </div>
 
+      {isAdmin && (
+        <Card className="border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base"><Shield className="h-4 w-4 text-primary" /> أدوات الأدمن</CardTitle>
+            <p className="mt-1 text-xs text-muted-foreground">إدارة المستخدمين، الرصيد، الصلاحيات، والاستخدام.</p>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <AdminTile to="/admin/users" icon={Users} title="المستخدمين" desc="رصيد · حظر · ترقية" />
+            <AdminTile to="/admin/team" icon={Users} title="الفريق" desc="دعوات وأعضاء" />
+            <AdminTile to="/admin/usage" icon={BarChart3} title="الاستخدام" desc="إحصائيات شهرية" />
+            <AdminTile to="/admin/branding" icon={Palette} title="الهوية" desc="ألوان وشعار" />
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader><CardTitle className="text-base">{t("dashboard.quickActions")}</CardTitle></CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-3">
@@ -58,5 +84,23 @@ function Dashboard() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function AdminTile({ to, icon: Icon, title, desc }: { to: string; icon: any; title: string; desc: string }) {
+  return (
+    <Link
+      to={to}
+      className="group flex items-start gap-3 rounded-xl border bg-card p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+    >
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="min-w-0">
+        <div className="text-sm font-semibold">{title}</div>
+        <div className="truncate text-xs text-muted-foreground">{desc}</div>
+      </div>
+      <ArrowRight className="ms-auto h-4 w-4 self-center text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
+    </Link>
   );
 }
