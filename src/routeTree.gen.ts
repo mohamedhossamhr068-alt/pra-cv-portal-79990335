@@ -23,6 +23,7 @@ import { Route as AuthenticatedPlatformAnalyticsRouteImport } from './routes/_au
 import { Route as AuthenticatedCvNewRouteImport } from './routes/_authenticated/cv.new'
 import { Route as AuthenticatedCvIdRouteImport } from './routes/_authenticated/cv.$id'
 import { Route as AuthenticatedBillingTopupRouteImport } from './routes/_authenticated/billing.topup'
+import { Route as AuthenticatedAdminWalletRouteImport } from './routes/_authenticated/admin.wallet'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminUsageRouteImport } from './routes/_authenticated/admin.usage'
 import { Route as AuthenticatedAdminTeamRouteImport } from './routes/_authenticated/admin.team'
@@ -101,6 +102,12 @@ const AuthenticatedBillingTopupRoute =
     path: '/topup',
     getParentRoute: () => AuthenticatedBillingRoute,
   } as any)
+const AuthenticatedAdminWalletRoute =
+  AuthenticatedAdminWalletRouteImport.update({
+    id: '/admin/wallet',
+    path: '/admin/wallet',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
   id: '/admin/users',
   path: '/admin/users',
@@ -142,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/usage': typeof AuthenticatedAdminUsageRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/admin/wallet': typeof AuthenticatedAdminWalletRoute
   '/billing/topup': typeof AuthenticatedBillingTopupRoute
   '/cv/$id': typeof AuthenticatedCvIdRoute
   '/cv/new': typeof AuthenticatedCvNewRoute
@@ -162,6 +170,7 @@ export interface FileRoutesByTo {
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/usage': typeof AuthenticatedAdminUsageRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/admin/wallet': typeof AuthenticatedAdminWalletRoute
   '/billing/topup': typeof AuthenticatedBillingTopupRoute
   '/cv/$id': typeof AuthenticatedCvIdRoute
   '/cv/new': typeof AuthenticatedCvNewRoute
@@ -184,6 +193,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/team': typeof AuthenticatedAdminTeamRoute
   '/_authenticated/admin/usage': typeof AuthenticatedAdminUsageRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/_authenticated/admin/wallet': typeof AuthenticatedAdminWalletRoute
   '/_authenticated/billing/topup': typeof AuthenticatedBillingTopupRoute
   '/_authenticated/cv/$id': typeof AuthenticatedCvIdRoute
   '/_authenticated/cv/new': typeof AuthenticatedCvNewRoute
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/admin/team'
     | '/admin/usage'
     | '/admin/users'
+    | '/admin/wallet'
     | '/billing/topup'
     | '/cv/$id'
     | '/cv/new'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/admin/team'
     | '/admin/usage'
     | '/admin/users'
+    | '/admin/wallet'
     | '/billing/topup'
     | '/cv/$id'
     | '/cv/new'
@@ -247,6 +259,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/team'
     | '/_authenticated/admin/usage'
     | '/_authenticated/admin/users'
+    | '/_authenticated/admin/wallet'
     | '/_authenticated/billing/topup'
     | '/_authenticated/cv/$id'
     | '/_authenticated/cv/new'
@@ -362,6 +375,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBillingTopupRouteImport
       parentRoute: typeof AuthenticatedBillingRoute
     }
+    '/_authenticated/admin/wallet': {
+      id: '/_authenticated/admin/wallet'
+      path: '/admin/wallet'
+      fullPath: '/admin/wallet'
+      preLoaderRoute: typeof AuthenticatedAdminWalletRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/users': {
       id: '/_authenticated/admin/users'
       path: '/admin/users'
@@ -421,6 +441,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminTeamRoute: typeof AuthenticatedAdminTeamRoute
   AuthenticatedAdminUsageRoute: typeof AuthenticatedAdminUsageRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
+  AuthenticatedAdminWalletRoute: typeof AuthenticatedAdminWalletRoute
   AuthenticatedCvIdRoute: typeof AuthenticatedCvIdRoute
   AuthenticatedCvNewRoute: typeof AuthenticatedCvNewRoute
   AuthenticatedPlatformAnalyticsRoute: typeof AuthenticatedPlatformAnalyticsRoute
@@ -438,6 +459,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminTeamRoute: AuthenticatedAdminTeamRoute,
   AuthenticatedAdminUsageRoute: AuthenticatedAdminUsageRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
+  AuthenticatedAdminWalletRoute: AuthenticatedAdminWalletRoute,
   AuthenticatedCvIdRoute: AuthenticatedCvIdRoute,
   AuthenticatedCvNewRoute: AuthenticatedCvNewRoute,
   AuthenticatedPlatformAnalyticsRoute: AuthenticatedPlatformAnalyticsRoute,

@@ -5,13 +5,19 @@ import { z } from "zod";
 // Real-time Egypt job scraping via Firecrawl search API.
 // Only company_admin or superadmin can trigger to avoid abuse / cost.
 
-const QUERIES = [
-  { q: `site:wuzzuf.net/jobs Egypt`, source: "wuzzuf" },
-  { q: `site:linkedin.com/jobs "Egypt"`, source: "linkedin" },
-  { q: `site:bayt.com/en/egypt jobs`, source: "bayt" },
-  { q: `site:forasna.com jobs`, source: "forasna" },
-  { q: `site:naukrigulf.com Egypt jobs`, source: "naukrigulf" },
+// Egypt-only sources. We always inject the keyword and `Egypt` to keep results local.
+const SOURCES: { host: string; source: string }[] = [
+  { host: "wuzzuf.net", source: "wuzzuf" },
+  { host: "linkedin.com/jobs", source: "linkedin" },
+  { host: "bayt.com", source: "bayt" },
+  { host: "forasna.com", source: "forasna" },
+  { host: "naukrigulf.com", source: "naukrigulf" },
 ];
+
+function isEgyptUrl(u: string) {
+  const s = u.toLowerCase();
+  return /(\/eg\/|\/egypt|egypt|cairo|alexandria|giza|wuzzuf\.net)/.test(s);
+}
 
 function logoFor(url: string, source: string) {
   try {
