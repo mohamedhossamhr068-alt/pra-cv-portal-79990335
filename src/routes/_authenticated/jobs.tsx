@@ -130,18 +130,36 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
   if (!job) return null;
   const posted = job.posted_at ? new Date(job.posted_at) : null;
   const daysAgo = posted ? Math.floor((Date.now() - posted.getTime()) / 86400000) : null;
-  const sourceMeta: Record<string, { label: string; bg: string; logo: string; domain: string }> = {
-    linkedin:  { label: "LinkedIn",   bg: "#0A66C2", domain: "linkedin.com",   logo: "https://www.google.com/s2/favicons?domain=linkedin.com&sz=128" },
-    wuzzuf:    { label: "Wuzzuf",     bg: "#059669", domain: "wuzzuf.net",     logo: "https://www.google.com/s2/favicons?domain=wuzzuf.net&sz=128" },
-    bayt:      { label: "Bayt",       bg: "#e11d48", domain: "bayt.com",       logo: "https://www.google.com/s2/favicons?domain=bayt.com&sz=128" },
-    forasna:   { label: "Forasna",    bg: "#ea580c", domain: "forasna.com",    logo: "https://www.google.com/s2/favicons?domain=forasna.com&sz=128" },
-    indeed:    { label: "Indeed",     bg: "#2557a7", domain: "indeed.com",     logo: "https://www.google.com/s2/favicons?domain=indeed.com&sz=128" },
-    glassdoor: { label: "Glassdoor",  bg: "#0CAA41", domain: "glassdoor.com",  logo: "https://www.google.com/s2/favicons?domain=glassdoor.com&sz=128" },
-    naukrigulf:{ label: "NaukriGulf", bg: "#1e40af", domain: "naukrigulf.com", logo: "https://www.google.com/s2/favicons?domain=naukrigulf.com&sz=128" },
-    tanqeeb:   { label: "Tanqeeb",    bg: "#0f766e", domain: "tanqeeb.com",    logo: "https://www.google.com/s2/favicons?domain=tanqeeb.com&sz=128" },
+  const sourceMeta: Record<string, { label: string; bg: string; domain: string }> = {
+    linkedin:  { label: "LinkedIn",   bg: "#0A66C2", domain: "linkedin.com" },
+    wuzzuf:    { label: "Wuzzuf",     bg: "#059669", domain: "wuzzuf.net" },
+    bayt:      { label: "Bayt",       bg: "#e11d48", domain: "bayt.com" },
+    forasna:   { label: "Forasna",    bg: "#ea580c", domain: "forasna.com" },
+    indeed:    { label: "Indeed",     bg: "#2557a7", domain: "indeed.com" },
+    glassdoor: { label: "Glassdoor",  bg: "#0CAA41", domain: "glassdoor.com" },
+    naukrigulf:{ label: "NaukriGulf", bg: "#1e40af", domain: "naukrigulf.com" },
+    tanqeeb:   { label: "Tanqeeb",    bg: "#0f766e", domain: "tanqeeb.com" },
   };
   const srcKey = String(job.source ?? "").toLowerCase();
   const src = sourceMeta[srcKey];
+  // Multi-source fallback chain: Clearbit (high quality) → DuckDuckGo → Google
+  const logoChain = (domain: string) => [
+    `https://logo.clearbit.com/${domain}`,
+    `https://icons.duckduckgo.com/ip3/${domain}.ico`,
+    `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+  ];
+  const advanceLogo = (e: React.SyntheticEvent<HTMLImageElement>, chain: string[]) => {
+    const el = e.currentTarget;
+    const idx = Number(el.dataset.idx ?? "0");
+    const next = idx + 1;
+    if (next < chain.length) {
+      el.dataset.idx = String(next);
+      el.src = chain[next];
+    } else {
+      el.style.display = "none";
+    }
+  };
+
 
   return (
     <Card className="group relative overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5">
@@ -162,26 +180,19 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
           {(() => {
             let host = "";
             try { host = job.external_url ? new URL(job.external_url).hostname.replace(/^www\./, "") : ""; } catch {}
-            const fallback = host
-              ? `https://www.google.com/s2/favicons?domain=${host}&sz=128`
-              : (src ? src.logo : "");
-            const logoSrc = job.company_logo || fallback;
+            const domain = host || src?.domain || "";
+            const chain = domain ? logoChain(domain) : [];
+            const initial = job.company_logo || chain[0] || "";
             return (
               <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-lg border bg-white">
-                {logoSrc ? (
+                {initial ? (
                   <img
-                    src={logoSrc}
+                    src={initial}
                     alt={job.company || ""}
+                    referrerPolicy="no-referrer"
                     className="h-full w-full object-contain p-1"
-                    onError={(e) => {
-                      const el = e.currentTarget;
-                      if (el.dataset.fb !== "1" && fallback && el.src !== fallback) {
-                        el.dataset.fb = "1";
-                        el.src = fallback;
-                      } else {
-                        el.style.display = "none";
-                      }
-                    }}
+                    data-idx={job.company_logo ? "-1" : "0"}
+                    onError={(e) => advanceLogo(e, chain)}
                   />
                 ) : (
                   <Building2 className="h-6 w-6 text-muted-foreground" />
@@ -189,6 +200,7 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
               </div>
             );
           })()}
+
           <div className="min-w-0 flex-1 pe-14">
             <div className="truncate text-sm font-semibold">{job.title}</div>
             <div className="truncate text-xs text-muted-foreground">{job.company}</div>
@@ -206,12 +218,20 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
               className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-white"
               style={{ backgroundColor: src?.bg ?? "hsl(var(--muted))", color: src ? "#fff" : undefined }}
             >
-              <img
-                src={src?.logo ?? `https://www.google.com/s2/favicons?domain=${srcKey}.com&sz=64`}
-                alt=""
-                className="h-3 w-3 rounded-sm bg-white object-contain p-[1px]"
-                onError={(e) => ((e.currentTarget.style.display = "none"))}
-              />
+              {(() => {
+                const badgeDomain = src?.domain ?? `${srcKey}.com`;
+                const badgeChain = logoChain(badgeDomain);
+                return (
+                  <img
+                    src={badgeChain[0]}
+                    alt=""
+                    referrerPolicy="no-referrer"
+                    data-idx="0"
+                    onError={(e) => advanceLogo(e, badgeChain)}
+                    className="h-3 w-3 rounded-sm bg-white object-contain p-[1px]"
+                  />
+                );
+              })()}
               {src?.label ?? job.source}
             </span>
           )}
