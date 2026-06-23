@@ -4,9 +4,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { useMeQuery } from "@/lib/me.hooks";
 import { getTenantPricing } from "@/lib/admin.functions";
+import { listActiveOffers } from "@/lib/offers.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Tag } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/billing")({
   component: Billing,
