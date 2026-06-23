@@ -232,11 +232,6 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
                   />
                 );
               })()}
-
-                alt=""
-                className="h-3 w-3 rounded-sm bg-white object-contain p-[1px]"
-                onError={(e) => ((e.currentTarget.style.display = "none"))}
-              />
               {src?.label ?? job.source}
             </span>
           )}
