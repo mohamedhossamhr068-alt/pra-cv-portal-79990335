@@ -612,7 +612,7 @@ function AtsScoreCard({ score, checks, ar }: { score: number; checks: { label: s
   );
 }
 
-function AnalysisSection({ analysis, accent, ar }: { analysis: CvAnalysis; accent: string; ar: boolean }) {
+function AnalysisSection({ analysis, recommendations, accent, ar }: { analysis: CvAnalysis; recommendations: string[]; accent: string; ar: boolean }) {
   return (
     <div className="mt-6 grid gap-4 print:hidden">
       <Card>
