@@ -22,8 +22,6 @@ const SYMBOLS: Record<string, string> = {
 function Billing() {
   const { t } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  if (pathname !== "/billing") return <Outlet />;
-
   const me = useMeQuery();
   const currentPlan = me.data?.subscription?.plan ?? "free";
   const getPricing = useServerFn(getTenantPricing);
@@ -38,6 +36,8 @@ function Billing() {
     pro: Number((pricing as any)?.plan_price_pro ?? 250),
     business: Number((pricing as any)?.plan_price_business ?? 500),
   };
+
+  if (pathname !== "/billing") return <Outlet />;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
