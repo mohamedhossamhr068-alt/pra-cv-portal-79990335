@@ -561,6 +561,7 @@ export type Database = {
           created_at: string
           credits: number
           email: string
+          feature_flags: Json
           full_name: string | null
           grant_budget: number | null
           grant_low_notified: boolean
@@ -579,6 +580,7 @@ export type Database = {
           created_at?: string
           credits?: number
           email: string
+          feature_flags?: Json
           full_name?: string | null
           grant_budget?: number | null
           grant_low_notified?: boolean
@@ -597,6 +599,7 @@ export type Database = {
           created_at?: string
           credits?: number
           email?: string
+          feature_flags?: Json
           full_name?: string | null
           grant_budget?: number | null
           grant_low_notified?: boolean
@@ -989,6 +992,10 @@ export type Database = {
             }
             Returns: undefined
           }
+      admin_set_user_feature_flags: {
+        Args: { _flags: Json; _target_user: string }
+        Returns: undefined
+      }
       admin_set_user_permissions: {
         Args: {
           _make_moderator?: boolean
