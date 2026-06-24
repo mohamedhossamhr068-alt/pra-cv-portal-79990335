@@ -150,7 +150,7 @@ function Jobs() {
             <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
-              {browseList.map((j: any) => <JobCard key={j.id} job={j} t={t} />)}
+              {browseList.map((j: any) => <JobCard key={j.id} job={j} score={j.score} reasoning={j.reasoning} t={t} />)}
             </div>
           )}
         </>
