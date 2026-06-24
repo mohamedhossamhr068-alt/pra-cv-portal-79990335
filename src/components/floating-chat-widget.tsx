@@ -256,7 +256,7 @@ function AuthedSupportChat({ ar, onClose }: { ar: boolean; onClose: () => void }
       await sendChatMessage({ data: { conversation_id: convId, body: text } });
       // Fire-and-forget bot trigger
       const { triggerSupportBotReply } = await import("@/lib/bot.functions");
-      triggerSupportBotReply({ data: { conversation_id: convId } }).catch(() => {});
+      triggerSupportBotReply({ data: { conversation_id: convId, lang: ar ? "ar" : "en" } }).catch(() => {});
     } catch (e: any) {
       console.error(e);
     } finally {
