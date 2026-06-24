@@ -43,16 +43,25 @@ function AdminPricing() {
   const [planFree, setPlanFree] = useState(0);
   const [planPro, setPlanPro] = useState(29);
   const [planBusiness, setPlanBusiness] = useState(99);
+  const [creditsFree, setCreditsFree] = useState(10);
+  const [creditsPro, setCreditsPro] = useState(100);
+  const [creditsBusiness, setCreditsBusiness] = useState(500);
+  const [bonus, setBonus] = useState(3);
 
   useEffect(() => {
     if (data) {
-      setCv((data as any).cv_credit_cost ?? 5);
-      setMatch((data as any).match_credit_cost ?? 1);
-      setScrape((data as any).scrape_credit_cost ?? 3);
-      setCurrency((data as any).currency ?? "USD");
-      setPlanFree(Number((data as any).plan_price_free ?? 0));
-      setPlanPro(Number((data as any).plan_price_pro ?? 29));
-      setPlanBusiness(Number((data as any).plan_price_business ?? 99));
+      const d: any = data;
+      setCv(d.cv_credit_cost ?? 5);
+      setMatch(d.match_credit_cost ?? 1);
+      setScrape(d.scrape_credit_cost ?? 3);
+      setCurrency(d.currency ?? "USD");
+      setPlanFree(Number(d.plan_price_free ?? 0));
+      setPlanPro(Number(d.plan_price_pro ?? 29));
+      setPlanBusiness(Number(d.plan_price_business ?? 99));
+      setCreditsFree(Number(d.plan_credits_free ?? 10));
+      setCreditsPro(Number(d.plan_credits_pro ?? 100));
+      setCreditsBusiness(Number(d.plan_credits_business ?? 500));
+      setBonus(Number(d.bonus_credits ?? 3));
     }
   }, [data]);
 
@@ -69,6 +78,10 @@ function AdminPricing() {
           plan_free: planFree,
           plan_pro: planPro,
           plan_business: planBusiness,
+          credits_free: creditsFree,
+          credits_pro: creditsPro,
+          credits_business: creditsBusiness,
+          bonus_credits: bonus,
         },
       }),
     onSuccess: () => {
@@ -87,10 +100,11 @@ function AdminPricing() {
   ];
 
   const planItems = [
-    { key: "free", label: T("الخطة المجانية", "Free Plan"), value: planFree, set: setPlanFree, badge: T("للبداية", "Starter") },
-    { key: "pro", label: T("خطة Pro", "Pro Plan"), value: planPro, set: setPlanPro, badge: T("الأكثر شهرة", "Popular") },
-    { key: "business", label: T("خطة Business", "Business Plan"), value: planBusiness, set: setPlanBusiness, badge: T("للفرق", "Teams") },
+    { key: "free", label: T("الخطة المجانية", "Free Plan"), value: planFree, set: setPlanFree, credits: creditsFree, setCredits: setCreditsFree, badge: T("للبداية", "Starter") },
+    { key: "pro", label: T("خطة Pro", "Pro Plan"), value: planPro, set: setPlanPro, credits: creditsPro, setCredits: setCreditsPro, badge: T("الأكثر شهرة", "Popular") },
+    { key: "business", label: T("خطة Business", "Business Plan"), value: planBusiness, set: setPlanBusiness, credits: creditsBusiness, setCredits: setCreditsBusiness, badge: T("للفرق", "Teams") },
   ];
+
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
