@@ -64,8 +64,30 @@ export const scrapeEgyptJobs = createServerFn({ method: "POST" })
       if (!allowed) throw new Error("FORBIDDEN");
     }
 
+    // Half-credit pricing for keyword job searches: charge 1 credit per every 2 searches.
+    // Bulk admin scrapes (no keyword) are not charged.
+    if (hasKeyword) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("credits,is_blocked,job_search_count")
+        .eq("id", userId)
+        .maybeSingle();
+      if (profile?.is_blocked) throw new Error("ACCOUNT_BLOCKED");
+      const nextCount = (profile?.job_search_count ?? 0) + 1;
+      const shouldCharge = nextCount % 2 === 0; // every 2nd search costs 1 credit
+      if (shouldCharge && (profile?.credits ?? 0) < 1) throw new Error("NO_CREDITS");
+      await supabase
+        .from("profiles")
+        .update({
+          job_search_count: nextCount,
+          credits: shouldCharge ? (profile?.credits ?? 0) - 1 : (profile?.credits ?? 0),
+        })
+        .eq("id", userId);
+    }
+
     const apiKey = process.env.FIRECRAWL_API_KEY;
     if (!apiKey) throw new Error("Firecrawl is not connected.");
+
 
     let kw = (data.keyword ?? "").trim();
     // If no keyword passed, auto-derive from the user's latest CV (job title / role).

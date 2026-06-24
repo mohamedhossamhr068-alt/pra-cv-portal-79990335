@@ -571,6 +571,7 @@ export type Database = {
           id: string
           is_approved: boolean
           is_blocked: boolean
+          job_search_count: number
           locale: string
           tenant_id: string | null
         }
@@ -590,6 +591,7 @@ export type Database = {
           id: string
           is_approved?: boolean
           is_blocked?: boolean
+          job_search_count?: number
           locale?: string
           tenant_id?: string | null
         }
@@ -609,6 +611,7 @@ export type Database = {
           id?: string
           is_approved?: boolean
           is_blocked?: boolean
+          job_search_count?: number
           locale?: string
           tenant_id?: string | null
         }
