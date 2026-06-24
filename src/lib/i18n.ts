@@ -40,8 +40,8 @@ const en = {
   },
   auth: {
     signInTitle: "Welcome back",
-    signInSub: "Sign in to your PRA workspace",
-    signUpTitle: "Create your workspace",
+    signInSub: "Sign in to your PRA organization",
+    signUpTitle: "Create your organization",
     signUpSub: "Spin up a tenant in seconds",
     email: "Email",
     password: "Password",
@@ -55,7 +55,7 @@ const en = {
     forgot: "Forgot password?",
   },
   dashboard: {
-    title: "Workspace overview",
+    title: "Organization overview",
     sub: "Real-time AI usage & talent analytics",
     cvsThisMonth: "CVs this month",
     quotaRemaining: "Quota remaining",
@@ -132,10 +132,10 @@ const en = {
     features: {
       free: ["10 credits / month", "1 user", "Basic templates"],
       pro: ["100 credits / month", "All templates", "Job matching", "Priority AI"],
-      business: ["500 credits / month", "Team workspace", "Branding", "Analytics & exports"],
+      business: ["500 credits / month", "Team organization", "Branding", "Analytics & exports"],
     },
 
-    stripeNote: "Stripe checkout is available once payments are enabled on this workspace.",
+    stripeNote: "Stripe checkout is available once payments are enabled on this organization.",
   },
   settings: {
     title: "Settings",
@@ -273,7 +273,7 @@ const en = {
     budgetExhausted: "Out of grant budget — ask an admin to top it up.",
     budgetCannotLower: "Moderators cannot reduce a user's credits.",
     selfDemoteForbidden: "You cannot remove your own admin role. Ask another admin to do it.",
-    lastAdminForbidden: "You cannot remove the last admin in the workspace.",
+    lastAdminForbidden: "You cannot remove the last admin in the organization.",
     tileNotifications: "Admin alerts",
     tileNotificationsDesc: "Moderator activity feed",
   },
@@ -357,8 +357,8 @@ const ar: typeof en = {
   },
   auth: {
     signInTitle: "مرحبًا بعودتك",
-    signInSub: "سجّل الدخول إلى مساحة عملك",
-    signUpTitle: "أنشئ مساحة عمل",
+    signInSub: "سجّل الدخول إلى حساب مؤسستك",
+    signUpTitle: "أنشئ مؤسستك",
     signUpSub: "أنشئ مؤسستك خلال ثوانٍ",
     email: "البريد الإلكتروني",
     password: "كلمة المرور",
