@@ -22,8 +22,13 @@ import { PaymentMethodIcon, PAYMENT_TYPE_META } from "@/components/payment-metho
 import { fmtCairo } from "@/lib/time";
 
 export const Route = createFileRoute("/_authenticated/billing/topup")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    plan: typeof s.plan === "string" ? s.plan : undefined,
+    amount: s.amount != null && !Number.isNaN(Number(s.amount)) ? Number(s.amount) : undefined,
+  }),
   component: TopupPage,
 });
+
 
 function TopupPage() {
   const { i18n: i } = useTranslation();
