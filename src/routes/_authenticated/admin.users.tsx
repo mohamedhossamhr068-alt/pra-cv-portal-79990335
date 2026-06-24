@@ -115,7 +115,10 @@ function StatCard({ icon: Icon, label, value, accent }: any) {
 
 function UserRow({ user, onUpdate, pending, t }: { user: any; onUpdate: (p: any) => void; pending: boolean; t: any }) {
   const [credits, setCredits] = useState<number>(user.credits ?? 0);
+  const [permOpen, setPermOpen] = useState(false);
   const isAdmin = user.roles?.includes("company_admin");
+  const isModerator = user.roles?.includes("moderator");
+  const permCount = (user.permissions ?? []).length;
 
   return (
     <Card className="overflow-hidden border-border/60 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[var(--shadow-elegant)]">
@@ -127,6 +130,11 @@ function UserRow({ user, onUpdate, pending, t }: { user: any; onUpdate: (p: any)
           <div className="flex flex-wrap items-center gap-2">
             <div className="truncate text-sm font-semibold">{user.full_name ?? user.email}</div>
             {isAdmin && <Badge variant="secondary" className="gap-1"><Shield className="h-3 w-3" /> {t("admin.adminBadge")}</Badge>}
+            {isModerator && !isAdmin && (
+              <Badge variant="outline" className="gap-1">
+                <KeyRound className="h-3 w-3" /> {t("admin.moderatorBadge")} · {permCount}
+              </Badge>
+            )}
             {user.is_blocked && <Badge variant="destructive" className="gap-1"><Ban className="h-3 w-3" /> {t("admin.blockedBadge")}</Badge>}
           </div>
           <div className="truncate text-xs text-muted-foreground">{user.email}</div>
@@ -152,6 +160,16 @@ function UserRow({ user, onUpdate, pending, t }: { user: any; onUpdate: (p: any)
 
         <Button
           size="sm"
+          variant="outline"
+          onClick={() => setPermOpen(true)}
+          className="gap-1.5"
+          disabled={isAdmin}
+        >
+          <KeyRound className="h-3.5 w-3.5" /> {t("admin.permissions")}
+        </Button>
+
+        <Button
+          size="sm"
           variant={isAdmin ? "outline" : "secondary"}
           disabled={pending}
           onClick={() => onUpdate({ grant_admin: !isAdmin })}
@@ -171,7 +189,101 @@ function UserRow({ user, onUpdate, pending, t }: { user: any; onUpdate: (p: any)
           {user.is_blocked ? <Check className="h-3.5 w-3.5" /> : <Ban className="h-3.5 w-3.5" />}
           {user.is_blocked ? t("admin.unblock") : t("admin.block")}
         </Button>
+
+        <PermissionsDialog
+          open={permOpen}
+          onOpenChange={setPermOpen}
+          user={user}
+          t={t}
+        />
       </CardContent>
     </Card>
   );
 }
+
+function PermissionsDialog({ open, onOpenChange, user, t }: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  user: any;
+  t: any;
+}) {
+  const qc = useQueryClient();
+  const setPerms = useServerFn(setUserPermissions);
+  const initial = (user.permissions ?? []) as Permission[];
+  const isModerator = user.roles?.includes("moderator");
+  const [selected, setSelected] = useState<Set<Permission>>(new Set(initial));
+  const [moderator, setModerator] = useState<boolean>(!!isModerator);
+
+  const toggle = (p: Permission) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(p)) next.delete(p);
+      else next.add(p);
+      return next;
+    });
+  };
+
+  const mut = useMutation({
+    mutationFn: () =>
+      setPerms({
+        data: {
+          target_user: user.id,
+          permissions: Array.from(selected),
+          make_moderator: moderator,
+        },
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tenant-users"] });
+      toast.success(t("admin.permissionsSaved"));
+      onOpenChange(false);
+    },
+    onError: (e: any) => toast.error(e?.message ?? t("admin.updateFailed")),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <KeyRound className="h-5 w-5 text-primary" />
+            {t("admin.permissionsFor", { name: user.full_name ?? user.email })}
+          </DialogTitle>
+          <DialogDescription>{t("admin.permissionsHint")}</DialogDescription>
+        </DialogHeader>
+
+        <div className="flex items-center justify-between rounded-lg border bg-muted/30 p-3">
+          <div>
+            <div className="text-sm font-medium">{t("admin.moderatorBadge")}</div>
+            <div className="text-xs text-muted-foreground">{t("admin.moderatorHint")}</div>
+          </div>
+          <Switch checked={moderator} onCheckedChange={setModerator} />
+        </div>
+
+        <div className="space-y-2">
+          {ALL_PERMISSIONS.map((p) => (
+            <label
+              key={p}
+              className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/30"
+            >
+              <Checkbox checked={selected.has(p)} onCheckedChange={() => toggle(p)} className="mt-0.5" />
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium">{t(`admin.perm_${p}`)}</div>
+                <div className="text-xs text-muted-foreground">{t(`admin.perm_${p}_desc`)}</div>
+              </div>
+            </label>
+          ))}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={mut.isPending}>
+            {t("common.cancel")}
+          </Button>
+          <Button onClick={() => mut.mutate()} disabled={mut.isPending}>
+            {mut.isPending ? t("admin.saving") : t("admin.save")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
