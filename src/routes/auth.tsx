@@ -194,15 +194,25 @@ function AuthPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
+              {status && (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-primary"
+                >
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>{status}</span>
+                </div>
+              )}
               {step === "email" ? (
-                <form className="flex flex-col gap-3" onSubmit={sendCode}>
+                <form className="flex flex-col gap-3" onSubmit={sendCode} noValidate>
                   <div className="grid gap-1.5">
                     <Label htmlFor="fn">{t("auth.fullName")}</Label>
-                    <Input id="fn" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                    <Input id="fn" value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={100} />
                   </div>
                   <div className="grid gap-1.5">
                     <Label htmlFor="co">{t("auth.company")}</Label>
-                    <Input id="co" value={company} onChange={(e) => setCompany(e.target.value)} />
+                    <Input id="co" value={company} onChange={(e) => setCompany(e.target.value)} maxLength={120} />
                   </div>
                   <div className="grid gap-1.5">
                     <Label htmlFor="em">{t("auth.email")}</Label>
@@ -210,20 +220,46 @@ function AuthPage() {
                       id="em"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (emailError) setEmailError(null);
+                      }}
+                      onBlur={() => {
+                        if (!email) return;
+                        const r = emailSchema.safeParse(email);
+                        setEmailError(r.success ? null : r.error.issues[0]?.message ?? null);
+                      }}
                       placeholder="you@company.com"
+                      autoComplete="email"
+                      maxLength={255}
+                      aria-invalid={!!emailError}
+                      aria-describedby={emailError ? "em-err" : undefined}
+                      className={emailError ? "border-destructive focus-visible:ring-destructive/40" : undefined}
                       required
                     />
+                    {emailError && (
+                      <p id="em-err" className="flex items-start gap-1.5 text-xs text-destructive">
+                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <span>{emailError}</span>
+                      </p>
+                    )}
                   </div>
-                  <Button type="submit" disabled={loading || !email} className="mt-2 h-11">
-                    {loading ? t("auth.sending") : t("auth.sendCode")}
+                  <Button type="submit" disabled={loading} className="mt-2 h-11">
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t("auth.sending")}
+                      </>
+                    ) : (
+                      t("auth.sendCode")
+                    )}
                   </Button>
                   <p className="text-center text-xs text-muted-foreground">
                     {t("auth.awaitingApproval")}
                   </p>
                 </form>
               ) : (
-                <form className="flex flex-col gap-3" onSubmit={verifyCode}>
+                <form className="flex flex-col gap-3" onSubmit={verifyCode} noValidate>
                   <div className="grid gap-1.5">
                     <Label htmlFor="code">{t("auth.enterCode")}</Label>
                     <Input
@@ -232,26 +268,50 @@ function AuthPage() {
                       autoComplete="one-time-code"
                       maxLength={6}
                       value={code}
-                      onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                      onChange={(e) => {
+                        setCode(e.target.value.replace(/\D/g, ""));
+                        if (codeError) setCodeError(null);
+                      }}
                       placeholder="••••••"
-                      className="h-12 text-center text-2xl tracking-[0.5em]"
+                      className={`h-12 text-center text-2xl tracking-[0.5em] ${
+                        codeError ? "border-destructive focus-visible:ring-destructive/40" : ""
+                      }`}
+                      aria-invalid={!!codeError}
+                      aria-describedby={codeError ? "code-err" : undefined}
                       required
                     />
+                    {codeError && (
+                      <p id="code-err" className="flex items-start gap-1.5 text-xs text-destructive">
+                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <span>{codeError}</span>
+                      </p>
+                    )}
                   </div>
-                  <Button type="submit" disabled={loading || code.length < 6} className="h-11">
-                    {loading ? t("auth.verifying") : t("auth.verify")}
+                  <Button type="submit" disabled={loading} className="h-11">
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t("auth.verifying")}
+                      </>
+                    ) : (
+                      t("auth.verify")
+                    )}
                   </Button>
                   <div className="flex justify-between text-xs">
                     <button
                       type="button"
-                      className="text-muted-foreground hover:text-foreground"
-                      onClick={() => setStep("email")}
+                      className="text-muted-foreground hover:text-foreground disabled:opacity-50"
+                      onClick={() => {
+                        setStep("email");
+                        setCodeError(null);
+                      }}
+                      disabled={loading}
                     >
                       ← {t("auth.changeEmail")}
                     </button>
                     <button
                       type="button"
-                      className="text-primary hover:underline"
+                      className="text-primary hover:underline disabled:opacity-50"
                       onClick={() => sendCode()}
                       disabled={loading}
                     >
@@ -261,6 +321,7 @@ function AuthPage() {
                 </form>
               )}
             </CardContent>
+
           </Card>
         </div>
       </div>
