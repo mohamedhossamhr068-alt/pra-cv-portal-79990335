@@ -36,7 +36,16 @@ function AdminUsers() {
       qc.invalidateQueries({ queryKey: ["tenant-users"] });
       toast.success(t("admin.updated"));
     },
-    onError: (e: any) => toast.error(e?.message ?? t("admin.updateFailed")),
+    onError: (e: any) => {
+      const msg = String(e?.message ?? "");
+      if (msg.includes("MOD_BUDGET_EXCEEDED")) {
+        toast.error(t("admin.budgetExhausted"));
+      } else if (msg.includes("MOD_CANNOT_LOWER_CREDITS")) {
+        toast.error(t("admin.budgetCannotLower"));
+      } else {
+        toast.error(e?.message ?? t("admin.updateFailed"));
+      }
+    },
   });
 
   const users = (data ?? []) as any[];
