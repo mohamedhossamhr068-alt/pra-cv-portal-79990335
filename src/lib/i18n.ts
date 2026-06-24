@@ -211,6 +211,17 @@ const en = {
     permissionsSaved: "Permissions updated",
     moderatorBadge: "Moderator",
     moderatorHint: "Grants the moderator role. Permissions below define what they can do.",
+    manageRole: "Manage role",
+    roleLabel: "Role",
+    roleUser: "Regular user",
+    roleUser_desc: "No admin access. All permissions are revoked.",
+    roleModerator: "Moderator",
+    roleModerator_desc: "Limited admin access. You choose the exact permissions below.",
+    roleAdmin: "Admin",
+    roleAdmin_desc: "Full access to every admin area. Use with care.",
+    roleSaved: "Role updated",
+
+
 
 
     perm_manage_users: "Manage users",
@@ -475,6 +486,15 @@ const ar: typeof en = {
     permissionsSaved: "تم حفظ الصلاحيات",
     moderatorBadge: "مشرف",
     moderatorHint: "يمنح المستخدم دور المشرف. الصلاحيات بالأسفل تحدد ما يقدر يعمله.",
+    manageRole: "إدارة الدور",
+    roleLabel: "الدور",
+    roleUser: "مستخدم عادي",
+    roleUser_desc: "بدون صلاحيات إدارية. يتم سحب كل الصلاحيات.",
+    roleModerator: "مشرف",
+    roleModerator_desc: "صلاحيات محدودة. أنت تختار بالظبط الصلاحيات بالأسفل.",
+    roleAdmin: "أدمن",
+    roleAdmin_desc: "وصول كامل لكل أقسام الإدارة. استخدمها بحذر.",
+    roleSaved: "تم تحديث الدور",
     perm_manage_users: "إدارة المستخدمين",
     perm_manage_users_desc: "تعديل الرصيد وحظر / إلغاء حظر المستخدمين (بدون الترقية للأدمن).",
     perm_review_topups: "مراجعة طلبات الشحن",
