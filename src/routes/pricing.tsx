@@ -111,7 +111,7 @@ function Pricing() {
                   </CardTitle>
                   <div className="text-3xl font-bold">
                     {formatPrice(tier.price, currency)}
-                    <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                    <span className="text-sm font-normal text-muted-foreground">{ar ? " / شهر" : "/mo"}</span>
                   </div>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
