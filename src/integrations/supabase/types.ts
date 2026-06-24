@@ -399,6 +399,7 @@ export type Database = {
           email: string
           full_name: string | null
           grant_budget: number | null
+          grant_low_notified: boolean
           grant_used: number
           id: string
           is_blocked: boolean
@@ -411,6 +412,7 @@ export type Database = {
           email: string
           full_name?: string | null
           grant_budget?: number | null
+          grant_low_notified?: boolean
           grant_used?: number
           id: string
           is_blocked?: boolean
@@ -423,6 +425,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           grant_budget?: number | null
+          grant_low_notified?: boolean
           grant_used?: number
           id?: string
           is_blocked?: boolean
