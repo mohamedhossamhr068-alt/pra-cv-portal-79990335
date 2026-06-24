@@ -26,7 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { setLocale } from "@/lib/i18n";
-import { useMeQuery } from "@/lib/me.hooks";
+import { useMeQuery, hasFeature, type FeatureFlag } from "@/lib/me.hooks";
 import { NotificationBell } from "@/components/notification-bell";
 import { CairoClock } from "@/components/cairo-clock";
 
