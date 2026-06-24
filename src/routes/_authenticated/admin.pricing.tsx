@@ -73,6 +73,7 @@ function AdminPricing() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tenant-pricing"] });
+      qc.invalidateQueries({ queryKey: ["platform-pricing"] });
       qc.invalidateQueries({ queryKey: ["me"] });
       toast.success(t("admin.pricingSaved"));
     },
