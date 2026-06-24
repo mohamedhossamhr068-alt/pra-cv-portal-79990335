@@ -69,7 +69,9 @@ function TopupPage() {
     [fallbackMethods, selectedId],
   );
 
-  const [amount, setAmount] = useState<number>(50);
+  const search = Route.useSearch();
+  const [amount, setAmount] = useState<number>(search.amount && search.amount > 0 ? search.amount : 50);
+
   const [ref, setRef] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
