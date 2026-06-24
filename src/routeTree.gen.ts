@@ -20,6 +20,7 @@ import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/j
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedCvIndexRouteImport } from './routes/_authenticated/cv.index'
+import { Route as AuthenticatedBillingIndexRouteImport } from './routes/_authenticated/billing.index'
 import { Route as ApiPublicGuestChatRouteImport } from './routes/api/public/guest-chat'
 import { Route as AuthenticatedPlatformTenantsRouteImport } from './routes/_authenticated/platform.tenants'
 import { Route as AuthenticatedPlatformAnalyticsRouteImport } from './routes/_authenticated/platform.analytics'
@@ -98,6 +99,12 @@ const AuthenticatedCvIndexRoute = AuthenticatedCvIndexRouteImport.update({
   path: '/cv/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBillingIndexRoute =
+  AuthenticatedBillingIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedBillingRoute,
+  } as any)
 const ApiPublicGuestChatRoute = ApiPublicGuestChatRouteImport.update({
   id: '/api/public/guest-chat',
   path: '/api/public/guest-chat',
@@ -259,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/platform/analytics': typeof AuthenticatedPlatformAnalyticsRoute
   '/platform/tenants': typeof AuthenticatedPlatformTenantsRoute
   '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
+  '/billing/': typeof AuthenticatedBillingIndexRoute
   '/cv/': typeof AuthenticatedCvIndexRoute
   '/admin/chat/credit': typeof AuthenticatedAdminChatCreditRoute
   '/admin/chat/guests': typeof AuthenticatedAdminChatGuestsRoute
@@ -269,7 +277,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/pending-approval': typeof PendingApprovalRoute
   '/pricing': typeof PricingRoute
-  '/billing': typeof AuthenticatedBillingRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/jobs': typeof AuthenticatedJobsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -294,6 +301,7 @@ export interface FileRoutesByTo {
   '/platform/analytics': typeof AuthenticatedPlatformAnalyticsRoute
   '/platform/tenants': typeof AuthenticatedPlatformTenantsRoute
   '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
+  '/billing': typeof AuthenticatedBillingIndexRoute
   '/cv': typeof AuthenticatedCvIndexRoute
   '/admin/chat/credit': typeof AuthenticatedAdminChatCreditRoute
   '/admin/chat/guests': typeof AuthenticatedAdminChatGuestsRoute
@@ -331,6 +339,7 @@ export interface FileRoutesById {
   '/_authenticated/platform/analytics': typeof AuthenticatedPlatformAnalyticsRoute
   '/_authenticated/platform/tenants': typeof AuthenticatedPlatformTenantsRoute
   '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
+  '/_authenticated/billing/': typeof AuthenticatedBillingIndexRoute
   '/_authenticated/cv/': typeof AuthenticatedCvIndexRoute
   '/_authenticated/admin/chat/credit': typeof AuthenticatedAdminChatCreditRoute
   '/_authenticated/admin/chat/guests': typeof AuthenticatedAdminChatGuestsRoute
@@ -368,6 +377,7 @@ export interface FileRouteTypes {
     | '/platform/analytics'
     | '/platform/tenants'
     | '/api/public/guest-chat'
+    | '/billing/'
     | '/cv/'
     | '/admin/chat/credit'
     | '/admin/chat/guests'
@@ -378,7 +388,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/pending-approval'
     | '/pricing'
-    | '/billing'
     | '/dashboard'
     | '/jobs'
     | '/settings'
@@ -403,6 +412,7 @@ export interface FileRouteTypes {
     | '/platform/analytics'
     | '/platform/tenants'
     | '/api/public/guest-chat'
+    | '/billing'
     | '/cv'
     | '/admin/chat/credit'
     | '/admin/chat/guests'
@@ -439,6 +449,7 @@ export interface FileRouteTypes {
     | '/_authenticated/platform/analytics'
     | '/_authenticated/platform/tenants'
     | '/api/public/guest-chat'
+    | '/_authenticated/billing/'
     | '/_authenticated/cv/'
     | '/_authenticated/admin/chat/credit'
     | '/_authenticated/admin/chat/guests'
@@ -532,6 +543,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/cv/'
       preLoaderRoute: typeof AuthenticatedCvIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/billing/': {
+      id: '/_authenticated/billing/'
+      path: '/'
+      fullPath: '/billing/'
+      preLoaderRoute: typeof AuthenticatedBillingIndexRouteImport
+      parentRoute: typeof AuthenticatedBillingRoute
     }
     '/api/public/guest-chat': {
       id: '/api/public/guest-chat'
@@ -700,11 +718,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedBillingRouteChildren {
   AuthenticatedBillingHistoryRoute: typeof AuthenticatedBillingHistoryRoute
   AuthenticatedBillingTopupRoute: typeof AuthenticatedBillingTopupRoute
+  AuthenticatedBillingIndexRoute: typeof AuthenticatedBillingIndexRoute
 }
 
 const AuthenticatedBillingRouteChildren: AuthenticatedBillingRouteChildren = {
   AuthenticatedBillingHistoryRoute: AuthenticatedBillingHistoryRoute,
   AuthenticatedBillingTopupRoute: AuthenticatedBillingTopupRoute,
+  AuthenticatedBillingIndexRoute: AuthenticatedBillingIndexRoute,
 }
 
 const AuthenticatedBillingRouteWithChildren =
