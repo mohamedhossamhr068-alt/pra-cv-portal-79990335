@@ -357,6 +357,23 @@ function RoleDialog({ open, onOpenChange, user, t }: {
                   value={budget}
                   onChange={(e) => setBudgetVal(Number(e.target.value))}
                 />
+                <div>
+                  <Label className="text-xs">{t("admin.budgetPeriod")}</Label>
+                  <div className="mt-1 grid grid-cols-2 gap-2">
+                    {(["monthly", "total"] as const).map((p) => (
+                      <button
+                        type="button"
+                        key={p}
+                        onClick={() => setPeriod(p)}
+                        className={`rounded-md border px-2 py-1.5 text-xs font-medium transition-colors ${
+                          period === p ? "border-primary bg-primary/10 text-primary" : "hover:bg-muted/40"
+                        }`}
+                      >
+                        {t(`admin.budgetPeriod_${p}`)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="flex items-center justify-between rounded border bg-background px-2 py-1.5 text-xs">
                   <span className="text-muted-foreground">{t("admin.budgetUsed")}</span>
                   <span className="font-medium">
