@@ -22,35 +22,50 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [company, setCompany] = useState("");
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const sendCode = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!email.trim()) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: window.location.origin + "/pending-approval",
+          data: { full_name: fullName || undefined, company_name: company || undefined },
+        },
+      });
+      if (error) throw error;
+      toast.success(t("auth.codeSent", { email }));
+      setStep("code");
+    } catch (err: any) {
+      toast.error(err?.message ?? "Failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin + "/dashboard",
-            data: { full_name: fullName, company_name: company },
-          },
-        });
-        if (error) throw error;
-        toast.success("Account created");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: code.trim(),
+        type: "email",
+      });
+      if (error) throw error;
+      // approval gate inside _authenticated will route to /pending-approval if needed
       navigate({ to: "/dashboard" });
     } catch (err: any) {
-      toast.error(err?.message ?? "Authentication failed");
+      toast.error(err?.message ?? "Invalid code");
     } finally {
       setLoading(false);
     }
@@ -83,8 +98,8 @@ function AuthPage() {
             <span className="text-lg font-semibold">{t("brand")}</span>
           </div>
           <div>
-            <h2 className="text-3xl font-bold leading-tight">{t("landing.heroTitle")}</h2>
-            <p className="mt-3 max-w-md text-white/85">{t("landing.heroSub")}</p>
+            <h2 className="text-3xl font-bold leading-tight">{t("auth.signUpTitle")}</h2>
+            <p className="mt-3 max-w-md text-white/85">{t("auth.signUpSub")}</p>
           </div>
           <div className="text-xs text-white/70">© {new Date().getFullYear()} {t("brand")}</div>
         </div>
@@ -93,50 +108,70 @@ function AuthPage() {
       <div className="flex items-center justify-center bg-background p-6">
         <Card className="w-full max-w-md border-border/60 shadow-[var(--shadow-elegant)]">
           <CardHeader>
-            <CardTitle>{mode === "signin" ? t("auth.signInTitle") : t("auth.signUpTitle")}</CardTitle>
-            <CardDescription>{mode === "signin" ? t("auth.signInSub") : t("auth.signUpSub")}</CardDescription>
+            <CardTitle>{step === "email" ? t("auth.signInTitle") : t("auth.enterCode")}</CardTitle>
+            <CardDescription>
+              {step === "email" ? t("auth.signUpSub") : t("auth.codeSent", { email })}
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <Button variant="outline" className="w-full" onClick={onGoogle} disabled={loading}>
-              {t("auth.google")}
-            </Button>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <div className="h-px flex-1 bg-border" />
-              {t("auth.or")}
-              <div className="h-px flex-1 bg-border" />
-            </div>
-            <form className="flex flex-col gap-3" onSubmit={onSubmit}>
-              {mode === "signup" && (
-                <>
+            {step === "email" ? (
+              <>
+                <Button variant="outline" className="w-full" onClick={onGoogle} disabled={loading}>
+                  {t("auth.google")}
+                </Button>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <div className="h-px flex-1 bg-border" />
+                  {t("auth.or")}
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+                <form className="flex flex-col gap-3" onSubmit={sendCode}>
                   <div>
                     <Label htmlFor="fn">{t("auth.fullName")}</Label>
-                    <Input id="fn" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+                    <Input id="fn" value={fullName} onChange={(e) => setFullName(e.target.value)} />
                   </div>
                   <div>
                     <Label htmlFor="co">{t("auth.company")}</Label>
-                    <Input id="co" value={company} onChange={(e) => setCompany(e.target.value)} required />
+                    <Input id="co" value={company} onChange={(e) => setCompany(e.target.value)} />
                   </div>
-                </>
-              )}
-              <div>
-                <Label htmlFor="em">{t("auth.email")}</Label>
-                <Input id="em" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </div>
-              <div>
-                <Label htmlFor="pw">{t("auth.password")}</Label>
-                <Input id="pw" type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} required />
-              </div>
-              <Button type="submit" disabled={loading} className="mt-2">
-                {loading ? t("common.loading") : t("auth.submit")}
-              </Button>
-            </form>
-            <button
-              type="button"
-              className="text-center text-xs text-muted-foreground hover:text-foreground"
-              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-            >
-              {mode === "signin" ? t("auth.noAccount") : t("auth.haveAccount")}
-            </button>
+                  <div>
+                    <Label htmlFor="em">{t("auth.email")}</Label>
+                    <Input id="em" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  </div>
+                  <Button type="submit" disabled={loading || !email} className="mt-2">
+                    {loading ? t("auth.sending") : t("auth.sendCode")}
+                  </Button>
+                </form>
+                <p className="text-center text-xs text-muted-foreground">{t("auth.awaitingApproval")}</p>
+              </>
+            ) : (
+              <form className="flex flex-col gap-3" onSubmit={verifyCode}>
+                <div>
+                  <Label htmlFor="code">{t("auth.enterCode")}</Label>
+                  <Input
+                    id="code"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                    placeholder="••••••"
+                    className="text-center text-2xl tracking-[0.5em]"
+                    required
+                  />
+                </div>
+                <Button type="submit" disabled={loading || code.length < 6}>
+                  {loading ? t("auth.verifying") : t("auth.verify")}
+                </Button>
+                <div className="flex justify-between text-xs">
+                  <button type="button" className="text-muted-foreground hover:text-foreground" onClick={() => setStep("email")}>
+                    ← {t("auth.changeEmail")}
+                  </button>
+                  <button type="button" className="text-primary hover:underline" onClick={() => sendCode()} disabled={loading}>
+                    {t("auth.resend")}
+                  </button>
+                </div>
+              </form>
+            )}
           </CardContent>
         </Card>
       </div>
