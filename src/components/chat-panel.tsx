@@ -2,14 +2,18 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
-import { Send, Check, X, Coins } from "lucide-react";
+import { Send, Check, X, Coins, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { listMessages, sendChatMessage, reviewCreditRequest } from "@/lib/chat.functions";
+import { triggerSupportBotReply } from "@/lib/bot.functions";
+import { setBotEnabled } from "@/lib/guest-chat.functions";
 import { fmtCairo } from "@/lib/time";
 import { useMeQuery } from "@/lib/me.hooks";
 import { toast } from "sonner";
@@ -21,9 +25,15 @@ type Props = {
   showCreditRequest?: boolean;
   /** show approve/reject buttons (admins) */
   canReview?: boolean;
+  /** owner-side: trigger bot reply after sending */
+  triggerBot?: boolean;
+  /** staff-side: show bot on/off toggle */
+  showBotToggle?: boolean;
+  /** initial bot state for the toggle */
+  initialBotEnabled?: boolean;
 };
 
-export function ChatPanel({ conversationId, kind, showCreditRequest, canReview }: Props) {
+export function ChatPanel({ conversationId, kind, showCreditRequest, canReview, triggerBot, showBotToggle, initialBotEnabled }: Props) {
   const { i18n } = useTranslation();
   const ar = i18n.language === "ar";
   const me = useMeQuery();
@@ -31,6 +41,12 @@ export function ChatPanel({ conversationId, kind, showCreditRequest, canReview }
   const listFn = useServerFn(listMessages);
   const sendFn = useServerFn(sendChatMessage);
   const reviewFn = useServerFn(reviewCreditRequest);
+  const botFn = useServerFn(triggerSupportBotReply);
+  const toggleBotFn = useServerFn(setBotEnabled);
+  const [botOn, setBotOn] = useState<boolean>(initialBotEnabled ?? true);
+  useEffect(() => {
+    if (typeof initialBotEnabled === "boolean") setBotOn(initialBotEnabled);
+  }, [initialBotEnabled]);
 
   const q = useQuery({
     queryKey: ["chat-messages", conversationId],
