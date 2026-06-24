@@ -73,7 +73,10 @@ export function FloatingChatWidget() {
 
 // ------------------ Guest (visitor) chat ------------------
 function GuestChat({ ar, onClose }: { ar: boolean; onClose: () => void }) {
-  const [token] = useState(getOrCreateToken);
+  const [token, setToken] = useState<string>("");
+  useEffect(() => {
+    setToken(getOrCreateToken());
+  }, []);
   const [msgs, setMsgs] = useState<GuestMsg[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
