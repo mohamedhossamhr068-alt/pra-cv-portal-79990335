@@ -20,7 +20,9 @@ export type Database = {
           actor_id: string | null
           created_at: string
           id: string
+          link: string | null
           metadata: Json | null
+          status: string
           target: string | null
           tenant_id: string | null
         }
@@ -29,7 +31,9 @@ export type Database = {
           actor_id?: string | null
           created_at?: string
           id?: string
+          link?: string | null
           metadata?: Json | null
+          status?: string
           target?: string | null
           tenant_id?: string | null
         }
@@ -38,7 +42,9 @@ export type Database = {
           actor_id?: string | null
           created_at?: string
           id?: string
+          link?: string | null
           metadata?: Json | null
+          status?: string
           target?: string | null
           tenant_id?: string | null
         }
@@ -807,6 +813,16 @@ export type Database = {
       is_tenant_admin: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
+      }
+      log_audit: {
+        Args: {
+          _action: string
+          _link?: string
+          _metadata?: Json
+          _status?: string
+          _target?: string
+        }
+        Returns: string
       }
       push_notification: {
         Args: {
