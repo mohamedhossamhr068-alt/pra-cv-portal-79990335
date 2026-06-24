@@ -78,6 +78,8 @@ function Dashboard() {
             <AdminTile to="/admin/usage" icon={BarChart3} title={t("admin.tileUsage")} desc={t("admin.tileUsageDesc")} />
             <AdminTile to="/admin/branding" icon={Palette} title={t("admin.tileBranding")} desc={t("admin.tileBrandingDesc")} />
             <AdminTile to="/admin/audit" icon={ScrollText} title={t("admin.tileAudit")} desc={t("admin.tileAuditDesc")} />
+            <AdminTile to="/admin/notifications" icon={BellRing} title={t("admin.tileNotifications")} desc={t("admin.tileNotificationsDesc")} />
+
 
           </CardContent>
         </Card>
