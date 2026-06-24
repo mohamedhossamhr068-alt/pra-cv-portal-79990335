@@ -14,6 +14,10 @@ function Dashboard() {
   const me = useMeQuery();
   const quota = me.data?.quota;
   const isAdmin = me.data?.roles?.includes("company_admin");
+  const isModerator = me.data?.roles?.includes("moderator") && !isAdmin;
+  const grantBudget = (me.data?.profile as any)?.grant_budget as number | null | undefined;
+  const grantUsed = (me.data?.profile as any)?.grant_used ?? 0;
+  const grantRemaining = grantBudget == null ? null : Math.max(0, grantBudget - grantUsed);
 
   const stats = [
     { label: t("dashboard.cvsThisMonth"), value: quota?.used ?? 0, icon: FileText, accent: "bg-primary/10 text-primary" },
