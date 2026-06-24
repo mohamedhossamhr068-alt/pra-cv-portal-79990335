@@ -129,7 +129,7 @@ function GuestChat({ ar, onClose }: { ar: boolean; onClose: () => void }) {
       const r = await fetch("/api/public/guest-chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ guest_token: token, message: text, display_name: name || undefined, email: email || undefined }),
+        body: JSON.stringify({ guest_token: token, message: text, display_name: name || undefined, email: email || undefined, lang: ar ? "ar" : "en" }),
       });
       const d = await r.json();
       if (d.bot_reply) {
