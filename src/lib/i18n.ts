@@ -486,6 +486,10 @@ const ar: typeof en = {
     today: "اليوم",
     daysAgo: "قبل {{n}} يوم",
     allEgyptHint: 'كل الوظائف الحديثة من مصر. اعمل سي في واضغط "مطابقة" للحصول على نسبة قبول لكل وظيفة.',
+    searchHint: "ابحث عن وظيفة بالمسمى (مثلاً: مطور React, مدير مبيعات)…",
+    searchBtn: "بحث",
+    searching: "جاري البحث…",
+    searchResultsFor: 'نتائج "{{kw}}" — {{n}} وظيفة.',
   },
   billing: {
     title: "الفوترة والاشتراك",
