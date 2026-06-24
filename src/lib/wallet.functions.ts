@@ -113,9 +113,17 @@ export const reviewTopup = createServerFn({ method: "POST" })
       _approve: data.approve,
       _note: data.note || null,
     } as any);
+    await context.supabase.rpc("log_audit" as any, {
+      _action: data.approve ? "payment.topup_approved" : "payment.topup_rejected",
+      _status: error ? "failure" : "success",
+      _target: data.request_id,
+      _link: "/admin/wallet",
+      _metadata: { note: data.note || null, error: error ? String(error.message ?? error) : null } as any,
+    });
     if (error) throw error;
     return { ok: true };
   });
+
 
 export const getScreenshotUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -208,6 +216,14 @@ export const createTopupRequestV2 = createServerFn({ method: "POST" })
       screenshot_path: data.screenshot_path,
       payment_method_id: data.payment_method_id || null,
     } as any);
+    await supabase.rpc("log_audit" as any, {
+      _action: "payment.topup_requested",
+      _status: error ? "failure" : "success",
+      _target: `${data.amount_egp} EGP → ${credits} credits`,
+      _link: "/billing/topup",
+      _metadata: { amount_egp: data.amount_egp, credits, error: error ? String(error.message ?? error) : null } as any,
+    });
     if (error) throw error;
     return { ok: true, credits };
   });
+
