@@ -347,8 +347,8 @@ const ar: typeof en = {
     tenants: "المؤسسات",
     analytics: "التحليلات",
     signOut: "تسجيل الخروج",
-    signIn: "تسجيل الدخول",
-    signUp: "إنشاء حساب",
+    signIn: "أدخل PRA",
+    signUp: "انضم إلى PRA",
   },
   landing: {
     heroEyebrow: "مصممة للموارد البشرية والتوظيف عالميًا",
