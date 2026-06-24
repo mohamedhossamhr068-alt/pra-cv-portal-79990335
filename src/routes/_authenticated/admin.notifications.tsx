@@ -159,9 +159,9 @@ function NotifRow({ n, onMark }: { n: any; onMark: () => void }) {
           {actorName && <><span>{actorName}</span><span>•</span></>}
           <span>{date}</span>
           {n.link && (
-            <Link to={n.link} className="inline-flex items-center gap-1 text-primary hover:underline">
+            <a href={n.link} className="inline-flex items-center gap-1 text-primary hover:underline">
               <ExternalLink className="h-3 w-3" /> {t("admin.openRecord")}
-            </Link>
+            </a>
           )}
         </div>
       </div>
