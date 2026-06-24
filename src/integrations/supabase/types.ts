@@ -346,8 +346,12 @@ export type Database = {
       }
       platform_pricing: {
         Row: {
+          bonus_credits: number
           currency: string
           id: string
+          plan_credits_business: number
+          plan_credits_free: number
+          plan_credits_pro: number
           plan_price_business: number
           plan_price_free: number
           plan_price_pro: number
@@ -355,8 +359,12 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          bonus_credits?: number
           currency?: string
           id?: string
+          plan_credits_business?: number
+          plan_credits_free?: number
+          plan_credits_pro?: number
           plan_price_business?: number
           plan_price_free?: number
           plan_price_pro?: number
@@ -364,8 +372,12 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          bonus_credits?: number
           currency?: string
           id?: string
+          plan_credits_business?: number
+          plan_credits_free?: number
+          plan_credits_pro?: number
           plan_price_business?: number
           plan_price_free?: number
           plan_price_pro?: number
@@ -461,6 +473,7 @@ export type Database = {
       }
       tenants: {
         Row: {
+          bonus_credits: number
           created_at: string
           currency: string
           cv_credit_cost: number
@@ -469,6 +482,9 @@ export type Database = {
           logo_url: string | null
           match_credit_cost: number
           name: string
+          plan_credits_business: number
+          plan_credits_free: number
+          plan_credits_pro: number
           plan_price_business: number
           plan_price_free: number
           plan_price_pro: number
@@ -477,6 +493,7 @@ export type Database = {
           slug: string
         }
         Insert: {
+          bonus_credits?: number
           created_at?: string
           currency?: string
           cv_credit_cost?: number
@@ -485,6 +502,9 @@ export type Database = {
           logo_url?: string | null
           match_credit_cost?: number
           name: string
+          plan_credits_business?: number
+          plan_credits_free?: number
+          plan_credits_pro?: number
           plan_price_business?: number
           plan_price_free?: number
           plan_price_pro?: number
@@ -493,6 +513,7 @@ export type Database = {
           slug: string
         }
         Update: {
+          bonus_credits?: number
           created_at?: string
           currency?: string
           cv_credit_cost?: number
@@ -501,6 +522,9 @@ export type Database = {
           logo_url?: string | null
           match_credit_cost?: number
           name?: string
+          plan_credits_business?: number
+          plan_credits_free?: number
+          plan_credits_pro?: number
           plan_price_business?: number
           plan_price_free?: number
           plan_price_pro?: number
@@ -736,6 +760,22 @@ export type Database = {
           }
         | {
             Args: {
+              _currency?: string
+              _cv_cost?: number
+              _match_cost?: number
+              _plan_business?: number
+              _plan_free?: number
+              _plan_pro?: number
+              _scrape_cost?: number
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _bonus_credits?: number
+              _credits_business?: number
+              _credits_free?: number
+              _credits_pro?: number
               _currency?: string
               _cv_cost?: number
               _match_cost?: number
