@@ -11,7 +11,7 @@ export const getWalletSettings = createServerFn({ method: "GET" })
     if (!prof?.tenant_id) return null;
     const { data } = await supabase
       .from("wallet_settings").select("*").eq("tenant_id", prof.tenant_id).maybeSingle();
-    return data ?? { tenant_id: prof.tenant_id, vodafone_number: "", instructions: "", credits_per_egp: 1 };
+    return data ?? { tenant_id: prof.tenant_id, vodafone_number: "", instructions: "", credits_per_egp: 0.02 };
   });
 
 export const updateWalletSettings = createServerFn({ method: "POST" })
@@ -55,7 +55,7 @@ export const createTopupRequest = createServerFn({ method: "POST" })
     if (!prof?.tenant_id) throw new Error("NO_TENANT");
     const { data: w } = await supabase
       .from("wallet_settings").select("credits_per_egp").eq("tenant_id", prof.tenant_id).maybeSingle();
-    const rate = Number((w as any)?.credits_per_egp ?? 1);
+    const rate = Number((w as any)?.credits_per_egp ?? 0.02);
     const credits = Math.max(1, Math.floor(data.amount_egp * rate));
     const { error } = await supabase.from("topup_requests").insert({
       tenant_id: prof.tenant_id,
@@ -213,7 +213,7 @@ export const createTopupRequestV2 = createServerFn({ method: "POST" })
       supabase.from("wallet_settings").select("credits_per_egp").eq("tenant_id", prof.tenant_id).maybeSingle(),
       supabase.from("tenants").select("plan_credits_pro,plan_credits_business").eq("id", prof.tenant_id).maybeSingle(),
     ]);
-    const rate = Number((w as any)?.credits_per_egp ?? 1);
+    const rate = Number((w as any)?.credits_per_egp ?? 0.02);
     const credits = data.requested_plan === "pro"
       ? Math.max(1, Number((tenant as any)?.plan_credits_pro ?? Math.floor(data.amount_egp * rate)))
       : data.requested_plan === "business"

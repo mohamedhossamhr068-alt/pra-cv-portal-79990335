@@ -98,7 +98,7 @@ function TopupPage() {
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  const rate = Number((wallet as any)?.credits_per_egp ?? 1);
+  const rate = Number((wallet as any)?.credits_per_egp ?? 0.02);
   const expectedCredits = selectedPlan ? planOptions[selectedPlan].credits : Math.max(1, Math.floor((amount || 0) * rate));
 
   const mut = useMutation({
@@ -190,7 +190,7 @@ function TopupPage() {
             >
               <div className="font-semibold">{T("شحن مخصص", "Custom top-up")}</div>
               <div className="mt-1 text-sm text-muted-foreground">{T("اكتب المبلغ بنفسك", "Enter your amount")}</div>
-              <div className="text-xs text-primary">{rate} {T("كريديت لكل جنيه", "credits per EGP")}</div>
+              <div className="text-xs text-primary">{T(`1 كريديت = ${Math.round(1 / (rate || 0.02))} ج.م`, `1 credit = ${Math.round(1 / (rate || 0.02))} EGP`)}</div>
             </button>
           </div>
         </CardContent>
@@ -279,7 +279,7 @@ function TopupPage() {
             <Coins className="me-2 inline h-4 w-4 text-amber-500" />
             {T("ستحصل على", "You will receive")}{" "}
             <b>{expectedCredits}</b>{" "}{T("كريديت", "credits")}
-            <span className="text-muted-foreground"> · {selectedPlan ? planOptions[selectedPlan].label : `${rate} ${T("لكل جنيه", "per EGP")}`}</span>
+            <span className="text-muted-foreground"> · {selectedPlan ? planOptions[selectedPlan].label : T(`1 كريديت = ${Math.round(1 / (rate || 0.02))} ج.م`, `1 credit = ${Math.round(1 / (rate || 0.02))} EGP`)}</span>
           </div>
 
           <div>
