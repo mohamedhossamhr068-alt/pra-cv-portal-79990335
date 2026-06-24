@@ -272,6 +272,8 @@ const en = {
     budgetRemaining: "Grant budget remaining",
     budgetExhausted: "Out of grant budget — ask an admin to top it up.",
     budgetCannotLower: "Moderators cannot reduce a user's credits.",
+    selfDemoteForbidden: "You cannot remove your own admin role. Ask another admin to do it.",
+    lastAdminForbidden: "You cannot remove the last admin in the workspace.",
     tileNotifications: "Admin alerts",
     tileNotificationsDesc: "Moderator activity feed",
   },
@@ -581,6 +583,8 @@ const ar: typeof en = {
     budgetRemaining: "المتبقي من ميزانية المنح",
     budgetExhausted: "انتهت ميزانية المنح — اطلب من الأدمن إعادة شحنها.",
     budgetCannotLower: "لا يمكن للمودوريتر تقليل رصيد مستخدم.",
+    selfDemoteForbidden: "لا يمكنك إزالة صلاحية المالك عن نفسك. اطلب من مالك آخر تنفيذ ذلك.",
+    lastAdminForbidden: "لا يمكن إزالة آخر مالك في مساحة العمل.",
   },
   adminNotif: {
     title: "إشعارات الإدارة",

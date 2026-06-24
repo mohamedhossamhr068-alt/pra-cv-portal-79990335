@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { listTenantUsers, adminUpdateUser, setUserPermissions, setModeratorBudget } from "@/lib/admin.functions";
+import { useMeQuery } from "@/lib/me.hooks";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,8 @@ function AdminUsers() {
   const listFn = useServerFn(listTenantUsers);
   const updateFn = useServerFn(adminUpdateUser);
   const qc = useQueryClient();
+  const me = useMeQuery();
+  const meId = (me.data?.profile as any)?.id as string | undefined;
   const { data, isLoading } = useQuery({ queryKey: ["tenant-users"], queryFn: () => listFn() });
   const [q, setQ] = useState("");
 
@@ -42,6 +45,10 @@ function AdminUsers() {
         toast.error(t("admin.budgetExhausted"));
       } else if (msg.includes("MOD_CANNOT_LOWER_CREDITS")) {
         toast.error(t("admin.budgetCannotLower"));
+      } else if (msg.includes("SELF_DEMOTE_FORBIDDEN")) {
+        toast.error(t("admin.selfDemoteForbidden"));
+      } else if (msg.includes("LAST_ADMIN_FORBIDDEN")) {
+        toast.error(t("admin.lastAdminForbidden"));
       } else {
         toast.error(e?.message ?? t("admin.updateFailed"));
       }
@@ -97,7 +104,7 @@ function AdminUsers() {
       ) : (
         <div className="grid gap-3">
           {filtered.map((u) => (
-            <UserRow key={u.id} user={u} onUpdate={(p) => mut.mutate({ target_user: u.id, ...p })} pending={mut.isPending} t={t} />
+            <UserRow key={u.id} user={u} meId={meId} onUpdate={(p) => mut.mutate({ target_user: u.id, ...p })} pending={mut.isPending} t={t} />
           ))}
         </div>
       )}
@@ -122,12 +129,13 @@ function StatCard({ icon: Icon, label, value, accent }: any) {
   );
 }
 
-function UserRow({ user, onUpdate, pending, t }: { user: any; onUpdate: (p: any) => void; pending: boolean; t: any }) {
+function UserRow({ user, meId, onUpdate, pending, t }: { user: any; meId?: string; onUpdate: (p: any) => void; pending: boolean; t: any }) {
   const [credits, setCredits] = useState<number>(user.credits ?? 0);
   const [permOpen, setPermOpen] = useState(false);
   const isAdmin = user.roles?.includes("company_admin");
   const isModerator = user.roles?.includes("moderator");
   const permCount = (user.permissions ?? []).length;
+  const isSelf = !!meId && meId === user.id;
 
   return (
     <Card className="overflow-hidden border-border/60 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[var(--shadow-elegant)]">
@@ -199,6 +207,7 @@ function UserRow({ user, onUpdate, pending, t }: { user: any; onUpdate: (p: any)
           open={permOpen}
           onOpenChange={setPermOpen}
           user={user}
+          isSelf={isSelf}
           t={t}
         />
       </CardContent>
@@ -208,10 +217,11 @@ function UserRow({ user, onUpdate, pending, t }: { user: any; onUpdate: (p: any)
 
 type RoleKind = "user" | "moderator" | "admin";
 
-function RoleDialog({ open, onOpenChange, user, t }: {
+function RoleDialog({ open, onOpenChange, user, isSelf, t }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   user: any;
+  isSelf?: boolean;
   t: any;
 }) {
   const qc = useQueryClient();
@@ -295,16 +305,23 @@ function RoleDialog({ open, onOpenChange, user, t }: {
           <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             {t("admin.roleLabel")}
           </div>
+          {isSelf && wasAdmin && (
+            <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700/40 dark:bg-amber-950/30 dark:text-amber-300">
+              {t("admin.selfDemoteForbidden")}
+            </div>
+          )}
           {roleOptions.map(({ id, icon: Icon }) => {
             const active = role === id;
+            const lockedSelf = isSelf && wasAdmin && id !== "admin";
             return (
               <button
                 type="button"
                 key={id}
-                onClick={() => setRole(id)}
+                onClick={() => !lockedSelf && setRole(id)}
+                disabled={lockedSelf}
                 className={`flex w-full items-start gap-3 rounded-lg border p-3 text-start transition-colors ${
                   active ? "border-primary bg-primary/5" : "hover:bg-muted/30"
-                }`}
+                } ${lockedSelf ? "cursor-not-allowed opacity-50" : ""}`}
               >
                 <div className={`grid h-9 w-9 place-items-center rounded-lg ${active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                   <Icon className="h-4 w-4" />
