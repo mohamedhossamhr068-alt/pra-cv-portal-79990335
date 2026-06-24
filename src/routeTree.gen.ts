@@ -18,6 +18,7 @@ import { Route as AuthenticatedJobsRouteImport } from './routes/_authenticated/j
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedCvIndexRouteImport } from './routes/_authenticated/cv.index'
+import { Route as ApiPublicGuestChatRouteImport } from './routes/api/public/guest-chat'
 import { Route as AuthenticatedPlatformTenantsRouteImport } from './routes/_authenticated/platform.tenants'
 import { Route as AuthenticatedPlatformAnalyticsRouteImport } from './routes/_authenticated/platform.analytics'
 import { Route as AuthenticatedCvNewRouteImport } from './routes/_authenticated/cv.new'
@@ -80,6 +81,11 @@ const AuthenticatedCvIndexRoute = AuthenticatedCvIndexRouteImport.update({
   id: '/cv/',
   path: '/cv/',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicGuestChatRoute = ApiPublicGuestChatRouteImport.update({
+  id: '/api/public/guest-chat',
+  path: '/api/public/guest-chat',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedPlatformTenantsRoute =
   AuthenticatedPlatformTenantsRouteImport.update({
@@ -207,6 +213,7 @@ export interface FileRoutesByFullPath {
   '/cv/new': typeof AuthenticatedCvNewRoute
   '/platform/analytics': typeof AuthenticatedPlatformAnalyticsRoute
   '/platform/tenants': typeof AuthenticatedPlatformTenantsRoute
+  '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
   '/cv/': typeof AuthenticatedCvIndexRoute
   '/admin/chat/credit': typeof AuthenticatedAdminChatCreditRoute
   '/admin/chat/support': typeof AuthenticatedAdminChatSupportRoute
@@ -235,6 +242,7 @@ export interface FileRoutesByTo {
   '/cv/new': typeof AuthenticatedCvNewRoute
   '/platform/analytics': typeof AuthenticatedPlatformAnalyticsRoute
   '/platform/tenants': typeof AuthenticatedPlatformTenantsRoute
+  '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
   '/cv': typeof AuthenticatedCvIndexRoute
   '/admin/chat/credit': typeof AuthenticatedAdminChatCreditRoute
   '/admin/chat/support': typeof AuthenticatedAdminChatSupportRoute
@@ -265,6 +273,7 @@ export interface FileRoutesById {
   '/_authenticated/cv/new': typeof AuthenticatedCvNewRoute
   '/_authenticated/platform/analytics': typeof AuthenticatedPlatformAnalyticsRoute
   '/_authenticated/platform/tenants': typeof AuthenticatedPlatformTenantsRoute
+  '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
   '/_authenticated/cv/': typeof AuthenticatedCvIndexRoute
   '/_authenticated/admin/chat/credit': typeof AuthenticatedAdminChatCreditRoute
   '/_authenticated/admin/chat/support': typeof AuthenticatedAdminChatSupportRoute
@@ -295,6 +304,7 @@ export interface FileRouteTypes {
     | '/cv/new'
     | '/platform/analytics'
     | '/platform/tenants'
+    | '/api/public/guest-chat'
     | '/cv/'
     | '/admin/chat/credit'
     | '/admin/chat/support'
@@ -323,6 +333,7 @@ export interface FileRouteTypes {
     | '/cv/new'
     | '/platform/analytics'
     | '/platform/tenants'
+    | '/api/public/guest-chat'
     | '/cv'
     | '/admin/chat/credit'
     | '/admin/chat/support'
@@ -352,6 +363,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cv/new'
     | '/_authenticated/platform/analytics'
     | '/_authenticated/platform/tenants'
+    | '/api/public/guest-chat'
     | '/_authenticated/cv/'
     | '/_authenticated/admin/chat/credit'
     | '/_authenticated/admin/chat/support'
@@ -362,6 +374,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   PricingRoute: typeof PricingRoute
+  ApiPublicGuestChatRoute: typeof ApiPublicGuestChatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -428,6 +441,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/cv/'
       preLoaderRoute: typeof AuthenticatedCvIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/guest-chat': {
+      id: '/api/public/guest-chat'
+      path: '/api/public/guest-chat'
+      fullPath: '/api/public/guest-chat'
+      preLoaderRoute: typeof ApiPublicGuestChatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/platform/tenants': {
       id: '/_authenticated/platform/tenants'
@@ -627,6 +647,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   PricingRoute: PricingRoute,
+  ApiPublicGuestChatRoute: ApiPublicGuestChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
