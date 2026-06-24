@@ -135,6 +135,14 @@ function UserRow({ user, onUpdate, pending, t }: { user: any; onUpdate: (p: any)
                 <KeyRound className="h-3 w-3" /> {t("admin.moderatorBadge")} · {permCount}
               </Badge>
             )}
+            {isModerator && !isAdmin && (
+              <Badge variant="outline" className="gap-1 border-emerald-500/40 text-emerald-700 dark:text-emerald-400">
+                <Wallet className="h-3 w-3" />
+                {user.grant_budget == null
+                  ? t("admin.budgetUnlimited")
+                  : `${(user.grant_budget ?? 0) - (user.grant_used ?? 0)} / ${user.grant_budget}`}
+              </Badge>
+            )}
             {user.is_blocked && <Badge variant="destructive" className="gap-1"><Ban className="h-3 w-3" /> {t("admin.blockedBadge")}</Badge>}
           </div>
           <div className="truncate text-xs text-muted-foreground">{user.email}</div>
