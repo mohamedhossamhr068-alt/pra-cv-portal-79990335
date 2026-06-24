@@ -15,6 +15,9 @@ import { FloatingChatWidget } from "@/components/floating-chat-widget";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
+const THEME_COLOR = "#3b82f6";
+
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -83,6 +86,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "PRA — منصة السيرة الذاتية الذكية" },
       { name: "description", content: "PRA: منصة احترافية لإنشاء وتحليل السير الذاتية وربطها بفرص العمل." },
       { name: "author", content: "PRA" },
+      { name: "theme-color", content: THEME_COLOR },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "PRA" },
       { property: "og:title", content: "PRA — Smart CV Platform" },
       { property: "og:description", content: "Build, analyze, and match CVs to real job opportunities." },
       { property: "og:type", content: "website" },
@@ -91,6 +98,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/icon-192.png", sizes: "192x192" },
+      { rel: "icon", type: "image/png", href: "/icon-192.png", sizes: "192x192" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -104,6 +114,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
+
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
@@ -122,6 +133,10 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    void import("../lib/pwa").then(({ registerPWA }) => registerPWA());
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
@@ -130,3 +145,4 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+
