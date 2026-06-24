@@ -122,7 +122,7 @@ function Pricing() {
                         <span>{f}</span>
                       </li>
                     ))}
-                    {bonus > 0 && (
+                    {bonus > 0 && tier.price > 0 && (
                       <li className="flex items-start gap-2 font-semibold text-primary">
                         <Check className="mt-0.5 h-4 w-4 shrink-0" />
                         <span>{ar ? `+${bonus} كريديت إضافي مجاناً` : `+${bonus} bonus credits free`}</span>
