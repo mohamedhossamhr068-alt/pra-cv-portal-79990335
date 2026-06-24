@@ -46,7 +46,7 @@ function TopupPage() {
   const urlFn = useServerFn(getScreenshotUrl);
 
   const { data: wallet } = useQuery({ queryKey: ["wallet"], queryFn: () => walletFn() });
-  const { data: pricing } = useQuery({ queryKey: ["tenant-pricing"], queryFn: () => pricingFn() });
+  const { data: pricing } = useQuery({ queryKey: ["platform-pricing"], queryFn: () => pricingFn() });
   const { data: history } = useQuery({ queryKey: ["my-topups"], queryFn: () => listFn() });
   const { data: methods } = useQuery({ queryKey: ["payment-methods"], queryFn: () => methodsFn() });
 
