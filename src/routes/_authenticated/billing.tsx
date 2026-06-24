@@ -76,6 +76,7 @@ function Billing() {
         {(["free", "pro", "business"] as const).map((id) => {
           const features = (t(`billing.features.${id}`, { returnObjects: true }) as string[]) ?? [];
           const isCurrent = currentPlan === id;
+          const canSelect = id !== "free" && !isCurrent;
           return (
             <Card key={id} className={isCurrent ? "border-primary" : ""}>
               <CardHeader>
@@ -100,9 +101,9 @@ function Billing() {
                     </li>
                   ))}
                 </ul>
-                <Button asChild={!isCurrent} variant={isCurrent ? "outline" : "default"} disabled={isCurrent} className="w-full">
-                  {isCurrent ? (
-                    <span>{t("billing.current")}</span>
+                <Button asChild={canSelect} variant={canSelect ? "default" : "outline"} disabled={!canSelect} className="w-full">
+                  {!canSelect ? (
+                    <span>{isCurrent ? t("billing.current") : t(`billing.plans.${id}`)}</span>
                   ) : (
                     <Link to="/billing/topup" search={{ plan: id, amount: prices[id] } as any}>{t("billing.upgrade")}</Link>
                   )}

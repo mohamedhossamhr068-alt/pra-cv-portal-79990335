@@ -75,7 +75,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (me.isLoading || !me.data) return;
     const isSuperOnly = pathname.startsWith("/platform/") || pathname.startsWith("/admin/approvals");
     if (isSuperOnly && !_isSuper) { navigate({ to: "/dashboard", replace: true }); return; }
-    if (pathname.startsWith("/admin/") && !_isAdmin && !_isSuper) {
+    const _canReviewTopups = !!(me.data as any)?.permissions?.includes("review_topups");
+    const _reviewPath = pathname.startsWith("/admin/wallet") || pathname.startsWith("/admin/chat/credit");
+    if (pathname.startsWith("/admin/") && !_isAdmin && !_isSuper && !(_canReviewTopups && _reviewPath)) {
       navigate({ to: "/dashboard", replace: true });
       return;
     }
