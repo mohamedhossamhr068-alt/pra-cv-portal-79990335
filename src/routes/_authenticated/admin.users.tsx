@@ -28,6 +28,8 @@ function AdminUsers() {
   const listFn = useServerFn(listTenantUsers);
   const updateFn = useServerFn(adminUpdateUser);
   const qc = useQueryClient();
+  const me = useMeQuery();
+  const meId = (me.data?.profile as any)?.id as string | undefined;
   const { data, isLoading } = useQuery({ queryKey: ["tenant-users"], queryFn: () => listFn() });
   const [q, setQ] = useState("");
 
