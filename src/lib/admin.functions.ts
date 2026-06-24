@@ -17,9 +17,10 @@ export const listTenantUsers = createServerFn({ method: "GET" })
 
     const { data: users } = await supabase
       .from("profiles")
-      .select("id,email,full_name,credits,is_blocked,created_at,grant_budget,grant_used,grant_period,grant_period_start")
+      .select("id,email,full_name,credits,is_blocked,created_at,grant_budget,grant_used,grant_period,grant_period_start,feature_flags")
       .eq("tenant_id", prof.tenant_id)
       .order("created_at", { ascending: false });
+
 
     const { data: roles } = await supabase
       .from("user_roles")
