@@ -120,7 +120,9 @@ export const scrapeEgyptJobs = createServerFn({ method: "POST" })
         const results = json?.data?.web ?? json?.data ?? [];
         for (const r of results) {
           if (!r?.url || !r?.title) continue;
+          if (!isSafeHttpUrl(String(r.url))) continue;
           if (!isEgyptUrl(String(r.url))) continue; // hard Egypt filter
+
           const desc = String(r.description ?? r.snippet ?? r.markdown ?? "");
           // Drop obvious non-Egypt mentions
           if (/\b(saudi|riyadh|jeddah|dubai|abu dhabi|qatar|kuwait|oman|bahrain|usa|united states|uk|london)\b/i
