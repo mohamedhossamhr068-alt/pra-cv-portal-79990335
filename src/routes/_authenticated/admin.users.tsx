@@ -208,6 +208,7 @@ function RoleDialog({ open, onOpenChange, user, t }: {
   const qc = useQueryClient();
   const setPerms = useServerFn(setUserPermissions);
   const updateUser = useServerFn(adminUpdateUser);
+  const setBudget = useServerFn(setModeratorBudget);
   const initialPerms = (user.permissions ?? []) as Permission[];
   const wasAdmin = user.roles?.includes("company_admin");
   const wasModerator = user.roles?.includes("moderator");
@@ -215,6 +216,9 @@ function RoleDialog({ open, onOpenChange, user, t }: {
 
   const [role, setRole] = useState<RoleKind>(initialRole);
   const [selected, setSelected] = useState<Set<Permission>>(new Set(initialPerms));
+  const [unlimited, setUnlimited] = useState<boolean>(user.grant_budget == null);
+  const [budget, setBudgetVal] = useState<number>(user.grant_budget ?? 0);
+  const [resetUsed, setResetUsed] = useState<boolean>(false);
 
   const toggle = (p: Permission) => {
     setSelected((prev) => {
@@ -227,13 +231,11 @@ function RoleDialog({ open, onOpenChange, user, t }: {
 
   const mut = useMutation({
     mutationFn: async () => {
-      // 1) Admin role transitions (only true admins may toggle this).
       if (role === "admin" && !wasAdmin) {
         await updateUser({ data: { target_user: user.id, grant_admin: true } });
       } else if (role !== "admin" && wasAdmin) {
         await updateUser({ data: { target_user: user.id, grant_admin: false } });
       }
-      // 2) Moderator role + permissions.
       const perms: Permission[] = role === "moderator" ? Array.from(selected) : [];
       const makeMod = role === "moderator" ? true : role === "user" ? false : null;
       await setPerms({
@@ -243,6 +245,15 @@ function RoleDialog({ open, onOpenChange, user, t }: {
           ...(makeMod !== null ? { make_moderator: makeMod } : {}),
         },
       });
+      if (role === "moderator") {
+        await setBudget({
+          data: {
+            target_user: user.id,
+            budget: unlimited ? null : Math.max(0, Math.floor(budget)),
+            reset_used: resetUsed,
+          },
+        });
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tenant-users"] });
