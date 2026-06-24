@@ -45,8 +45,10 @@ function mapAuthError(t: (k: string) => string, msg: string | undefined, kind: "
 function AuthPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [mode, setMode] = useState<"email" | "phone">("email");
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [fullName, setFullName] = useState("");
   const [company, setCompany] = useState("");
   const [code, setCode] = useState("");
@@ -62,6 +64,12 @@ function AuthPage() {
     .max(255, t("auth.errEmailTooLong"))
     .email(t("auth.errEmailInvalid"));
 
+  const phoneSchema = z
+    .string()
+    .trim()
+    .min(1, "رقم الهاتف مطلوب")
+    .regex(/^\+?[1-9]\d{7,14}$/, "رقم هاتف غير صالح (مثال: ‎+201001234567)");
+
   const codeSchema = z
     .string()
     .trim()
@@ -72,24 +80,46 @@ function AuthPage() {
   const sendCode = async (e?: React.FormEvent) => {
     e?.preventDefault();
     setEmailError(null);
-    const parsed = emailSchema.safeParse(email);
-    if (!parsed.success) {
-      setEmailError(parsed.error.issues[0]?.message ?? t("auth.errEmailInvalid"));
-      return;
-    }
     setLoading(true);
     setStatus(t("auth.statusSending"));
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: parsed.data,
-        options: {
-          shouldCreateUser: true,
-          emailRedirectTo: window.location.origin + "/pending-approval",
-          data: { full_name: fullName || undefined, company_name: company || undefined },
-        },
-      });
-      if (error) throw error;
-      toast.success(t("auth.codeSent", { email: parsed.data }));
+      if (mode === "email") {
+        const parsed = emailSchema.safeParse(email);
+        if (!parsed.success) {
+          setEmailError(parsed.error.issues[0]?.message ?? t("auth.errEmailInvalid"));
+          setLoading(false);
+          setStatus(null);
+          return;
+        }
+        const { error } = await supabase.auth.signInWithOtp({
+          email: parsed.data,
+          options: {
+            shouldCreateUser: true,
+            emailRedirectTo: window.location.origin + "/pending-approval",
+            data: { full_name: fullName || undefined, company_name: company || undefined },
+          },
+        });
+        if (error) throw error;
+        toast.success(t("auth.codeSent", { email: parsed.data }));
+      } else {
+        const parsed = phoneSchema.safeParse(phone);
+        if (!parsed.success) {
+          setEmailError(parsed.error.issues[0]?.message ?? "رقم هاتف غير صالح");
+          setLoading(false);
+          setStatus(null);
+          return;
+        }
+        const { error } = await supabase.auth.signInWithOtp({
+          phone: parsed.data,
+          options: {
+            shouldCreateUser: true,
+            channel: "sms",
+            data: { full_name: fullName || undefined, company_name: company || undefined },
+          },
+        });
+        if (error) throw error;
+        toast.success(`تم إرسال الكود إلى ${parsed.data}`);
+      }
       setStep("code");
       setCode("");
       setCodeError(null);
@@ -114,11 +144,9 @@ function AuthPage() {
     setLoading(true);
     setStatus(t("auth.statusVerifying"));
     try {
-      const { error } = await supabase.auth.verifyOtp({
-        email: email.trim(),
-        token: parsed.data,
-        type: "email",
-      });
+      const { error } = mode === "email"
+        ? await supabase.auth.verifyOtp({ email: email.trim(), token: parsed.data, type: "email" })
+        : await supabase.auth.verifyOtp({ phone: phone.trim(), token: parsed.data, type: "sms" });
       if (error) throw error;
       navigate({ to: "/dashboard" });
     } catch (err: any) {
@@ -130,6 +158,8 @@ function AuthPage() {
       setStatus(null);
     }
   };
+
+
 
 
   return (
@@ -243,6 +273,22 @@ function AuthPage() {
                     <div className="h-px flex-1 bg-border" />
                   </div>
                 <form className="flex flex-col gap-3" onSubmit={sendCode} noValidate>
+                  <div className="grid grid-cols-2 gap-1 rounded-lg border bg-muted/30 p-1">
+                    <button
+                      type="button"
+                      onClick={() => { setMode("email"); setEmailError(null); }}
+                      className={`h-9 rounded-md text-sm font-medium transition-colors ${mode === "email" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      {t("auth.email")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setMode("phone"); setEmailError(null); }}
+                      className={`h-9 rounded-md text-sm font-medium transition-colors ${mode === "phone" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      رقم الهاتف
+                    </button>
+                  </div>
 
                   <div className="grid gap-1.5">
                     <Label htmlFor="fn">{t("auth.fullName")}</Label>
@@ -252,36 +298,48 @@ function AuthPage() {
                     <Label htmlFor="co">{t("auth.company")}</Label>
                     <Input id="co" value={company} onChange={(e) => setCompany(e.target.value)} maxLength={120} />
                   </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="em">{t("auth.email")}</Label>
-                    <Input
-                      id="em"
-                      type="email"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        if (emailError) setEmailError(null);
-                      }}
-                      onBlur={() => {
-                        if (!email) return;
-                        const r = emailSchema.safeParse(email);
-                        setEmailError(r.success ? null : r.error.issues[0]?.message ?? null);
-                      }}
-                      placeholder="you@company.com"
-                      autoComplete="email"
-                      maxLength={255}
-                      aria-invalid={!!emailError}
-                      aria-describedby={emailError ? "em-err" : undefined}
-                      className={emailError ? "border-destructive focus-visible:ring-destructive/40" : undefined}
-                      required
-                    />
-                    {emailError && (
-                      <p id="em-err" className="flex items-start gap-1.5 text-xs text-destructive">
-                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                        <span>{emailError}</span>
-                      </p>
-                    )}
-                  </div>
+                  {mode === "email" ? (
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="em">{t("auth.email")}</Label>
+                      <Input
+                        id="em"
+                        type="email"
+                        value={email}
+                        onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(null); }}
+                        placeholder="you@company.com"
+                        autoComplete="email"
+                        maxLength={255}
+                        aria-invalid={!!emailError}
+                        className={emailError ? "border-destructive focus-visible:ring-destructive/40" : undefined}
+                        required
+                      />
+                    </div>
+                  ) : (
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="ph">رقم الهاتف</Label>
+                      <Input
+                        id="ph"
+                        type="tel"
+                        dir="ltr"
+                        value={phone}
+                        onChange={(e) => { setPhone(e.target.value); if (emailError) setEmailError(null); }}
+                        placeholder="+201001234567"
+                        autoComplete="tel"
+                        maxLength={20}
+                        aria-invalid={!!emailError}
+                        className={emailError ? "border-destructive focus-visible:ring-destructive/40" : undefined}
+                        required
+                      />
+                      <p className="text-[11px] text-muted-foreground">أدخل الرقم بصيغة دولية تبدأ بـ + ومفتاح الدولة</p>
+                    </div>
+                  )}
+                  {emailError && (
+                    <p className="flex items-start gap-1.5 text-xs text-destructive">
+                      <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                      <span>{emailError}</span>
+                    </p>
+                  )}
+
                   <Button type="submit" disabled={loading} className="mt-2 h-11">
                     {loading ? (
                       <>
