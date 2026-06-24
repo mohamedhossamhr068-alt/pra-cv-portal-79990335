@@ -1,27 +1,27 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
-import { createLovableAiGatewayProvider, BOT_SYSTEM_AR } from "./ai-gateway.server";
+import { createLovableAiGatewayProvider, pickBotSystem } from "./ai-gateway.server";
 
 const MODEL = "google/gemini-3-flash-preview";
 
-async function callBot(history: { role: "user" | "assistant"; content: string }[]) {
+async function callBot(history: { role: "user" | "assistant"; content: string }[], lang?: string) {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("Missing LOVABLE_API_KEY");
   const gateway = createLovableAiGatewayProvider(key);
+  const lastUser = [...history].reverse().find((h) => h.role === "user")?.content;
+  const system = pickBotSystem(lang, lastUser);
   const { text } = await generateText({
     model: gateway(MODEL),
-    system: BOT_SYSTEM_AR,
+    system,
     messages: history.slice(-12),
   });
   return text;
 }
 
-/** Triggered after a user sends a message in their support conversation.
- * If bot is enabled and no human has replied yet, ask the model and insert a bot reply. */
 export const triggerSupportBotReply = createServerFn({ method: "POST" })
-  .inputValidator((d: { conversation_id: string }) =>
-    z.object({ conversation_id: z.string().uuid() }).parse(d),
+  .inputValidator((d: { conversation_id: string; lang?: string }) =>
+    z.object({ conversation_id: z.string().uuid(), lang: z.string().max(8).optional() }).parse(d),
   )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -52,7 +52,7 @@ export const triggerSupportBotReply = createServerFn({ method: "POST" })
     }
     let reply: string;
     try {
-      reply = await callBot(history);
+      reply = await callBot(history, data.lang);
     } catch (e: any) {
       console.error("bot error", e?.message);
       return { ok: false, reason: "ai_error" };
