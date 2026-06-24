@@ -38,30 +38,36 @@ export function useNotifications() {
   }, [q.data]);
 
   useEffect(() => {
-    let channel: any;
+    let cancelled = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      channel = supabase
-        .channel(`notif-${user.id}`)
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-          (payload) => {
-            const n = payload.new as any;
-            if (n && !seenRef.current.has(n.id)) {
-              seenRef.current.add(n.id);
-              toast(n.title ?? "إشعار جديد", { description: n.body ?? undefined });
-            }
-            qc.invalidateQueries({ queryKey: ["notifications"] });
-          },
-        )
-        .subscribe();
+      if (!user || cancelled) return;
+      const ch = supabase.channel(`notif-${user.id}-${Math.random().toString(36).slice(2, 8)}`);
+      ch.on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const n = payload.new as any;
+          if (n && !seenRef.current.has(n.id)) {
+            seenRef.current.add(n.id);
+            toast(n.title ?? "إشعار جديد", { description: n.body ?? undefined });
+          }
+          qc.invalidateQueries({ queryKey: ["notifications"] });
+        },
+      ).subscribe();
+      if (cancelled) {
+        supabase.removeChannel(ch);
+        return;
+      }
+      channel = ch;
     })();
     return () => {
+      cancelled = true;
       if (channel) supabase.removeChannel(channel);
     };
   }, [qc]);
+
 
   const unread = (q.data ?? []).filter((n) => !n.read_at).length;
 
