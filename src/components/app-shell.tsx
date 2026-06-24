@@ -65,6 +65,21 @@ export function AppShell({ children }: { children: ReactNode }) {
     document.documentElement.dir = lng === "ar" ? "rtl" : "ltr";
   }, [i18n.language]);
 
+  // Route-level RBAC: block non-admins from /admin/* and non-superadmins from
+  // /platform/* and /admin/approvals (URL-typed access — sidebar already hides links).
+  const roles = me.data?.roles ?? [];
+  const _isAdmin = roles.includes("company_admin");
+  const _isSuper = roles.includes("superadmin");
+  useEffect(() => {
+    if (me.isLoading || !me.data) return;
+    const isSuperOnly = pathname.startsWith("/platform/") || pathname.startsWith("/admin/approvals");
+    if (isSuperOnly && !_isSuper) { navigate({ to: "/dashboard", replace: true }); return; }
+    if (pathname.startsWith("/admin/") && !_isAdmin && !_isSuper) {
+      navigate({ to: "/dashboard", replace: true });
+    }
+  }, [pathname, me.isLoading, me.data, _isAdmin, _isSuper, navigate]);
+
+
   const items: NavItem[] = [
     { to: "/dashboard", key: "dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
     { to: "/cv/new", key: "cvnew", label: t("nav.cv"), icon: Sparkles },
