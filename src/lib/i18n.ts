@@ -211,6 +211,17 @@ const en = {
     permissionsSaved: "Permissions updated",
     moderatorBadge: "Moderator",
     moderatorHint: "Grants the moderator role. Permissions below define what they can do.",
+    manageRole: "Manage role",
+    roleLabel: "Role",
+    roleUser: "Regular user",
+    roleUser_desc: "No admin access. All permissions are revoked.",
+    roleModerator: "Moderator",
+    roleModerator_desc: "Limited admin access. You choose the exact permissions below.",
+    roleAdmin: "Admin",
+    roleAdmin_desc: "Full access to every admin area. Use with care.",
+    roleSaved: "Role updated",
+
+
 
 
     perm_manage_users: "Manage users",
