@@ -327,6 +327,40 @@ function RoleDialog({ open, onOpenChange, user, t }: {
           </div>
         )}
 
+        {role === "moderator" && (
+          <div className="space-y-3 rounded-lg border bg-muted/20 p-3">
+            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <Wallet className="h-3.5 w-3.5" /> {t("admin.budgetTitle")}
+            </div>
+            <p className="text-xs text-muted-foreground">{t("admin.budgetHint")}</p>
+            <label className="flex cursor-pointer items-center gap-2">
+              <Checkbox checked={unlimited} onCheckedChange={(v) => setUnlimited(!!v)} />
+              <span className="text-sm">{t("admin.budgetUnlimited")}</span>
+            </label>
+            {!unlimited && (
+              <div className="space-y-2">
+                <Label className="text-xs">{t("admin.budgetAmount")}</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={budget}
+                  onChange={(e) => setBudgetVal(Number(e.target.value))}
+                />
+                <div className="flex items-center justify-between rounded border bg-background px-2 py-1.5 text-xs">
+                  <span className="text-muted-foreground">{t("admin.budgetUsed")}</span>
+                  <span className="font-medium">
+                    {user.grant_used ?? 0} / {budget || 0}
+                  </span>
+                </div>
+                <label className="flex cursor-pointer items-center gap-2">
+                  <Checkbox checked={resetUsed} onCheckedChange={(v) => setResetUsed(!!v)} />
+                  <span className="text-xs">{t("admin.budgetReset")}</span>
+                </label>
+              </div>
+            )}
+          </div>
+        )}
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={mut.isPending}>
             {t("common.cancel")}
