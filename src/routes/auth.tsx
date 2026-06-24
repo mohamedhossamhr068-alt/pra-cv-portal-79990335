@@ -207,7 +207,43 @@ function AuthPage() {
                 </div>
               )}
               {step === "email" ? (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 w-full"
+                    disabled={loading}
+                    onClick={async () => {
+                      setLoading(true);
+                      setStatus(t("auth.statusSending"));
+                      try {
+                        const result = await lovable.auth.signInWithOAuth("google", {
+                          redirect_uri: window.location.origin + "/auth/callback",
+                          extraParams: { prompt: "select_account" },
+                        });
+                        if (result.error) {
+                          toast.error((result.error as any)?.message ?? "Google sign-in failed");
+                          return;
+                        }
+                        if (result.redirected) return;
+                        navigate({ to: "/dashboard" });
+                      } catch (err: any) {
+                        toast.error(err?.message ?? "Google sign-in failed");
+                      } finally {
+                        setLoading(false);
+                        setStatus(null);
+                      }
+                    }}
+                  >
+                    {t("auth.google")}
+                  </Button>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <div className="h-px flex-1 bg-border" />
+                    {t("auth.or")}
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
                 <form className="flex flex-col gap-3" onSubmit={sendCode} noValidate>
+
                   <div className="grid gap-1.5">
                     <Label htmlFor="fn">{t("auth.fullName")}</Label>
                     <Input id="fn" value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={100} />
