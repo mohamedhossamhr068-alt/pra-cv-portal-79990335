@@ -217,10 +217,11 @@ function UserRow({ user, meId, onUpdate, pending, t }: { user: any; meId?: strin
 
 type RoleKind = "user" | "moderator" | "admin";
 
-function RoleDialog({ open, onOpenChange, user, t }: {
+function RoleDialog({ open, onOpenChange, user, isSelf, t }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   user: any;
+  isSelf?: boolean;
   t: any;
 }) {
   const qc = useQueryClient();
