@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMeQuery } from "@/lib/me.hooks";
 import { Button } from "@/components/ui/button";
-import { FileText, Sparkles, Briefcase, Users, ArrowRight, Shield, Coins, BarChart3, Palette, ScrollText } from "lucide-react";
+import { FileText, Sparkles, Briefcase, Users, ArrowRight, Shield, Coins, BarChart3, Palette, ScrollText, BellRing } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -78,6 +78,8 @@ function Dashboard() {
             <AdminTile to="/admin/usage" icon={BarChart3} title={t("admin.tileUsage")} desc={t("admin.tileUsageDesc")} />
             <AdminTile to="/admin/branding" icon={Palette} title={t("admin.tileBranding")} desc={t("admin.tileBrandingDesc")} />
             <AdminTile to="/admin/audit" icon={ScrollText} title={t("admin.tileAudit")} desc={t("admin.tileAuditDesc")} />
+            <AdminTile to="/admin/notifications" icon={BellRing} title={t("admin.tileNotifications")} desc={t("admin.tileNotificationsDesc")} />
+
 
           </CardContent>
         </Card>
