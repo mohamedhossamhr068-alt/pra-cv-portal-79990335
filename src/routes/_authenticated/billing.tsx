@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, Tag } from "lucide-react";
+import { fmtCairoDate } from "@/lib/time";
 
 export const Route = createFileRoute("/_authenticated/billing")({
   component: Billing,
@@ -62,7 +63,7 @@ function Billing() {
                 </div>
                 {o.valid_until && (
                   <span className="text-[11px] text-muted-foreground">
-                    {new Date(o.valid_until).toLocaleDateString()}
+                    {fmtCairoDate(o.valid_until)}
                   </span>
                 )}
               </CardContent>

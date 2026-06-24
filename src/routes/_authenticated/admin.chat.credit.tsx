@@ -8,6 +8,7 @@ import { listConversations } from "@/lib/chat.functions";
 import { useMeQuery } from "@/lib/me.hooks";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { fmtCairo } from "@/lib/time";
 
 export const Route = createFileRoute("/_authenticated/admin/chat/credit")({
   component: AdminCreditChat,
@@ -56,7 +57,7 @@ function AdminCreditChat() {
                   {c.owner?.full_name ?? c.owner?.email ?? "—"}
                 </div>
                 <div className="text-xs text-muted-foreground truncate">
-                  {new Date(c.last_message_at).toLocaleString(ar ? "ar-EG" : "en-US")}
+                  {fmtCairo(c.last_message_at, ar)}
                 </div>
               </button>
             ))}

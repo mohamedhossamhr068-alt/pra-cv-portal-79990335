@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Users } from "lucide-react";
+import { fmtCairoDate } from "@/lib/time";
 
 export const Route = createFileRoute("/_authenticated/admin/team")({
   component: Team,
@@ -74,7 +75,7 @@ function Team() {
                     <div className="truncate text-sm font-medium">{m.full_name ?? m.email}</div>
                     <div className="truncate text-xs text-muted-foreground">{m.email}</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">{new Date(m.created_at).toLocaleDateString()}</div>
+                  <div className="text-xs text-muted-foreground">{fmtCairoDate(m.created_at)}</div>
                 </li>
               ))}
             </ul>

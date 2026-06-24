@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { fmtCairoDate } from "@/lib/time";
 
 export const Route = createFileRoute("/_authenticated/cv/")({
   component: CvLibrary,
@@ -53,7 +54,7 @@ function CvLibrary() {
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium">{cv.title}</div>
                   <div className="text-xs text-muted-foreground">
-                    {cv.template.replace("_", " ")} · {new Date(cv.created_at).toLocaleDateString()}
+                    {cv.template.replace("_", " ")} · {fmtCairoDate(cv.created_at)}
                   </div>
                 </div>
                 <Link to="/cv/$id" params={{ id: cv.id }}>

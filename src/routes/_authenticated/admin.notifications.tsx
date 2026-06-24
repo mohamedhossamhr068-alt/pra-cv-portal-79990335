@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Bell, BellRing, CheckCheck, ExternalLink, RefreshCw, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
+import { fmtCairo } from "@/lib/time";
 
 type TypeFilter = "all" | "admin_action" | "topup_approved" | "topup_rejected" | "offer_created" | "cv_generated";
 type ReadFilter = "all" | "unread" | "read";
@@ -135,7 +136,7 @@ function AdminNotificationsPage() {
 function NotifRow({ n, onMark }: { n: any; onMark: () => void }) {
   const { t, i18n } = useTranslation();
   const isUnread = !n.read_at;
-  const date = new Date(n.created_at).toLocaleString(i18n.language === "ar" ? "ar-EG" : undefined);
+  const date = fmtCairo(n.created_at, i18n.language);
   const actorName = n.actor?.full_name || n.actor?.email;
   const status = n.metadata?.status as string | undefined;
 

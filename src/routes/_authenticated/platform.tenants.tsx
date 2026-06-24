@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getPlatformAnalytics } from "@/lib/analytics.functions";
 import { Card, CardContent } from "@/components/ui/card";
+import { fmtCairoDate } from "@/lib/time";
 
 export const Route = createFileRoute("/_authenticated/platform/tenants")({
   component: Tenants,
@@ -28,7 +29,7 @@ function Tenants() {
                     <div className="truncate text-sm font-medium">{tn.name}</div>
                     <div className="truncate text-xs text-muted-foreground">{tn.industry ?? "—"}</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">{new Date(tn.created_at).toLocaleDateString()}</div>
+                  <div className="text-xs text-muted-foreground">{fmtCairoDate(tn.created_at)}</div>
                 </li>
               ))}
             </ul>

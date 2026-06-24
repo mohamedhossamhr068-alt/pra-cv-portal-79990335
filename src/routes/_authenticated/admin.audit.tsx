@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle2, XCircle, Info, ExternalLink, RefreshCw, Search } from "lucide-react";
+import { fmtCairo } from "@/lib/time";
 
 type Category = "all" | "cv" | "stripe" | "ai" | "topup" | "admin";
 type Status = "all" | "success" | "failure" | "info";
@@ -134,7 +135,7 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone?:
 
 function LogRow({ log }: { log: any }) {
   const { t, i18n } = useTranslation();
-  const date = new Date(log.created_at).toLocaleString(i18n.language === "ar" ? "ar-EG" : undefined);
+  const date = fmtCairo(log.created_at, i18n.language);
   const StatusIcon = log.status === "success" ? CheckCircle2 : log.status === "failure" ? XCircle : Info;
   const statusColor =
     log.status === "success"

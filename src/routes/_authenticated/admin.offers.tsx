@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tag, Plus, Trash2, Percent, Sparkles } from "lucide-react";
 import { listAllOffers, createOffer, toggleOffer, deleteOffer } from "@/lib/offers.functions";
+import { fmtCairo } from "@/lib/time";
 
 export const Route = createFileRoute("/_authenticated/admin/offers")({
   component: AdminOffers,
@@ -140,7 +141,7 @@ function AdminOffers() {
                 {o.description && <p className="mt-1 text-xs text-muted-foreground">{o.description}</p>}
                 {o.valid_until && (
                   <p className="mt-1 text-[11px] text-muted-foreground">
-                    {T("ينتهي:", "Until:")} {new Date(o.valid_until).toLocaleString()}
+                    {T("ينتهي:", "Until:")} {fmtCairo(o.valid_until)}
                   </p>
                 )}
               </div>

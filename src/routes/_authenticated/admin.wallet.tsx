@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Wallet, Save, CheckCircle2, XCircle, Eye, Clock, Plus, Trash2, Power } from "lucide-react";
 import { toast } from "sonner";
 import { PaymentMethodIcon, PAYMENT_TYPE_META } from "@/components/payment-method-icon";
+import { fmtCairo } from "@/lib/time";
 
 export const Route = createFileRoute("/_authenticated/admin/wallet")({
   component: AdminWallet,
@@ -253,7 +254,7 @@ function AdminWallet() {
                       <div className="font-medium">{r.user?.full_name || r.user?.email || r.user_id.slice(0,8)}</div>
                       <div className="text-xs text-muted-foreground">
                         {r.amount_egp} EGP → {r.credits_requested} {T("كريديت","cr")}
-                        {r.reference_number && ` · #${r.reference_number}`} · {new Date(r.created_at).toLocaleString()}
+                        {r.reference_number && ` · #${r.reference_number}`} · {fmtCairo(r.created_at)}
                       </div>
                       <div className="mt-2 flex flex-wrap gap-2">
                         <Input placeholder={T("ملاحظة (اختياري)","Note (optional)")} value={noteById[r.id] ?? ""}

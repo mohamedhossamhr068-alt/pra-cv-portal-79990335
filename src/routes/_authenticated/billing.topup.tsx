@@ -19,6 +19,7 @@ import { Upload, Copy, CheckCircle2, Clock, XCircle, Coins, ImageIcon, Receipt }
 import { toast } from "sonner";
 import { useMeQuery } from "@/lib/me.hooks";
 import { PaymentMethodIcon, PAYMENT_TYPE_META } from "@/components/payment-method-icon";
+import { fmtCairo } from "@/lib/time";
 
 export const Route = createFileRoute("/_authenticated/billing/topup")({
   component: TopupPage,
@@ -261,7 +262,7 @@ function TopupPage() {
                 <div className="min-w-0">
                   <div className="font-medium">{r.amount_egp} EGP → {r.credits_requested} {T("كريديت","cr")}</div>
                   <div className="text-xs text-muted-foreground">
-                    {new Date(r.created_at).toLocaleString()} {r.reference_number && `· #${r.reference_number}`}
+                    {fmtCairo(r.created_at)} {r.reference_number && `· #${r.reference_number}`}
                   </div>
                   {r.admin_note && <div className="mt-1 text-xs">{r.admin_note}</div>}
                 </div>
