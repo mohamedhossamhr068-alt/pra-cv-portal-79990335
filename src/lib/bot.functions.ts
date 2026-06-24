@@ -21,20 +21,29 @@ async function callBot(history: { role: "user" | "assistant"; content: string }[
 }
 
 export const triggerSupportBotReply = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: { conversation_id: string; lang?: string }) =>
     z.object({ conversation_id: z.string().uuid(), lang: z.string().max(8).optional() }).parse(d),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: conv } = await supabaseAdmin
       .from("conversations" as any)
-      .select("id, kind, bot_enabled, human_replied, owner_id")
+      .select("id, kind, bot_enabled, human_replied, owner_id, tenant_id")
       .eq("id", data.conversation_id)
       .maybeSingle();
     if (!conv) return { ok: false, reason: "not_found" };
     const c = conv as any;
     if (c.kind !== "support" || !c.bot_enabled || c.human_replied) {
       return { ok: false, reason: "disabled" };
+    }
+    // Authorize: only the conversation owner or a tenant admin can trigger the bot.
+    if (c.owner_id !== context.userId) {
+      const { data: isAdmin } = await context.supabase.rpc("is_tenant_admin", {
+        _user_id: context.userId,
+        _tenant_id: c.tenant_id,
+      });
+      if (!isAdmin) return { ok: false, reason: "forbidden" };
     }
     const { data: msgs } = await supabaseAdmin
       .from("conversation_messages" as any)
