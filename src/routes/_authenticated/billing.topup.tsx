@@ -190,7 +190,7 @@ function TopupPage() {
             >
               <div className="font-semibold">{T("شحن مخصص", "Custom top-up")}</div>
               <div className="mt-1 text-sm text-muted-foreground">{T("اكتب المبلغ بنفسك", "Enter your amount")}</div>
-              <div className="text-xs text-primary">{rate} {T("كريديت لكل جنيه", "credits per EGP")}</div>
+              <div className="text-xs text-primary">{T(`1 كريديت = ${Math.round(1 / (rate || 0.02))} ج.م`, `1 credit = ${Math.round(1 / (rate || 0.02))} EGP`)}</div>
             </button>
           </div>
         </CardContent>
