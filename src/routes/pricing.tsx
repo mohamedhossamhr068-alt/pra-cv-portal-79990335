@@ -45,7 +45,7 @@ function Pricing() {
     refetchInterval: 5_000,
   });
   const currency = pricing?.currency ?? "EGP";
-  const bonus = Number((pricing as any)?.bonus_credits ?? 3);
+  const bonus = Number((pricing as any)?.bonus_credits ?? 2);
   const tiers = [
     {
       id: "free" as const,
@@ -58,8 +58,8 @@ function Pricing() {
     },
     {
       id: "pro" as const,
-      price: Number(pricing?.plan_price_pro ?? 29),
-      credits: Number((pricing as any)?.plan_credits_pro ?? 100),
+      price: Number(pricing?.plan_price_pro ?? 250),
+      credits: Number((pricing as any)?.plan_credits_pro ?? 6),
       popular: true,
       features: ar
         ? ["كل القوالب", "مطابقة الوظائف", "أولوية في الذكاء الاصطناعي", "تصدير PDF"]
@@ -67,8 +67,8 @@ function Pricing() {
     },
     {
       id: "business" as const,
-      price: Number(pricing?.plan_price_business ?? 99),
-      credits: Number((pricing as any)?.plan_credits_business ?? 500),
+      price: Number(pricing?.plan_price_business ?? 500),
+      credits: Number((pricing as any)?.plan_credits_business ?? 15),
       popular: false,
       features: ar
         ? ["حساب مؤسسة للفريق", "هوية بصرية مخصصة", "تحليلات وتصدير", "دعم ذو أولوية"]

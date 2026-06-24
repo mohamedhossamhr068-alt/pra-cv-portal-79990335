@@ -32,8 +32,8 @@ function Billing() {
   const symbol = SYMBOLS[currency] ?? currency;
   const prices: Record<string, number> = {
     free: Number((pricing as any)?.plan_price_free ?? 0),
-    pro: Number((pricing as any)?.plan_price_pro ?? 29),
-    business: Number((pricing as any)?.plan_price_business ?? 99),
+    pro: Number((pricing as any)?.plan_price_pro ?? 250),
+    business: Number((pricing as any)?.plan_price_business ?? 500),
   };
 
   return (

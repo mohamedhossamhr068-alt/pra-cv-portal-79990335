@@ -235,9 +235,9 @@ export const getPlatformPricing = createServerFn({ method: "GET" }).handler(asyn
   return (
     data ?? {
       currency: "EGP",
-      plan_price_free: 0, plan_price_pro: 499, plan_price_business: 1499,
-      plan_credits_free: 10, plan_credits_pro: 100, plan_credits_business: 500,
-      bonus_credits: 3,
+      plan_price_free: 0, plan_price_pro: 250, plan_price_business: 500,
+      plan_credits_free: 10, plan_credits_pro: 6, plan_credits_business: 15,
+      bonus_credits: 2,
     }
   );
 });

@@ -39,14 +39,14 @@ function AdminPricing() {
   const [cv, setCv] = useState(5);
   const [match, setMatch] = useState(1);
   const [scrape, setScrape] = useState(3);
-  const [currency, setCurrency] = useState<string>("USD");
+  const [currency, setCurrency] = useState<string>("EGP");
   const [planFree, setPlanFree] = useState(0);
-  const [planPro, setPlanPro] = useState(29);
-  const [planBusiness, setPlanBusiness] = useState(99);
+  const [planPro, setPlanPro] = useState(250);
+  const [planBusiness, setPlanBusiness] = useState(500);
   const [creditsFree, setCreditsFree] = useState(10);
-  const [creditsPro, setCreditsPro] = useState(100);
-  const [creditsBusiness, setCreditsBusiness] = useState(500);
-  const [bonus, setBonus] = useState(3);
+  const [creditsPro, setCreditsPro] = useState(6);
+  const [creditsBusiness, setCreditsBusiness] = useState(15);
+  const [bonus, setBonus] = useState(2);
 
   useEffect(() => {
     if (data) {
@@ -54,14 +54,14 @@ function AdminPricing() {
       setCv(d.cv_credit_cost ?? 5);
       setMatch(d.match_credit_cost ?? 1);
       setScrape(d.scrape_credit_cost ?? 3);
-      setCurrency(d.currency ?? "USD");
+      setCurrency(d.currency ?? "EGP");
       setPlanFree(Number(d.plan_price_free ?? 0));
-      setPlanPro(Number(d.plan_price_pro ?? 29));
-      setPlanBusiness(Number(d.plan_price_business ?? 99));
+      setPlanPro(Number(d.plan_price_pro ?? 250));
+      setPlanBusiness(Number(d.plan_price_business ?? 500));
       setCreditsFree(Number(d.plan_credits_free ?? 10));
-      setCreditsPro(Number(d.plan_credits_pro ?? 100));
-      setCreditsBusiness(Number(d.plan_credits_business ?? 500));
-      setBonus(Number(d.bonus_credits ?? 3));
+      setCreditsPro(Number(d.plan_credits_pro ?? 6));
+      setCreditsBusiness(Number(d.plan_credits_business ?? 15));
+      setBonus(Number(d.bonus_credits ?? 2));
     }
   }, [data]);
 
