@@ -28,7 +28,7 @@ function Billing() {
   const { data: pricing } = useQuery({ queryKey: ["tenant-pricing"], queryFn: () => getPricing() });
   const { data: offers = [] } = useQuery({ queryKey: ["offers-active"], queryFn: () => listOffersFn() });
 
-  const currency = (pricing as any)?.currency ?? "USD";
+  const currency = (pricing as any)?.currency ?? "EGP";
   const symbol = SYMBOLS[currency] ?? currency;
   const prices: Record<string, number> = {
     free: Number((pricing as any)?.plan_price_free ?? 0),
