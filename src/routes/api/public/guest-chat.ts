@@ -83,9 +83,10 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                 content: m.body as string,
               }));
               const gateway = createLovableAiGatewayProvider(key);
+              const system = pickBotSystem(body.lang, body.message);
               const { text } = await generateText({
                 model: gateway("google/gemini-3-flash-preview"),
-                system: BOT_SYSTEM_AR,
+                system,
                 messages,
               });
               botReply = text;
