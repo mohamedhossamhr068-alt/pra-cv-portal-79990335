@@ -136,72 +136,97 @@ function UserRow({ user, meId, onUpdate, pending, t }: { user: any; meId?: strin
   const isModerator = user.roles?.includes("moderator");
   const permCount = (user.permissions ?? []).length;
   const isSelf = !!meId && meId === user.id;
+  const roleLabel = isAdmin ? t("admin.roleAdmin") : isModerator ? t("admin.roleModerator") : t("admin.roleUser");
+
+  const addQuick = (amount: number) => {
+    const next = Math.max(0, (user.credits ?? 0) + amount);
+    setCredits(next);
+    onUpdate({ credits: next });
+  };
 
   return (
     <Card className="overflow-hidden border-border/60 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[var(--shadow-elegant)]">
-      <CardContent className="flex flex-wrap items-center gap-4 py-4">
-        <div className="grid h-11 w-11 place-items-center rounded-full bg-[image:var(--gradient-primary)] font-semibold text-primary-foreground shadow-[var(--shadow-elegant)]">
-          {(user.full_name ?? user.email)?.[0]?.toUpperCase()}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="truncate text-sm font-semibold">{user.full_name ?? user.email}</div>
-            {isAdmin && <Badge variant="secondary" className="gap-1"><Shield className="h-3 w-3" /> {t("admin.adminBadge")}</Badge>}
-            {isModerator && !isAdmin && (
-              <Badge variant="outline" className="gap-1">
-                <KeyRound className="h-3 w-3" /> {t("admin.moderatorBadge")} · {permCount}
-              </Badge>
-            )}
-            {isModerator && !isAdmin && (
-              <Badge variant="outline" className="gap-1 border-emerald-500/40 text-emerald-700 dark:text-emerald-400">
-                <Wallet className="h-3 w-3" />
-                {user.grant_budget == null
-                  ? t("admin.budgetUnlimited")
-                  : `${(user.grant_budget ?? 0) - (user.grant_used ?? 0)} / ${user.grant_budget} · ${t(`admin.budgetPeriod_${user.grant_period ?? "monthly"}`)}`}
-              </Badge>
-            )}
-            {user.is_blocked && <Badge variant="destructive" className="gap-1"><Ban className="h-3 w-3" /> {t("admin.blockedBadge")}</Badge>}
+      <CardContent className="space-y-4 py-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="grid h-11 w-11 place-items-center rounded-full bg-[image:var(--gradient-primary)] font-semibold text-primary-foreground shadow-[var(--shadow-elegant)]">
+            {(user.full_name ?? user.email)?.[0]?.toUpperCase()}
           </div>
-          <div className="truncate text-xs text-muted-foreground">{user.email}</div>
-        </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="truncate text-sm font-semibold">{user.full_name ?? user.email}</div>
+              {isAdmin && <Badge variant="secondary" className="gap-1"><Shield className="h-3 w-3" /> {t("admin.adminBadge")}</Badge>}
+              {isModerator && !isAdmin && (
+                <Badge variant="outline" className="gap-1">
+                  <KeyRound className="h-3 w-3" /> {t("admin.moderatorBadge")} · {permCount}
+                </Badge>
+              )}
+              {!isAdmin && !isModerator && (
+                <Badge variant="outline" className="gap-1"><Users className="h-3 w-3" /> {t("admin.roleUser")}</Badge>
+              )}
+              {isModerator && !isAdmin && (
+                <Badge variant="outline" className="gap-1 border-emerald-500/40 text-emerald-700 dark:text-emerald-400">
+                  <Wallet className="h-3 w-3" />
+                  {user.grant_budget == null
+                    ? t("admin.budgetUnlimited")
+                    : `${(user.grant_budget ?? 0) - (user.grant_used ?? 0)} / ${user.grant_budget} · ${t(`admin.budgetPeriod_${user.grant_period ?? "monthly"}`)}`}
+                </Badge>
+              )}
+              {user.is_blocked && <Badge variant="destructive" className="gap-1"><Ban className="h-3 w-3" /> {t("admin.blockedBadge")}</Badge>}
+            </div>
+            <div className="truncate text-xs text-muted-foreground">{user.email}</div>
+          </div>
 
-        <div className="flex items-center gap-1.5 rounded-lg border bg-muted/30 px-2 py-1">
-          <Coins className="h-4 w-4 text-amber-500" />
-          <Input
-            type="number"
-            value={credits}
-            onChange={(e) => setCredits(Number(e.target.value))}
-            className="h-8 w-20 border-0 bg-transparent focus-visible:ring-0"
-          />
+          <Button size="sm" variant="outline" onClick={() => setPermOpen(true)} className="gap-1.5">
+            <KeyRound className="h-3.5 w-3.5" /> {t("admin.manageRole")} · {roleLabel}
+          </Button>
+
           <Button
             size="sm"
-            variant="default"
-            disabled={pending || credits === user.credits}
-            onClick={() => onUpdate({ credits })}
+            variant={user.is_blocked ? "default" : "destructive"}
+            disabled={pending}
+            onClick={() => onUpdate({ is_blocked: !user.is_blocked })}
+            className="gap-1.5"
           >
-            {t("admin.save")}
+            {user.is_blocked ? <Check className="h-3.5 w-3.5" /> : <Ban className="h-3.5 w-3.5" />}
+            {user.is_blocked ? t("admin.unblock") : t("admin.block")}
           </Button>
         </div>
 
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setPermOpen(true)}
-          className="gap-1.5"
-        >
-          <KeyRound className="h-3.5 w-3.5" /> {t("admin.manageRole")}
-        </Button>
-
-        <Button
-          size="sm"
-          variant={user.is_blocked ? "default" : "destructive"}
-          disabled={pending}
-          onClick={() => onUpdate({ is_blocked: !user.is_blocked })}
-          className="gap-1.5"
-        >
-          {user.is_blocked ? <Check className="h-3.5 w-3.5" /> : <Ban className="h-3.5 w-3.5" />}
-          {user.is_blocked ? t("admin.unblock") : t("admin.block")}
-        </Button>
+        <div className="rounded-xl border bg-gradient-to-br from-amber-50 to-orange-50 p-3 dark:from-amber-950/20 dark:to-orange-950/20">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-amber-500/15 text-amber-600">
+                <Coins className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("admin.creditsLabel") || "Credits"}</div>
+                <div className="text-lg font-bold">{user.credits ?? 0}</div>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" variant="outline" disabled={pending} onClick={() => addQuick(10)}>+10</Button>
+              <Button size="sm" variant="outline" disabled={pending} onClick={() => addQuick(50)}>+50</Button>
+              <Button size="sm" variant="outline" disabled={pending} onClick={() => addQuick(100)}>+100</Button>
+              <div className="flex items-center gap-1.5 rounded-lg border bg-background px-2 py-1">
+                <Label className="text-[11px] text-muted-foreground">{t("admin.setTo") || "Set to"}</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={credits}
+                  onChange={(e) => setCredits(Number(e.target.value))}
+                  className="h-8 w-24 border-0 bg-transparent focus-visible:ring-0"
+                />
+                <Button
+                  size="sm"
+                  disabled={pending || credits === user.credits}
+                  onClick={() => onUpdate({ credits })}
+                >
+                  {t("admin.save")}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <RoleDialog
           open={permOpen}
@@ -214,6 +239,7 @@ function UserRow({ user, meId, onUpdate, pending, t }: { user: any; meId?: strin
     </Card>
   );
 }
+
 
 type RoleKind = "user" | "moderator" | "admin";
 
