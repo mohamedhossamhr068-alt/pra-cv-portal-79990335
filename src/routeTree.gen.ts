@@ -36,6 +36,7 @@ import { Route as AuthenticatedAdminNotificationsRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminBrandingRouteImport } from './routes/_authenticated/admin.branding'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 import { Route as AuthenticatedAdminChatSupportRouteImport } from './routes/_authenticated/admin.chat.support'
+import { Route as AuthenticatedAdminChatGuestsRouteImport } from './routes/_authenticated/admin.chat.guests'
 import { Route as AuthenticatedAdminChatCreditRouteImport } from './routes/_authenticated/admin.chat.credit'
 
 const PricingRoute = PricingRouteImport.update({
@@ -182,6 +183,12 @@ const AuthenticatedAdminChatSupportRoute =
     path: '/admin/chat/support',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminChatGuestsRoute =
+  AuthenticatedAdminChatGuestsRouteImport.update({
+    id: '/admin/chat/guests',
+    path: '/admin/chat/guests',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminChatCreditRoute =
   AuthenticatedAdminChatCreditRouteImport.update({
     id: '/admin/chat/credit',
@@ -216,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
   '/cv/': typeof AuthenticatedCvIndexRoute
   '/admin/chat/credit': typeof AuthenticatedAdminChatCreditRoute
+  '/admin/chat/guests': typeof AuthenticatedAdminChatGuestsRoute
   '/admin/chat/support': typeof AuthenticatedAdminChatSupportRoute
 }
 export interface FileRoutesByTo {
@@ -245,6 +253,7 @@ export interface FileRoutesByTo {
   '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
   '/cv': typeof AuthenticatedCvIndexRoute
   '/admin/chat/credit': typeof AuthenticatedAdminChatCreditRoute
+  '/admin/chat/guests': typeof AuthenticatedAdminChatGuestsRoute
   '/admin/chat/support': typeof AuthenticatedAdminChatSupportRoute
 }
 export interface FileRoutesById {
@@ -276,6 +285,7 @@ export interface FileRoutesById {
   '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
   '/_authenticated/cv/': typeof AuthenticatedCvIndexRoute
   '/_authenticated/admin/chat/credit': typeof AuthenticatedAdminChatCreditRoute
+  '/_authenticated/admin/chat/guests': typeof AuthenticatedAdminChatGuestsRoute
   '/_authenticated/admin/chat/support': typeof AuthenticatedAdminChatSupportRoute
 }
 export interface FileRouteTypes {
@@ -307,6 +317,7 @@ export interface FileRouteTypes {
     | '/api/public/guest-chat'
     | '/cv/'
     | '/admin/chat/credit'
+    | '/admin/chat/guests'
     | '/admin/chat/support'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -336,6 +347,7 @@ export interface FileRouteTypes {
     | '/api/public/guest-chat'
     | '/cv'
     | '/admin/chat/credit'
+    | '/admin/chat/guests'
     | '/admin/chat/support'
   id:
     | '__root__'
@@ -366,6 +378,7 @@ export interface FileRouteTypes {
     | '/api/public/guest-chat'
     | '/_authenticated/cv/'
     | '/_authenticated/admin/chat/credit'
+    | '/_authenticated/admin/chat/guests'
     | '/_authenticated/admin/chat/support'
   fileRoutesById: FileRoutesById
 }
@@ -568,6 +581,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminChatSupportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/chat/guests': {
+      id: '/_authenticated/admin/chat/guests'
+      path: '/admin/chat/guests'
+      fullPath: '/admin/chat/guests'
+      preLoaderRoute: typeof AuthenticatedAdminChatGuestsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/chat/credit': {
       id: '/_authenticated/admin/chat/credit'
       path: '/admin/chat/credit'
@@ -611,6 +631,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlatformTenantsRoute: typeof AuthenticatedPlatformTenantsRoute
   AuthenticatedCvIndexRoute: typeof AuthenticatedCvIndexRoute
   AuthenticatedAdminChatCreditRoute: typeof AuthenticatedAdminChatCreditRoute
+  AuthenticatedAdminChatGuestsRoute: typeof AuthenticatedAdminChatGuestsRoute
   AuthenticatedAdminChatSupportRoute: typeof AuthenticatedAdminChatSupportRoute
 }
 
@@ -636,6 +657,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlatformTenantsRoute: AuthenticatedPlatformTenantsRoute,
   AuthenticatedCvIndexRoute: AuthenticatedCvIndexRoute,
   AuthenticatedAdminChatCreditRoute: AuthenticatedAdminChatCreditRoute,
+  AuthenticatedAdminChatGuestsRoute: AuthenticatedAdminChatGuestsRoute,
   AuthenticatedAdminChatSupportRoute: AuthenticatedAdminChatSupportRoute,
 }
 
