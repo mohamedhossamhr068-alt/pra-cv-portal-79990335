@@ -39,7 +39,7 @@ function TopupPage() {
   const me = useMeQuery();
   const qc = useQueryClient();
   const walletFn = useServerFn(getWalletSettings);
-  const pricingFn = useServerFn(getTenantPricing);
+  const pricingFn = useServerFn(getPlatformPricing);
   const createFn = useServerFn(createTopupRequestV2);
   const listFn = useServerFn(listMyTopups);
   const methodsFn = useServerFn(listPaymentMethods);
