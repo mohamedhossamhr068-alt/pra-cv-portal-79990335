@@ -15,21 +15,13 @@ function CreditChat() {
   const ar = i18n.language === "ar";
   const me = useMeQuery();
   const fn = useServerFn(getOrCreateMyConversation);
-  const isMod = me.data?.roles?.includes("moderator") || me.data?.roles?.includes("company_admin");
   const q = useQuery({
     queryKey: ["my-conv", "credit"],
     queryFn: () => fn({ data: { kind: "credit" } }),
-    enabled: !!isMod,
+    enabled: !!me.data,
   });
 
   if (me.isLoading) return null;
-  if (!isMod) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        {ar ? "هذه المحادثة مخصصة للمشرفين فقط." : "This chat is for moderators only."}
-      </div>
-    );
-  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
@@ -37,8 +29,8 @@ function CreditChat() {
         <h1 className="text-2xl font-bold">{ar ? "طلبات الكرديت" : "Credit requests"}</h1>
         <p className="text-sm text-muted-foreground">
           {ar
-            ? "أرسل طلب زيادة كرديت إلى الأدمن. عند الموافقة تُضاف للميزانية تلقائياً."
-            : "Request more credits from the admin. On approval, your budget is bumped automatically."}
+            ? "أرسل طلب زيادة كرديت إلى الأدمن. عند الموافقة تُضاف إلى رصيدك تلقائياً."
+            : "Request more credits from the admin. On approval, credits are added automatically."}
         </p>
       </div>
       {q.data && <ChatPanel conversationId={q.data} kind="credit" showCreditRequest />}

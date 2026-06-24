@@ -155,6 +155,11 @@ function HistoryPage() {
                           {r.payment_method?.account_number && <> · {r.payment_method.account_number}</>}
                           {r.reference_number && <> · #{r.reference_number}</>}
                         </div>
+                        {r.requested_plan && (
+                          <div className="text-xs font-medium text-primary">
+                            {T("الباقة", "Plan")}: {r.requested_plan}
+                          </div>
+                        )}
                         <div className="text-xs text-muted-foreground">
                           {T("أُرسل", "Sent")}: {fmtCairo(r.created_at)}
                           {r.reviewed_at && <> · {T("روجع", "Reviewed")}: {fmtCairo(r.reviewed_at)}</>}

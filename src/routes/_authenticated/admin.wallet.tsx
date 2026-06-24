@@ -256,6 +256,11 @@ function AdminWallet() {
                         {r.amount_egp} EGP → {r.credits_requested} {T("كريديت","cr")}
                         {r.reference_number && ` · #${r.reference_number}`} · {fmtCairo(r.created_at)}
                       </div>
+                      {r.requested_plan && (
+                        <div className="mt-1 text-xs font-medium text-primary">
+                          {T("الباقة المطلوبة", "Requested plan")}: {r.requested_plan}
+                        </div>
+                      )}
                       <div className="mt-2 flex flex-wrap gap-2">
                         <Input placeholder={T("ملاحظة (اختياري)","Note (optional)")} value={noteById[r.id] ?? ""}
                           onChange={(e) => setNoteById((s) => ({ ...s, [r.id]: e.target.value }))} className="flex-1 min-w-[160px]" />
@@ -281,7 +286,7 @@ function AdminWallet() {
               <div className="space-y-1 text-xs">
                 {others.slice(0, 30).map((r: any) => (
                   <div key={r.id} className="flex items-center justify-between rounded border p-2">
-                    <span>{r.user?.full_name || r.user?.email || r.user_id.slice(0,8)} — {r.amount_egp} EGP</span>
+                    <span>{r.user?.full_name || r.user?.email || r.user_id.slice(0,8)} — {r.amount_egp} EGP{r.requested_plan ? ` · ${r.requested_plan}` : ""}</span>
                     <span className={`flex items-center gap-1 ${r.status === "approved" ? "text-emerald-600" : "text-rose-600"}`}>
                       {r.status === "approved" ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                       {r.status}

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
@@ -100,8 +100,12 @@ function Billing() {
                     </li>
                   ))}
                 </ul>
-                <Button variant={isCurrent ? "outline" : "default"} disabled={isCurrent} className="w-full">
-                  {isCurrent ? t("billing.current") : t("billing.upgrade")}
+                <Button asChild={!isCurrent} variant={isCurrent ? "outline" : "default"} disabled={isCurrent} className="w-full">
+                  {isCurrent ? (
+                    <span>{t("billing.current")}</span>
+                  ) : (
+                    <Link to="/billing/topup" search={{ plan: id, amount: prices[id] } as any}>{t("billing.upgrade")}</Link>
+                  )}
                 </Button>
               </CardContent>
             </Card>

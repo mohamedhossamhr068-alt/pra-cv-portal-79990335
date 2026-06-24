@@ -19,11 +19,11 @@ function AdminCreditChat() {
   const ar = i18n.language === "ar";
   const me = useMeQuery();
   const fn = useServerFn(listConversations);
-  const isAdmin = me.data?.roles?.includes("company_admin");
+  const canReview = !!(me.data?.roles?.includes("company_admin") || me.data?.roles?.includes("superadmin") || (me.data as any)?.permissions?.includes("review_topups"));
   const q = useQuery({
     queryKey: ["conversations", "credit"],
     queryFn: () => fn({ data: { kind: "credit" } }),
-    enabled: !!isAdmin,
+    enabled: canReview,
     refetchInterval: 15000,
   });
   const [active, setActive] = useState<string | null>(null);
@@ -31,7 +31,7 @@ function AdminCreditChat() {
     if (!active && q.data?.[0]) setActive(q.data[0].id);
   }, [q.data, active]);
 
-  if (!isAdmin) return <div className="text-sm text-muted-foreground">{ar ? "للأدمن فقط" : "Admin only"}</div>;
+  if (!canReview) return <div className="text-sm text-muted-foreground">{ar ? "غير مصرح" : "Not allowed"}</div>;
 
   return (
     <div className="space-y-4">

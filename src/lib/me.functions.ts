@@ -5,9 +5,10 @@ export const getMe = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const [{ data: profile }, { data: roles }] = await Promise.all([
+    const [{ data: profile }, { data: roles }, { data: permissions }] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
       supabase.from("user_roles").select("role,tenant_id").eq("user_id", userId),
+      supabase.from("user_permissions" as any).select("permission,tenant_id").eq("user_id", userId),
     ]);
     let tenant = null as any;
     let subscription = null as any;
@@ -37,6 +38,7 @@ export const getMe = createServerFn({ method: "GET" })
       tenant,
       subscription,
       roles: (roles ?? []).map((r) => r.role as string),
+      permissions: ((permissions as any[]) ?? []).map((p) => p.permission as string),
       quota: { used, limit, remaining: Math.max(0, limit - used), month: monthKey },
       credits: profile?.credits ?? 0,
       isBlocked: profile?.is_blocked ?? false,

@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { getTenantPricing } from "@/lib/admin.functions";
 import {
   createTopupRequestV2,
   listMyTopups,
@@ -23,7 +24,7 @@ import { fmtCairo } from "@/lib/time";
 
 export const Route = createFileRoute("/_authenticated/billing/topup")({
   validateSearch: (s: Record<string, unknown>) => ({
-    plan: typeof s.plan === "string" ? s.plan : undefined,
+    plan: s.plan === "pro" || s.plan === "business" ? s.plan : undefined,
     amount: s.amount != null && !Number.isNaN(Number(s.amount)) ? Number(s.amount) : undefined,
   }),
   component: TopupPage,
@@ -38,12 +39,14 @@ function TopupPage() {
   const me = useMeQuery();
   const qc = useQueryClient();
   const walletFn = useServerFn(getWalletSettings);
+  const pricingFn = useServerFn(getTenantPricing);
   const createFn = useServerFn(createTopupRequestV2);
   const listFn = useServerFn(listMyTopups);
   const methodsFn = useServerFn(listPaymentMethods);
   const urlFn = useServerFn(getScreenshotUrl);
 
   const { data: wallet } = useQuery({ queryKey: ["wallet"], queryFn: () => walletFn() });
+  const { data: pricing } = useQuery({ queryKey: ["tenant-pricing"], queryFn: () => pricingFn() });
   const { data: history } = useQuery({ queryKey: ["my-topups"], queryFn: () => listFn() });
   const { data: methods } = useQuery({ queryKey: ["payment-methods"], queryFn: () => methodsFn() });
 
@@ -70,7 +73,25 @@ function TopupPage() {
   );
 
   const search = Route.useSearch();
+  const [selectedPlan, setSelectedPlan] = useState<"pro" | "business" | null>(search.plan ?? null);
   const [amount, setAmount] = useState<number>(search.amount && search.amount > 0 ? search.amount : 50);
+
+  const planOptions = useMemo(() => ({
+    pro: {
+      label: T("باقة Pro", "Pro plan"),
+      price: Number((pricing as any)?.plan_price_pro ?? search.amount ?? 250),
+      credits: Number((pricing as any)?.plan_credits_pro ?? 100),
+    },
+    business: {
+      label: T("باقة Business", "Business plan"),
+      price: Number((pricing as any)?.plan_price_business ?? search.amount ?? 500),
+      credits: Number((pricing as any)?.plan_credits_business ?? 500),
+    },
+  }), [pricing, search.amount, ar]);
+
+  useEffect(() => {
+    if (selectedPlan) setAmount(planOptions[selectedPlan].price);
+  }, [selectedPlan, planOptions]);
 
   const [ref, setRef] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -78,7 +99,7 @@ function TopupPage() {
   const [uploading, setUploading] = useState(false);
 
   const rate = Number((wallet as any)?.credits_per_egp ?? 1);
-  const expectedCredits = Math.max(1, Math.floor((amount || 0) * rate));
+  const expectedCredits = selectedPlan ? planOptions[selectedPlan].credits : Math.max(1, Math.floor((amount || 0) * rate));
 
   const mut = useMutation({
     mutationFn: async () => {
@@ -98,12 +119,14 @@ function TopupPage() {
         reference_number: ref,
         screenshot_path: path,
         payment_method_id: selected.id.startsWith("__legacy") ? null : selected.id,
+        requested_plan: selectedPlan,
       }});
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-topups"] });
       toast.success(T("تم إرسال الطلب — سيتم مراجعته قريبًا", "Request sent — pending review"));
-      setFile(null); setFilePreview(null); setRef(""); setAmount(50);
+      setFile(null); setFilePreview(null); setRef("");
+      if (!selectedPlan) setAmount(50);
     },
     onError: (e: any) => toast.error(String(e?.message ?? "Error")),
     onSettled: () => setUploading(false),
@@ -144,6 +167,35 @@ function TopupPage() {
       </div>
 
       {/* Method picker */}
+      <Card>
+        <CardContent className="space-y-3 p-6">
+          <h2 className="font-semibold">{T("اختيار الباقة", "Select package")}</h2>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {(["pro", "business"] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setSelectedPlan(p)}
+                className={`rounded-xl border p-3 text-start transition hover:bg-muted/50 ${selectedPlan === p ? "border-primary bg-primary/5 ring-2 ring-primary/25" : ""}`}
+              >
+                <div className="font-semibold">{planOptions[p].label}</div>
+                <div className="mt-1 text-sm text-muted-foreground">{planOptions[p].price.toLocaleString()} {T("ج.م", "EGP")}</div>
+                <div className="text-xs text-primary">{planOptions[p].credits.toLocaleString()} {T("كريديت", "credits")}</div>
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setSelectedPlan(null)}
+              className={`rounded-xl border p-3 text-start transition hover:bg-muted/50 ${!selectedPlan ? "border-primary bg-primary/5 ring-2 ring-primary/25" : ""}`}
+            >
+              <div className="font-semibold">{T("شحن مخصص", "Custom top-up")}</div>
+              <div className="mt-1 text-sm text-muted-foreground">{T("اكتب المبلغ بنفسك", "Enter your amount")}</div>
+              <div className="text-xs text-primary">{rate} {T("كريديت لكل جنيه", "credits per EGP")}</div>
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent className="space-y-3 p-6">
           <div className="flex items-center justify-between">
@@ -214,6 +266,7 @@ function TopupPage() {
             <div>
               <Label>{T("المبلغ بالجنيه", "Amount (EGP)")}</Label>
               <Input type="number" min={1} value={amount}
+                readOnly={!!selectedPlan}
                 onChange={(e) => setAmount(parseFloat(e.target.value || "0"))} />
             </div>
             <div>
@@ -226,7 +279,7 @@ function TopupPage() {
             <Coins className="me-2 inline h-4 w-4 text-amber-500" />
             {T("ستحصل على", "You will receive")}{" "}
             <b>{expectedCredits}</b>{" "}{T("كريديت", "credits")}
-            <span className="text-muted-foreground"> · {rate} {T("لكل جنيه", "per EGP")}</span>
+            <span className="text-muted-foreground"> · {selectedPlan ? planOptions[selectedPlan].label : `${rate} ${T("لكل جنيه", "per EGP")}`}</span>
           </div>
 
           <div>
@@ -268,6 +321,7 @@ function TopupPage() {
               <div key={r.id} className="flex items-center justify-between gap-3 rounded-lg border p-3 text-sm">
                 <div className="min-w-0">
                   <div className="font-medium">{r.amount_egp} EGP → {r.credits_requested} {T("كريديت","cr")}</div>
+                  {r.requested_plan && <div className="text-xs text-primary">{T("الباقة", "Plan")}: {r.requested_plan}</div>}
                   <div className="text-xs text-muted-foreground">
                     {fmtCairo(r.created_at)} {r.reference_number && `· #${r.reference_number}`}
                   </div>

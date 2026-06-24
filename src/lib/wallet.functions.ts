@@ -201,6 +201,7 @@ export const createTopupRequestV2 = createServerFn({ method: "POST" })
       reference_number: z.string().max(80).optional().default(""),
       screenshot_path: z.string().min(3),
       payment_method_id: z.string().uuid().optional().nullable(),
+      requested_plan: z.enum(["pro", "business"]).optional().nullable(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -208,10 +209,16 @@ export const createTopupRequestV2 = createServerFn({ method: "POST" })
     const { data: prof } = await supabase
       .from("profiles").select("tenant_id").eq("id", userId).maybeSingle();
     if (!prof?.tenant_id) throw new Error("NO_TENANT");
-    const { data: w } = await supabase
-      .from("wallet_settings").select("credits_per_egp").eq("tenant_id", prof.tenant_id).maybeSingle();
+    const [{ data: w }, { data: tenant }] = await Promise.all([
+      supabase.from("wallet_settings").select("credits_per_egp").eq("tenant_id", prof.tenant_id).maybeSingle(),
+      supabase.from("tenants").select("plan_credits_pro,plan_credits_business").eq("id", prof.tenant_id).maybeSingle(),
+    ]);
     const rate = Number((w as any)?.credits_per_egp ?? 1);
-    const credits = Math.max(1, Math.floor(data.amount_egp * rate));
+    const credits = data.requested_plan === "pro"
+      ? Math.max(1, Number((tenant as any)?.plan_credits_pro ?? Math.floor(data.amount_egp * rate)))
+      : data.requested_plan === "business"
+        ? Math.max(1, Number((tenant as any)?.plan_credits_business ?? Math.floor(data.amount_egp * rate)))
+        : Math.max(1, Math.floor(data.amount_egp * rate));
     const { error } = await supabase.from("topup_requests").insert({
       tenant_id: prof.tenant_id,
       user_id: userId,
@@ -220,6 +227,7 @@ export const createTopupRequestV2 = createServerFn({ method: "POST" })
       reference_number: data.reference_number || null,
       screenshot_path: data.screenshot_path,
       payment_method_id: data.payment_method_id || null,
+      requested_plan: data.requested_plan || null,
     } as any);
     await supabase.rpc("log_audit" as any, {
       _action: "payment.topup_requested",

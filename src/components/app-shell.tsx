@@ -115,14 +115,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/billing", key: "billing", label: t("nav.billing"), icon: CreditCard, flag: "billing" },
     { to: "/billing/topup", key: "topup", label: i18n.language === "ar" ? "شحن رصيد" : "Top up", icon: CreditCard, flag: "topup" },
     { to: "/billing/history", key: "billing-history", label: i18n.language === "ar" ? "سجل الشحنات" : "Top-up history", icon: Receipt, flag: "topup" },
+    { to: "/chat/credit", key: "chat-credit", label: i18n.language === "ar" ? "طلب كرديت" : "Request credits", icon: Coins },
     { to: "/settings", key: "settings", label: t("nav.settings"), icon: SettingsIcon, flag: "settings" },
     { to: "/chat/support", key: "chat-support", label: i18n.language === "ar" ? "الدعم" : "Support", icon: MessageCircle, flag: "chat_support" },
   ];
   const items: NavItem[] = rawItems.filter((it) => !it.flag || allow(it.flag));
-
-  if (isMod && !isAdmin) {
-    items.push({ to: "/chat/credit", key: "chat-credit", label: i18n.language === "ar" ? "طلبات الكرديت" : "Credit requests", icon: Coins });
-  }
 
 
   const adminItems: NavItem[] = [
@@ -139,6 +136,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/admin/chat/support", key: "chat-sup", label: i18n.language === "ar" ? "محادثات الدعم" : "Support inbox", icon: MessageCircle },
     { to: "/admin/chat/credit", key: "chat-cr", label: i18n.language === "ar" ? "طلبات الكرديت" : "Credit requests", icon: Coins },
   ];
+  const canReviewTopups = !!(isAdmin || isSuper || (me.data as any)?.permissions?.includes("review_topups"));
+  const visibleAdminItems = isAdmin ? adminItems : canReviewTopups ? adminItems.filter((it) => it.to === "/admin/wallet" || it.to === "/admin/chat/credit") : [];
   const superItems: NavItem[] = [
     { to: "/admin/approvals", key: "approvals", label: i18n.language === "ar" ? "طلبات الانضمام" : "Approvals", icon: UserCheck },
     { to: "/platform/tenants", key: "tenants", label: t("nav.tenants"), icon: Building2 },
@@ -183,12 +182,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         );
       })}
 
-      {isAdmin && (
+      {visibleAdminItems.length > 0 && (
         <>
           <div className="mt-4 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             {t("nav.admin")}
           </div>
-          {adminItems.map((it) => {
+          {visibleAdminItems.map((it) => {
             const Icon = it.icon;
             const active = pathname.startsWith(it.to);
             return (
