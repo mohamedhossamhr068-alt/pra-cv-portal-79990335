@@ -149,7 +149,7 @@ function UserRow({ user, onUpdate, pending, t }: { user: any; onUpdate: (p: any)
                 <Wallet className="h-3 w-3" />
                 {user.grant_budget == null
                   ? t("admin.budgetUnlimited")
-                  : `${(user.grant_budget ?? 0) - (user.grant_used ?? 0)} / ${user.grant_budget}`}
+                  : `${(user.grant_budget ?? 0) - (user.grant_used ?? 0)} / ${user.grant_budget} · ${t(`admin.budgetPeriod_${user.grant_period ?? "monthly"}`)}`}
               </Badge>
             )}
             {user.is_blocked && <Badge variant="destructive" className="gap-1"><Ban className="h-3 w-3" /> {t("admin.blockedBadge")}</Badge>}
@@ -227,6 +227,7 @@ function RoleDialog({ open, onOpenChange, user, t }: {
   const [selected, setSelected] = useState<Set<Permission>>(new Set(initialPerms));
   const [unlimited, setUnlimited] = useState<boolean>(user.grant_budget == null);
   const [budget, setBudgetVal] = useState<number>(user.grant_budget ?? 0);
+  const [period, setPeriod] = useState<"monthly" | "total">((user.grant_period as any) ?? "monthly");
   const [resetUsed, setResetUsed] = useState<boolean>(false);
 
   const toggle = (p: Permission) => {
@@ -260,6 +261,7 @@ function RoleDialog({ open, onOpenChange, user, t }: {
             target_user: user.id,
             budget: unlimited ? null : Math.max(0, Math.floor(budget)),
             reset_used: resetUsed,
+            period,
           },
         });
       }
@@ -355,6 +357,23 @@ function RoleDialog({ open, onOpenChange, user, t }: {
                   value={budget}
                   onChange={(e) => setBudgetVal(Number(e.target.value))}
                 />
+                <div>
+                  <Label className="text-xs">{t("admin.budgetPeriod")}</Label>
+                  <div className="mt-1 grid grid-cols-2 gap-2">
+                    {(["monthly", "total"] as const).map((p) => (
+                      <button
+                        type="button"
+                        key={p}
+                        onClick={() => setPeriod(p)}
+                        className={`rounded-md border px-2 py-1.5 text-xs font-medium transition-colors ${
+                          period === p ? "border-primary bg-primary/10 text-primary" : "hover:bg-muted/40"
+                        }`}
+                      >
+                        {t(`admin.budgetPeriod_${p}`)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="flex items-center justify-between rounded border bg-background px-2 py-1.5 text-xs">
                   <span className="text-muted-foreground">{t("admin.budgetUsed")}</span>
                   <span className="font-medium">

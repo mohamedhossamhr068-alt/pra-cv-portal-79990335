@@ -400,6 +400,8 @@ export type Database = {
           full_name: string | null
           grant_budget: number | null
           grant_low_notified: boolean
+          grant_period: string
+          grant_period_start: string
           grant_used: number
           id: string
           is_blocked: boolean
@@ -413,6 +415,8 @@ export type Database = {
           full_name?: string | null
           grant_budget?: number | null
           grant_low_notified?: boolean
+          grant_period?: string
+          grant_period_start?: string
           grant_used?: number
           id: string
           is_blocked?: boolean
@@ -426,6 +430,8 @@ export type Database = {
           full_name?: string | null
           grant_budget?: number | null
           grant_low_notified?: boolean
+          grant_period?: string
+          grant_period_start?: string
           grant_used?: number
           id?: string
           is_blocked?: boolean
@@ -790,10 +796,24 @@ export type Database = {
         Args: { _approve: boolean; _note?: string; _request_id: string }
         Returns: undefined
       }
-      admin_set_moderator_budget: {
-        Args: { _budget?: number; _reset_used?: boolean; _target_user: string }
-        Returns: undefined
-      }
+      admin_set_moderator_budget:
+        | {
+            Args: {
+              _budget?: number
+              _reset_used?: boolean
+              _target_user: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _budget?: number
+              _period?: string
+              _reset_used?: boolean
+              _target_user: string
+            }
+            Returns: undefined
+          }
       admin_set_user_permissions: {
         Args: {
           _make_moderator?: boolean
