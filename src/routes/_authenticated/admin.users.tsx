@@ -43,6 +43,10 @@ function AdminUsers() {
         toast.error(t("admin.budgetExhausted"));
       } else if (msg.includes("MOD_CANNOT_LOWER_CREDITS")) {
         toast.error(t("admin.budgetCannotLower"));
+      } else if (msg.includes("SELF_DEMOTE_FORBIDDEN")) {
+        toast.error(t("admin.selfDemoteForbidden"));
+      } else if (msg.includes("LAST_ADMIN_FORBIDDEN")) {
+        toast.error(t("admin.lastAdminForbidden"));
       } else {
         toast.error(e?.message ?? t("admin.updateFailed"));
       }
