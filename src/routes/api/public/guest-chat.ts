@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { generateText } from "ai";
-import { createLovableAiGatewayProvider, BOT_SYSTEM_AR } from "@/lib/ai-gateway.server";
+import { createLovableAiGatewayProvider, pickBotSystem } from "@/lib/ai-gateway.server";
 
 const Body = z.object({
   guest_token: z.string().min(8).max(80),
   message: z.string().min(1).max(2000),
   display_name: z.string().max(80).optional(),
   email: z.string().email().max(160).optional(),
+  lang: z.string().max(8).optional(),
 });
 
 export const Route = createFileRoute("/api/public/guest-chat")({
@@ -82,9 +83,10 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                 content: m.body as string,
               }));
               const gateway = createLovableAiGatewayProvider(key);
+              const system = pickBotSystem(body.lang, body.message);
               const { text } = await generateText({
                 model: gateway("google/gemini-3-flash-preview"),
-                system: BOT_SYSTEM_AR,
+                system,
                 messages,
               });
               botReply = text;

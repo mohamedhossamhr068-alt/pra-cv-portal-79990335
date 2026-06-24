@@ -556,6 +556,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
           credits: number
           email: string
@@ -566,11 +568,14 @@ export type Database = {
           grant_period_start: string
           grant_used: number
           id: string
+          is_approved: boolean
           is_blocked: boolean
           locale: string
           tenant_id: string | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           credits?: number
           email: string
@@ -581,11 +586,14 @@ export type Database = {
           grant_period_start?: string
           grant_used?: number
           id: string
+          is_approved?: boolean
           is_blocked?: boolean
           locale?: string
           tenant_id?: string | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           credits?: number
           email?: string
@@ -596,6 +604,7 @@ export type Database = {
           grant_period_start?: string
           grant_used?: number
           id?: string
+          is_approved?: boolean
           is_blocked?: boolean
           locale?: string
           tenant_id?: string | null
@@ -954,6 +963,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_approve_signup: {
+        Args: { _approve: boolean; _note?: string; _user_id: string }
+        Returns: undefined
+      }
       admin_review_topup: {
         Args: { _approve: boolean; _note?: string; _request_id: string }
         Returns: undefined

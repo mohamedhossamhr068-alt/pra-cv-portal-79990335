@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PendingApprovalRouteImport } from './routes/pending-approval'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -35,6 +36,7 @@ import { Route as AuthenticatedAdminOffersRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminNotificationsRouteImport } from './routes/_authenticated/admin.notifications'
 import { Route as AuthenticatedAdminBrandingRouteImport } from './routes/_authenticated/admin.branding'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
+import { Route as AuthenticatedAdminApprovalsRouteImport } from './routes/_authenticated/admin.approvals'
 import { Route as AuthenticatedAdminChatSupportRouteImport } from './routes/_authenticated/admin.chat.support'
 import { Route as AuthenticatedAdminChatGuestsRouteImport } from './routes/_authenticated/admin.chat.guests'
 import { Route as AuthenticatedAdminChatCreditRouteImport } from './routes/_authenticated/admin.chat.credit'
@@ -42,6 +44,11 @@ import { Route as AuthenticatedAdminChatCreditRouteImport } from './routes/_auth
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PendingApprovalRoute = PendingApprovalRouteImport.update({
+  id: '/pending-approval',
+  path: '/pending-approval',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -177,6 +184,12 @@ const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
   path: '/admin/audit',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminApprovalsRoute =
+  AuthenticatedAdminApprovalsRouteImport.update({
+    id: '/admin/approvals',
+    path: '/admin/approvals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminChatSupportRoute =
   AuthenticatedAdminChatSupportRouteImport.update({
     id: '/admin/chat/support',
@@ -199,11 +212,13 @@ const AuthenticatedAdminChatCreditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/pending-approval': typeof PendingApprovalRoute
   '/pricing': typeof PricingRoute
   '/billing': typeof AuthenticatedBillingRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/jobs': typeof AuthenticatedJobsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/branding': typeof AuthenticatedAdminBrandingRoute
   '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
@@ -229,11 +244,13 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/pending-approval': typeof PendingApprovalRoute
   '/pricing': typeof PricingRoute
   '/billing': typeof AuthenticatedBillingRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/jobs': typeof AuthenticatedJobsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/branding': typeof AuthenticatedAdminBrandingRoute
   '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
@@ -261,11 +278,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/pending-approval': typeof PendingApprovalRoute
   '/pricing': typeof PricingRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/jobs': typeof AuthenticatedJobsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/branding': typeof AuthenticatedAdminBrandingRoute
   '/_authenticated/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
@@ -293,11 +312,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/pending-approval'
     | '/pricing'
     | '/billing'
     | '/dashboard'
     | '/jobs'
     | '/settings'
+    | '/admin/approvals'
     | '/admin/audit'
     | '/admin/branding'
     | '/admin/notifications'
@@ -323,11 +344,13 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/pending-approval'
     | '/pricing'
     | '/billing'
     | '/dashboard'
     | '/jobs'
     | '/settings'
+    | '/admin/approvals'
     | '/admin/audit'
     | '/admin/branding'
     | '/admin/notifications'
@@ -354,11 +377,13 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/pending-approval'
     | '/pricing'
     | '/_authenticated/billing'
     | '/_authenticated/dashboard'
     | '/_authenticated/jobs'
     | '/_authenticated/settings'
+    | '/_authenticated/admin/approvals'
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/branding'
     | '/_authenticated/admin/notifications'
@@ -386,6 +411,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  PendingApprovalRoute: typeof PendingApprovalRoute
   PricingRoute: typeof PricingRoute
   ApiPublicGuestChatRoute: typeof ApiPublicGuestChatRoute
 }
@@ -397,6 +423,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pending-approval': {
+      id: '/pending-approval'
+      path: '/pending-approval'
+      fullPath: '/pending-approval'
+      preLoaderRoute: typeof PendingApprovalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -574,6 +607,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/approvals': {
+      id: '/_authenticated/admin/approvals'
+      path: '/admin/approvals'
+      fullPath: '/admin/approvals'
+      preLoaderRoute: typeof AuthenticatedAdminApprovalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/chat/support': {
       id: '/_authenticated/admin/chat/support'
       path: '/admin/chat/support'
@@ -614,6 +654,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedJobsRoute: typeof AuthenticatedJobsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedAdminApprovalsRoute: typeof AuthenticatedAdminApprovalsRoute
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminBrandingRoute: typeof AuthenticatedAdminBrandingRoute
   AuthenticatedAdminNotificationsRoute: typeof AuthenticatedAdminNotificationsRoute
@@ -640,6 +681,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedJobsRoute: AuthenticatedJobsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedAdminApprovalsRoute: AuthenticatedAdminApprovalsRoute,
   AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
   AuthenticatedAdminBrandingRoute: AuthenticatedAdminBrandingRoute,
   AuthenticatedAdminNotificationsRoute: AuthenticatedAdminNotificationsRoute,
@@ -668,6 +710,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  PendingApprovalRoute: PendingApprovalRoute,
   PricingRoute: PricingRoute,
   ApiPublicGuestChatRoute: ApiPublicGuestChatRoute,
 }

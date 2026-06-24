@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   MessageCircle,
   Coins,
+  UserCheck,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -96,6 +97,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/admin/chat/credit", key: "chat-cr", label: i18n.language === "ar" ? "طلبات الكرديت" : "Credit requests", icon: Coins },
   ];
   const superItems: NavItem[] = [
+    { to: "/admin/approvals", key: "approvals", label: i18n.language === "ar" ? "طلبات الانضمام" : "Approvals", icon: UserCheck },
     { to: "/platform/tenants", key: "tenants", label: t("nav.tenants"), icon: Building2 },
     { to: "/platform/analytics", key: "panalytics", label: t("nav.analytics"), icon: BarChart3 },
   ];

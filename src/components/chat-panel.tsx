@@ -88,7 +88,7 @@ export function ChatPanel({ conversationId, kind, showCreditRequest, canReview, 
       setText("");
       qc.invalidateQueries({ queryKey: ["chat-messages", conversationId] });
       if (triggerBot && kind === "support") {
-        botFn({ data: { conversation_id: conversationId } }).catch(() => {});
+        botFn({ data: { conversation_id: conversationId, lang: i18n.language } }).catch(() => {});
       }
     } catch (e: any) {
       toast.error(e?.message ?? "Failed");
