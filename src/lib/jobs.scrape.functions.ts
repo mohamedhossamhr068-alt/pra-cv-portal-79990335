@@ -55,13 +55,14 @@ export const scrapeEgyptJobs = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId, supabase } = context;
 
-    // Authorize: only admin/superadmin can trigger
-    const [{ data: roles }, { data: profile }] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", userId),
-      supabase.from("profiles").select("tenant_id").eq("id", userId).maybeSingle(),
-    ]);
-    const allowed = (roles ?? []).some((r) => r.role === "company_admin" || r.role === "superadmin");
-    if (!allowed) throw new Error("FORBIDDEN");
+    // Authorize: any authenticated user can trigger a narrow keyword search.
+    // Bulk scraping (no keyword) is restricted to company_admin / superadmin.
+    const hasKeyword = !!(data.keyword && data.keyword.trim().length >= 2);
+    if (!hasKeyword) {
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+      const allowed = (roles ?? []).some((r) => r.role === "company_admin" || r.role === "superadmin");
+      if (!allowed) throw new Error("FORBIDDEN");
+    }
 
     const apiKey = process.env.FIRECRAWL_API_KEY;
     if (!apiKey) throw new Error("Firecrawl is not connected.");

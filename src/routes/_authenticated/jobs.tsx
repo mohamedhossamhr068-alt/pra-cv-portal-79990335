@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
@@ -9,7 +9,7 @@ import { useMeQuery } from "@/lib/me.hooks";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, Sparkles, MapPin, RefreshCw, Building2, Calendar, Coins } from "lucide-react";
+import { ExternalLink, Sparkles, MapPin, RefreshCw, Building2, Calendar, Coins, Search, X } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/jobs")({
@@ -27,9 +27,13 @@ function Jobs() {
   const scrapeFn = useServerFn(scrapeEgyptJobs);
   const qc = useQueryClient();
   const [keyword, setKeyword] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data, isLoading } = useQuery({ queryKey: ["matches"], queryFn: () => listFn() });
-  const { data: allJobs } = useQuery({ queryKey: ["all-jobs"], queryFn: () => allJobsFn() });
+  const { data: allJobs, isFetching: isJobsFetching } = useQuery({
+    queryKey: ["all-jobs", searchTerm],
+    queryFn: () => allJobsFn({ data: { keyword: searchTerm || undefined } }),
+  });
 
   const mut = useMutation({
     mutationFn: () => matchFn(),
@@ -48,7 +52,7 @@ function Jobs() {
   });
 
   const scrape = useMutation({
-    mutationFn: () => scrapeFn({ data: { keyword: keyword || undefined } }),
+    mutationFn: (kw?: string) => scrapeFn({ data: { keyword: (kw ?? keyword) || undefined } }),
     onSuccess: (r: any) => {
       qc.invalidateQueries({ queryKey: ["all-jobs"] });
       toast.success(t("jobs.scrapeOk", { n: r?.inserted ?? 0 }));
@@ -56,13 +60,18 @@ function Jobs() {
     onError: (e: any) => toast.error(String(e?.message ?? t("jobs.scrapeFail"))),
   });
 
-  useEffect(() => {
-    if (!isLoading && data && data.length === 0 && !mut.isPending) {
-      // auto-run once
-    }
-  }, [isLoading, data, mut.isPending]);
+  const runSearch = () => {
+    const kw = keyword.trim();
+    setSearchTerm(kw);
+    if (kw.length >= 2) scrape.mutate(kw);
+  };
 
-  const showMatches = data && data.length > 0;
+  const clearSearch = () => {
+    setKeyword("");
+    setSearchTerm("");
+  };
+
+  const showMatches = !searchTerm && data && data.length > 0;
   const browseList = !showMatches ? allJobs ?? [] : [];
 
   return (
@@ -85,22 +94,40 @@ function Jobs() {
         </div>
       </div>
 
-      {isAdmin && (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-wrap items-center gap-2 py-4">
+      <Card>
+        <CardContent className="flex flex-wrap items-center gap-2 py-4">
+          <div className="relative min-w-[220px] flex-1">
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder={t("jobs.scrapeHint")}
+              placeholder={t("jobs.searchHint")}
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              className="min-w-[200px] flex-1"
+              onKeyDown={(e) => { if (e.key === "Enter") runSearch(); }}
+              className="ps-9 pe-9"
             />
-            <Button onClick={() => scrape.mutate()} disabled={scrape.isPending} variant="outline" className="gap-2">
+            {keyword && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted"
+                aria-label={t("common.clear") ?? "Clear"}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          <Button onClick={runSearch} disabled={scrape.isPending || keyword.trim().length < 2} className="gap-2">
+            <Search className="h-4 w-4" />
+            {scrape.isPending ? t("jobs.searching") : t("jobs.searchBtn")}
+          </Button>
+          {isAdmin && (
+            <Button onClick={() => scrape.mutate(undefined)} disabled={scrape.isPending} variant="outline" className="gap-2">
               <RefreshCw className={`h-4 w-4 ${scrape.isPending ? "animate-spin" : ""}`} />
               {t("jobs.scrapeBtn")}
             </Button>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
@@ -114,12 +141,18 @@ function Jobs() {
         <>
           <Card>
             <CardContent className="py-6 text-sm text-muted-foreground">
-              {t("jobs.allEgyptHint")}
+              {searchTerm
+                ? t("jobs.searchResultsFor", { kw: searchTerm, n: browseList.length })
+                : t("jobs.allEgyptHint")}
             </CardContent>
           </Card>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {browseList.map((j: any) => <JobCard key={j.id} job={j} t={t} />)}
-          </div>
+          {isJobsFetching && browseList.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {browseList.map((j: any) => <JobCard key={j.id} job={j} t={t} />)}
+            </div>
+          )}
         </>
       )}
     </div>

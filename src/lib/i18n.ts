@@ -142,6 +142,10 @@ const en = {
     today: "today",
     daysAgo: "{{n}}d ago",
     allEgyptHint: 'All recent Egypt jobs. Create a CV and click "Match" to see your fit score for each one.',
+    searchHint: "Search jobs by title (e.g. React Developer, Sales Manager)…",
+    searchBtn: "Search",
+    searching: "Searching…",
+    searchResultsFor: 'Results for "{{kw}}" — {{n}} job(s).',
   },
   billing: {
     title: "Billing & subscription",
@@ -482,6 +486,10 @@ const ar: typeof en = {
     today: "اليوم",
     daysAgo: "قبل {{n}} يوم",
     allEgyptHint: 'كل الوظائف الحديثة من مصر. اعمل سي في واضغط "مطابقة" للحصول على نسبة قبول لكل وظيفة.',
+    searchHint: "ابحث عن وظيفة بالمسمى (مثلاً: مطور React, مدير مبيعات)…",
+    searchBtn: "بحث",
+    searching: "جاري البحث…",
+    searchResultsFor: 'نتائج "{{kw}}" — {{n}} وظيفة.',
   },
   billing: {
     title: "الفوترة والاشتراك",

@@ -9,16 +9,23 @@ async function getMatchCost(supabase: any, userId: string): Promise<number> {
   return (t as any)?.match_credit_cost ?? 1;
 }
 
-export const listJobs = createServerFn({ method: "GET" })
+export const listJobs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data } = await context.supabase
+  .inputValidator((d: unknown) => z.object({ keyword: z.string().max(80).optional() }).parse(d ?? {}))
+  .handler(async ({ data, context }) => {
+    let q = context.supabase
       .from("job_listings")
       .select("*")
       .eq("country", "EG")
       .order("posted_at", { ascending: false })
       .limit(100);
-    return data ?? [];
+    const kw = (data.keyword ?? "").trim();
+    if (kw.length >= 2) {
+      // Match title OR skills OR company (case-insensitive)
+      q = q.or(`title.ilike.%${kw}%,company.ilike.%${kw}%,description.ilike.%${kw}%`);
+    }
+    const { data: rows } = await q;
+    return rows ?? [];
   });
 
 export const runMatch = createServerFn({ method: "POST" })
