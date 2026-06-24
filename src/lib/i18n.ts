@@ -19,8 +19,8 @@ const en = {
     tenants: "Tenants",
     analytics: "Analytics",
     signOut: "Sign out",
-    signIn: "Sign in",
-    signUp: "Sign up",
+    signIn: "Enter PRA",
+    signUp: "Join PRA",
   },
   landing: {
     heroEyebrow: "Built for global HR, recruitment & enterprise",
