@@ -111,6 +111,7 @@ export const setModeratorBudget = createServerFn({ method: "POST" })
       target_user: z.string().uuid(),
       budget: z.number().int().min(0).max(1000000).nullable(),
       reset_used: z.boolean().optional(),
+      period: z.enum(["monthly", "total"]).optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -118,6 +119,7 @@ export const setModeratorBudget = createServerFn({ method: "POST" })
       _target_user: data.target_user,
       _budget: data.budget,
       _reset_used: data.reset_used ?? false,
+      _period: data.period ?? null,
     } as any);
     if (error) throw error;
     await context.supabase.rpc("log_audit" as any, {
@@ -125,7 +127,7 @@ export const setModeratorBudget = createServerFn({ method: "POST" })
       _status: "success",
       _target: data.target_user,
       _link: "/admin/users",
-      _metadata: { budget: data.budget, reset_used: data.reset_used ?? false } as any,
+      _metadata: { budget: data.budget, reset_used: data.reset_used ?? false, period: data.period ?? null } as any,
     });
     return { ok: true };
   });
