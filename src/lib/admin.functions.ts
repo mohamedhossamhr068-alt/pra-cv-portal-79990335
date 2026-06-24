@@ -133,6 +133,31 @@ export const setModeratorBudget = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const setUserFeatureFlags = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      target_user: z.string().uuid(),
+      flags: z.record(z.string(), z.boolean()),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("admin_set_user_feature_flags" as any, {
+      _target_user: data.target_user,
+      _flags: data.flags as any,
+    } as any);
+    if (error) throw error;
+    await context.supabase.rpc("log_audit" as any, {
+      _action: "admin.feature_flags_updated",
+      _status: "success",
+      _target: data.target_user,
+      _link: "/admin/access",
+      _metadata: { flags: data.flags } as any,
+    });
+    return { ok: true };
+  });
+
+
 export const getTenantPricing = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
