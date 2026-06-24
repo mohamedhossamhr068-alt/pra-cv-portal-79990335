@@ -207,6 +207,7 @@ function UserRow({ user, meId, onUpdate, pending, t }: { user: any; meId?: strin
           open={permOpen}
           onOpenChange={setPermOpen}
           user={user}
+          isSelf={isSelf}
           t={t}
         />
       </CardContent>
