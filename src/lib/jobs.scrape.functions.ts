@@ -14,10 +14,20 @@ const SOURCES: { host: string; source: string }[] = [
   { host: "naukrigulf.com", source: "naukrigulf" },
 ];
 
+function isSafeHttpUrl(u: string) {
+  try {
+    const parsed = new URL(u);
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 function isEgyptUrl(u: string) {
   const s = u.toLowerCase();
   return /(\/eg\/|\/egypt|egypt|cairo|alexandria|giza|wuzzuf\.net)/.test(s);
 }
+
 
 function logoFor(url: string, source: string) {
   try {
