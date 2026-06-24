@@ -31,6 +31,12 @@ export function useNotifications() {
     staleTime: 10_000,
   });
 
+  const seenRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    // seed seen with initial load to avoid toasts on first mount
+    (q.data ?? []).forEach((n) => seenRef.current.add(n.id));
+  }, [q.data]);
+
   useEffect(() => {
     let channel: any;
     (async () => {
@@ -41,7 +47,14 @@ export function useNotifications() {
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-          () => qc.invalidateQueries({ queryKey: ["notifications"] }),
+          (payload) => {
+            const n = payload.new as any;
+            if (n && !seenRef.current.has(n.id)) {
+              seenRef.current.add(n.id);
+              toast(n.title ?? "إشعار جديد", { description: n.body ?? undefined });
+            }
+            qc.invalidateQueries({ queryKey: ["notifications"] });
+          },
         )
         .subscribe();
     })();
