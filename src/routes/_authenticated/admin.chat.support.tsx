@@ -66,7 +66,12 @@ function AdminSupportChat() {
         </Card>
         <div>
           {active ? (
-            <ChatPanel conversationId={active} kind="support" />
+            <ChatPanel
+              conversationId={active}
+              kind="support"
+              showBotToggle
+              initialBotEnabled={q.data?.find((c: any) => c.id === active)?.bot_enabled ?? true}
+            />
           ) : (
             <Card className="p-8 text-center text-muted-foreground">
               {ar ? "اختر محادثة" : "Select a conversation"}
