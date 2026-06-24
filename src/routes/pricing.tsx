@@ -38,7 +38,10 @@ function Pricing() {
   const { data: pricing } = useQuery({
     queryKey: ["platform-pricing"],
     queryFn: () => getPricing(),
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 5_000,
   });
   const currency = pricing?.currency ?? "USD";
   const tiers = [
