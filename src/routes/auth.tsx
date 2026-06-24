@@ -108,7 +108,7 @@ function AuthPage() {
       <div className="flex items-center justify-center bg-background p-6">
         <Card className="w-full max-w-md border-border/60 shadow-[var(--shadow-elegant)]">
           <CardHeader>
-            <CardTitle>{step === "email" ? t("auth.signInTitle") : t("auth.enterCode")}</CardTitle>
+            <CardTitle>{step === "email" ? t("auth.signUpTitle") : t("auth.enterCode")}</CardTitle>
             <CardDescription>
               {step === "email" ? t("auth.signUpSub") : t("auth.codeSent", { email })}
             </CardDescription>
