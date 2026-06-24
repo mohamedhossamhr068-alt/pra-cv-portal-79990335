@@ -174,14 +174,18 @@ export const upsertPaymentMethod = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => paymentMethodSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: prof } = await supabase
-      .from("profiles").select("tenant_id").eq("id", userId).maybeSingle();
-    if (!prof?.tenant_id) throw new Error("NO_TENANT");
-    const payload: any = { ...data, tenant_id: prof.tenant_id };
+    // Check caller is an admin (company_admin or superadmin). Admin-managed payment
+    // methods are stored as PLATFORM-WIDE (tenant_id = NULL) so every user can see them.
+    const { data: roles } = await supabase
+      .from("user_roles").select("role").eq("user_id", userId);
+    const isAdmin = (roles ?? []).some((r: any) => r.role === "company_admin" || r.role === "superadmin");
+    if (!isAdmin) throw new Error("FORBIDDEN");
+    const payload: any = { ...data, tenant_id: null };
     const { error } = await supabase.from("payment_methods" as any).upsert(payload);
     if (error) throw error;
     return { ok: true };
   });
+
 
 export const deletePaymentMethod = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
