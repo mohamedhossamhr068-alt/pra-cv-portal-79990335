@@ -94,22 +94,40 @@ function Jobs() {
         </div>
       </div>
 
-      {isAdmin && (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-wrap items-center gap-2 py-4">
+      <Card>
+        <CardContent className="flex flex-wrap items-center gap-2 py-4">
+          <div className="relative min-w-[220px] flex-1">
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder={t("jobs.scrapeHint")}
+              placeholder={t("jobs.searchHint")}
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              className="min-w-[200px] flex-1"
+              onKeyDown={(e) => { if (e.key === "Enter") runSearch(); }}
+              className="ps-9 pe-9"
             />
-            <Button onClick={() => scrape.mutate()} disabled={scrape.isPending} variant="outline" className="gap-2">
+            {keyword && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted"
+                aria-label={t("common.clear") ?? "Clear"}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          <Button onClick={runSearch} disabled={scrape.isPending || keyword.trim().length < 2} className="gap-2">
+            <Search className="h-4 w-4" />
+            {scrape.isPending ? t("jobs.searching") : t("jobs.searchBtn")}
+          </Button>
+          {isAdmin && (
+            <Button onClick={() => scrape.mutate(undefined)} disabled={scrape.isPending} variant="outline" className="gap-2">
               <RefreshCw className={`h-4 w-4 ${scrape.isPending ? "animate-spin" : ""}`} />
               {t("jobs.scrapeBtn")}
             </Button>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
@@ -123,12 +141,18 @@ function Jobs() {
         <>
           <Card>
             <CardContent className="py-6 text-sm text-muted-foreground">
-              {t("jobs.allEgyptHint")}
+              {searchTerm
+                ? t("jobs.searchResultsFor", { kw: searchTerm, n: browseList.length })
+                : t("jobs.allEgyptHint")}
             </CardContent>
           </Card>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {browseList.map((j: any) => <JobCard key={j.id} job={j} t={t} />)}
-          </div>
+          {isJobsFetching && browseList.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {browseList.map((j: any) => <JobCard key={j.id} job={j} t={t} />)}
+            </div>
+          )}
         </>
       )}
     </div>
