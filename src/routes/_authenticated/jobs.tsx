@@ -282,13 +282,16 @@ function JobCard({ job, score, reasoning, t }: { job: any; score?: number; reaso
 
         {reasoning && <p className="text-[11px] text-muted-foreground">{reasoning}</p>}
 
-        {job.external_url && (
-          <a href={job.external_url} target="_blank" rel="noreferrer" className="block">
-            <Button variant="outline" size="sm" className="w-full gap-2">
-              {t("jobs.apply")} <ExternalLink className="h-3 w-3" />
-            </Button>
-          </a>
-        )}
+        {(() => {
+          const safeUrl = job.external_url && /^https?:\/\//i.test(job.external_url) ? job.external_url : null;
+          return safeUrl ? (
+            <a href={safeUrl} target="_blank" rel="noreferrer" className="block">
+              <Button variant="outline" size="sm" className="w-full gap-2">
+                {t("jobs.apply")} <ExternalLink className="h-3 w-3" />
+              </Button>
+            </a>
+          ) : null;
+        })()}
       </CardContent>
     </Card>
   );
