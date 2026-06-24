@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
@@ -21,6 +21,9 @@ const SYMBOLS: Record<string, string> = {
 
 function Billing() {
   const { t } = useTranslation();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (pathname !== "/billing") return <Outlet />;
+
   const me = useMeQuery();
   const currentPlan = me.data?.subscription?.plan ?? "free";
   const getPricing = useServerFn(getTenantPricing);
