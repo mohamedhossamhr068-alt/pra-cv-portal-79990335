@@ -470,7 +470,7 @@ export type Database = {
           is_active: boolean
           label: string
           sort_order: number
-          tenant_id: string
+          tenant_id: string | null
           type: string
           updated_at: string
         }
@@ -484,7 +484,7 @@ export type Database = {
           is_active?: boolean
           label: string
           sort_order?: number
-          tenant_id: string
+          tenant_id?: string | null
           type: string
           updated_at?: string
         }
@@ -498,7 +498,7 @@ export type Database = {
           is_active?: boolean
           label?: string
           sort_order?: number
-          tenant_id?: string
+          tenant_id?: string | null
           type?: string
           updated_at?: string
         }
