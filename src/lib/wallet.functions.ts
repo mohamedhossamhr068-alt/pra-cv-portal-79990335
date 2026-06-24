@@ -74,8 +74,10 @@ export const listMyTopups = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { data } = await supabase
-      .from("topup_requests").select("*").eq("user_id", userId)
-      .order("created_at", { ascending: false }).limit(50);
+      .from("topup_requests")
+      .select("*, payment_method:payment_methods(id,type,label,account_number)")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false }).limit(100);
     return data ?? [];
   });
 

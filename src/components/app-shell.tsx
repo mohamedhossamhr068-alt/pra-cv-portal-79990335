@@ -21,6 +21,7 @@ import {
   MessageCircle,
   Coins,
   UserCheck,
+  Receipt,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -113,6 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/jobs", key: "jobs", label: t("nav.jobs"), icon: Briefcase, flag: "jobs" },
     { to: "/billing", key: "billing", label: t("nav.billing"), icon: CreditCard, flag: "billing" },
     { to: "/billing/topup", key: "topup", label: i18n.language === "ar" ? "شحن رصيد" : "Top up", icon: CreditCard, flag: "topup" },
+    { to: "/billing/history", key: "billing-history", label: i18n.language === "ar" ? "سجل الشحنات" : "Top-up history", icon: Receipt, flag: "topup" },
     { to: "/settings", key: "settings", label: t("nav.settings"), icon: SettingsIcon, flag: "settings" },
     { to: "/chat/support", key: "chat-support", label: i18n.language === "ar" ? "الدعم" : "Support", icon: MessageCircle, flag: "chat_support" },
   ];

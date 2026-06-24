@@ -28,6 +28,7 @@ import { Route as AuthenticatedCvIdRouteImport } from './routes/_authenticated/c
 import { Route as AuthenticatedChatSupportRouteImport } from './routes/_authenticated/chat.support'
 import { Route as AuthenticatedChatCreditRouteImport } from './routes/_authenticated/chat.credit'
 import { Route as AuthenticatedBillingTopupRouteImport } from './routes/_authenticated/billing.topup'
+import { Route as AuthenticatedBillingHistoryRouteImport } from './routes/_authenticated/billing.history'
 import { Route as AuthenticatedAdminWalletRouteImport } from './routes/_authenticated/admin.wallet'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminUsageRouteImport } from './routes/_authenticated/admin.usage'
@@ -141,6 +142,12 @@ const AuthenticatedBillingTopupRoute =
     path: '/topup',
     getParentRoute: () => AuthenticatedBillingRoute,
   } as any)
+const AuthenticatedBillingHistoryRoute =
+  AuthenticatedBillingHistoryRouteImport.update({
+    id: '/history',
+    path: '/history',
+    getParentRoute: () => AuthenticatedBillingRoute,
+  } as any)
 const AuthenticatedAdminWalletRoute =
   AuthenticatedAdminWalletRouteImport.update({
     id: '/admin/wallet',
@@ -243,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/admin/usage': typeof AuthenticatedAdminUsageRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/wallet': typeof AuthenticatedAdminWalletRoute
+  '/billing/history': typeof AuthenticatedBillingHistoryRoute
   '/billing/topup': typeof AuthenticatedBillingTopupRoute
   '/chat/credit': typeof AuthenticatedChatCreditRoute
   '/chat/support': typeof AuthenticatedChatSupportRoute
@@ -277,6 +285,7 @@ export interface FileRoutesByTo {
   '/admin/usage': typeof AuthenticatedAdminUsageRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/wallet': typeof AuthenticatedAdminWalletRoute
+  '/billing/history': typeof AuthenticatedBillingHistoryRoute
   '/billing/topup': typeof AuthenticatedBillingTopupRoute
   '/chat/credit': typeof AuthenticatedChatCreditRoute
   '/chat/support': typeof AuthenticatedChatSupportRoute
@@ -313,6 +322,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/usage': typeof AuthenticatedAdminUsageRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/admin/wallet': typeof AuthenticatedAdminWalletRoute
+  '/_authenticated/billing/history': typeof AuthenticatedBillingHistoryRoute
   '/_authenticated/billing/topup': typeof AuthenticatedBillingTopupRoute
   '/_authenticated/chat/credit': typeof AuthenticatedChatCreditRoute
   '/_authenticated/chat/support': typeof AuthenticatedChatSupportRoute
@@ -349,6 +359,7 @@ export interface FileRouteTypes {
     | '/admin/usage'
     | '/admin/users'
     | '/admin/wallet'
+    | '/billing/history'
     | '/billing/topup'
     | '/chat/credit'
     | '/chat/support'
@@ -383,6 +394,7 @@ export interface FileRouteTypes {
     | '/admin/usage'
     | '/admin/users'
     | '/admin/wallet'
+    | '/billing/history'
     | '/billing/topup'
     | '/chat/credit'
     | '/chat/support'
@@ -418,6 +430,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/usage'
     | '/_authenticated/admin/users'
     | '/_authenticated/admin/wallet'
+    | '/_authenticated/billing/history'
     | '/_authenticated/billing/topup'
     | '/_authenticated/chat/credit'
     | '/_authenticated/chat/support'
@@ -576,6 +589,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBillingTopupRouteImport
       parentRoute: typeof AuthenticatedBillingRoute
     }
+    '/_authenticated/billing/history': {
+      id: '/_authenticated/billing/history'
+      path: '/history'
+      fullPath: '/billing/history'
+      preLoaderRoute: typeof AuthenticatedBillingHistoryRouteImport
+      parentRoute: typeof AuthenticatedBillingRoute
+    }
     '/_authenticated/admin/wallet': {
       id: '/_authenticated/admin/wallet'
       path: '/admin/wallet'
@@ -678,10 +698,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedBillingRouteChildren {
+  AuthenticatedBillingHistoryRoute: typeof AuthenticatedBillingHistoryRoute
   AuthenticatedBillingTopupRoute: typeof AuthenticatedBillingTopupRoute
 }
 
 const AuthenticatedBillingRouteChildren: AuthenticatedBillingRouteChildren = {
+  AuthenticatedBillingHistoryRoute: AuthenticatedBillingHistoryRoute,
   AuthenticatedBillingTopupRoute: AuthenticatedBillingTopupRoute,
 }
 
