@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate, redirect, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ShieldCheck, Sparkles, Briefcase, Users } from "lucide-react";
+import { ShieldCheck, Sparkles, Briefcase, Users, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
@@ -28,6 +29,17 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+function mapAuthError(t: (k: string) => string, msg: string | undefined, kind: "email" | "code"): string {
+  const m = (msg ?? "").toLowerCase();
+  if (!m) return kind === "email" ? t("auth.errEmailInvalid") : t("auth.errCodeInvalid");
+  if (m.includes("rate") || m.includes("too many") || m.includes("429")) return t("auth.errRate");
+  if (m.includes("network") || m.includes("fetch") || m.includes("failed to fetch")) return t("auth.errNetwork");
+  if (kind === "code" && (m.includes("invalid") || m.includes("expired") || m.includes("otp") || m.includes("token")))
+    return t("auth.errCodeInvalid");
+  if (kind === "email" && (m.includes("invalid") || m.includes("email"))) return t("auth.errEmailInvalid");
+  return msg ?? "";
+}
+
 function AuthPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -37,14 +49,37 @@ function AuthPage() {
   const [company, setCompany] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+
+  const emailSchema = z
+    .string()
+    .trim()
+    .min(1, t("auth.errEmailRequired"))
+    .max(255, t("auth.errEmailTooLong"))
+    .email(t("auth.errEmailInvalid"));
+
+  const codeSchema = z
+    .string()
+    .trim()
+    .min(1, t("auth.errCodeRequired"))
+    .regex(/^\d+$/, t("auth.errCodeDigits"))
+    .length(6, t("auth.errCodeShort"));
 
   const sendCode = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!email.trim()) return;
+    setEmailError(null);
+    const parsed = emailSchema.safeParse(email);
+    if (!parsed.success) {
+      setEmailError(parsed.error.issues[0]?.message ?? t("auth.errEmailInvalid"));
+      return;
+    }
     setLoading(true);
+    setStatus(t("auth.statusSending"));
     try {
       const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
+        email: parsed.data,
         options: {
           shouldCreateUser: true,
           emailRedirectTo: window.location.origin + "/pending-approval",
@@ -52,32 +87,48 @@ function AuthPage() {
         },
       });
       if (error) throw error;
-      toast.success(t("auth.codeSent", { email }));
+      toast.success(t("auth.codeSent", { email: parsed.data }));
       setStep("code");
+      setCode("");
+      setCodeError(null);
     } catch (err: any) {
-      toast.error(err?.message ?? "Failed");
+      const friendly = mapAuthError(t, err?.message, "email");
+      setEmailError(friendly);
+      toast.error(friendly);
     } finally {
       setLoading(false);
+      setStatus(null);
     }
   };
 
   const verifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCodeError(null);
+    const parsed = codeSchema.safeParse(code);
+    if (!parsed.success) {
+      setCodeError(parsed.error.issues[0]?.message ?? t("auth.errCodeInvalid"));
+      return;
+    }
     setLoading(true);
+    setStatus(t("auth.statusVerifying"));
     try {
       const { error } = await supabase.auth.verifyOtp({
         email: email.trim(),
-        token: code.trim(),
+        token: parsed.data,
         type: "email",
       });
       if (error) throw error;
       navigate({ to: "/dashboard" });
     } catch (err: any) {
-      toast.error(err?.message ?? "Invalid code");
+      const friendly = mapAuthError(t, err?.message, "code");
+      setCodeError(friendly);
+      toast.error(friendly);
     } finally {
       setLoading(false);
+      setStatus(null);
     }
   };
+
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
