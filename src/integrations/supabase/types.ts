@@ -741,6 +741,7 @@ export type Database = {
           id: string
           payment_method_id: string | null
           reference_number: string | null
+          requested_plan: Database["public"]["Enums"]["plan_tier"] | null
           reviewed_at: string | null
           reviewed_by: string | null
           screenshot_path: string
@@ -756,6 +757,7 @@ export type Database = {
           id?: string
           payment_method_id?: string | null
           reference_number?: string | null
+          requested_plan?: Database["public"]["Enums"]["plan_tier"] | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           screenshot_path: string
@@ -771,6 +773,7 @@ export type Database = {
           id?: string
           payment_method_id?: string | null
           reference_number?: string | null
+          requested_plan?: Database["public"]["Enums"]["plan_tier"] | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           screenshot_path?: string
