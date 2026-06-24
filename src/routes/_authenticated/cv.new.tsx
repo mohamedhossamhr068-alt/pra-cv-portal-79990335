@@ -458,9 +458,12 @@ function NewCv() {
             <Select value={form.template} onValueChange={(v: any) => setForm({ ...form, template: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="modern_executive">{t("cv.templateModern")}</SelectItem>
-                <SelectItem value="corporate_minimal">{t("cv.templateCorporate")}</SelectItem>
-                <SelectItem value="creative_professional">{t("cv.templateCreative")}</SelectItem>
+                <SelectItem value="classic_executive">{ar ? "كلاسيكي تنفيذي" : "Classic Executive"}</SelectItem>
+                <SelectItem value="creative_professional">{ar ? "إبداعي احترافي" : "Creative Pro"}</SelectItem>
+                <SelectItem value="corporate_minimal">{ar ? "مينيمال شركاتي" : "Corporate Minimal"}</SelectItem>
+                <SelectItem value="modern_sidebar">{ar ? "حديث بشريط جانبي" : "Modern Sidebar"}</SelectItem>
+                <SelectItem value="elegant_serif">{ar ? "أنيق سيريف" : "Elegant Serif"}</SelectItem>
+                <SelectItem value="mono_dark">{ar ? "داكن أحادي" : "Mono Dark"}</SelectItem>
               </SelectContent>
             </Select>
           </div>
