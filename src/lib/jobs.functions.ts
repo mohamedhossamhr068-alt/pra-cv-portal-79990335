@@ -46,29 +46,70 @@ export const runMatch = createServerFn({ method: "POST" })
     const userSkills = new Set<string>(
       (out?.skillsMatrix ?? []).flatMap((g: any) => g.skills ?? []).map((s: string) => s.toLowerCase()),
     );
+    (out?.competencies ?? []).forEach((c: string) => userSkills.add(String(c).toLowerCase()));
+
+    const STOP = new Set(["the","a","an","of","and","or","for","to","in","at","on","with","by","is","as","sr","jr","senior","junior","mid","lead"]);
+    const tokenize = (s: string) =>
+      String(s ?? "")
+        .toLowerCase()
+        .split(/[^a-z0-9+#.]+/)
+        .filter((t) => t.length > 1 && !STOP.has(t));
+
+    const userRoles: string[] = [
+      ...((out?.experience ?? []) as any[]).map((e) => e?.role ?? ""),
+      out?.headline ?? "",
+    ].filter(Boolean);
+    const userRoleTokenSets = userRoles.map((r) => new Set(tokenize(r)));
+    const userSummaryTokens = new Set<string>(tokenize(out?.summary ?? ""));
 
     const { data: jobs } = await supabase.from("job_listings").select("*").eq("country", "EG").limit(200);
-    const titleTokens = new Set<string>(
-      String(((out as any)?.experience?.[0]?.role ?? "") + " " + ((out as any)?.summary ?? ""))
-        .toLowerCase()
-        .split(/[^a-z0-9]+/)
-        .filter((t) => t.length > 2),
-    );
     const scored = (jobs ?? []).map((job) => {
+      const jobTitleTokens = tokenize(job.title ?? "");
+      const jobTitleSet = new Set(jobTitleTokens);
+
+      // Title similarity: best Jaccard across user roles
+      let titleSim = 0;
+      let bestRole = "";
+      for (let i = 0; i < userRoleTokenSets.length; i++) {
+        const rs = userRoleTokenSets[i];
+        if (rs.size === 0 || jobTitleSet.size === 0) continue;
+        let inter = 0;
+        rs.forEach((t) => { if (jobTitleSet.has(t)) inter++; });
+        const union = new Set([...rs, ...jobTitleSet]).size;
+        const sim = inter / union;
+        if (sim > titleSim) { titleSim = sim; bestRole = userRoles[i]; }
+      }
+      // Summary echo: small bonus when title words appear in summary
+      let summaryHits = 0;
+      jobTitleSet.forEach((t) => { if (userSummaryTokens.has(t)) summaryHits++; });
+      const summaryBoost = Math.min(10, summaryHits * 3);
+
+      // Title score: exact (sim=1) -> 70, strong overlap -> proportional
+      const titleScore = Math.round(titleSim * 70);
+      const sameTitle = titleSim >= 0.6;
+
+      // Skills overlap up to 25 points
       const skills: string[] = job.skills ?? [];
       const overlap = skills.filter((s) => userSkills.has(s.toLowerCase())).length;
-      const titleHit = String(job.title ?? "")
-        .toLowerCase()
-        .split(/\s+/)
-        .some((t) => titleTokens.has(t))
-        ? 15
-        : 0;
-      const skillScore = skills.length ? Math.round((overlap / skills.length) * 100) : 0;
-      const score = Math.min(99, skillScore + titleHit);
+      const skillRatio = skills.length ? overlap / skills.length : 0;
+      const skillScore = Math.round(skillRatio * 25);
+
+      let score = titleScore + skillScore + summaryBoost;
+      // Floor when CV exists and there's any title-word overlap
+      if (titleSim > 0 && score < 35) score = 35;
+      // Strong floor when titles essentially match
+      if (sameTitle && score < 75) score = 75;
+      score = Math.max(0, Math.min(99, score));
+
+      const reasonParts: string[] = [];
+      if (sameTitle) reasonParts.push(`role title matches your "${bestRole}"`);
+      else if (titleSim > 0) reasonParts.push(`partial title overlap with "${bestRole}"`);
+      if (skills.length) reasonParts.push(`${overlap}/${skills.length} required skills overlap`);
+      if (summaryHits > 0) reasonParts.push(`summary mentions ${summaryHits} title term${summaryHits > 1 ? "s" : ""}`);
       return {
         job_id: job.id,
         score,
-        reasoning: `${overlap} of ${skills.length} required skills overlap${titleHit ? " · role title match" : ""}.`,
+        reasoning: reasonParts.join(" · ") || "Limited signals to match.",
       };
     });
     scored.sort((a, b) => b.score - a.score);

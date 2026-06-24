@@ -511,6 +511,34 @@ function CvViewer() {
 
       {ats && <AtsScoreCard score={ats.score} checks={ats.checks} ar={ar} />}
 
+      {out.competencies && out.competencies.length > 0 && (
+        <Card className="mb-4 overflow-hidden border-0 bg-gradient-to-br from-background via-background to-primary/5 ring-1 ring-border print:hidden">
+          <CardContent className="p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Target className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold">{ar ? "الكفاءات الأساسية" : "Core Competencies"}</h2>
+                <p className="text-xs text-muted-foreground">
+                  {ar ? `${out.competencies.length} كفاءة مستخرجة من سيرتك الذاتية` : `${out.competencies.length} competencies extracted from your CV`}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {out.competencies.map((c, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-[11px] font-medium text-foreground"
+                >
+                  {c}
+                </span>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <TemplatePicker
         ar={ar}
         template={tpl}
