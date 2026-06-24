@@ -169,9 +169,10 @@ function LogRow({ log }: { log: any }) {
           <span>•</span>
           <span>{date}</span>
           {log.link && (
-            <Link to={log.link} className="inline-flex items-center gap-1 text-primary hover:underline">
+            <a href={log.link} className="inline-flex items-center gap-1 text-primary hover:underline">
               <ExternalLink className="h-3 w-3" /> {t("admin.openRecord")}
-            </Link>
+            </a>
+
           )}
         </div>
       </div>
