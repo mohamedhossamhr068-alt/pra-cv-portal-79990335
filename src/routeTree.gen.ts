@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PendingApprovalRouteImport } from './routes/pending-approval'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -42,6 +43,11 @@ import { Route as AuthenticatedAdminChatCreditRouteImport } from './routes/_auth
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PendingApprovalRoute = PendingApprovalRouteImport.update({
+  id: '/pending-approval',
+  path: '/pending-approval',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -199,6 +205,7 @@ const AuthenticatedAdminChatCreditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/pending-approval': typeof PendingApprovalRoute
   '/pricing': typeof PricingRoute
   '/billing': typeof AuthenticatedBillingRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -229,6 +236,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/pending-approval': typeof PendingApprovalRoute
   '/pricing': typeof PricingRoute
   '/billing': typeof AuthenticatedBillingRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -261,6 +269,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/pending-approval': typeof PendingApprovalRoute
   '/pricing': typeof PricingRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -293,6 +302,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/pending-approval'
     | '/pricing'
     | '/billing'
     | '/dashboard'
@@ -323,6 +333,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/pending-approval'
     | '/pricing'
     | '/billing'
     | '/dashboard'
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/pending-approval'
     | '/pricing'
     | '/_authenticated/billing'
     | '/_authenticated/dashboard'
@@ -386,6 +398,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  PendingApprovalRoute: typeof PendingApprovalRoute
   PricingRoute: typeof PricingRoute
   ApiPublicGuestChatRoute: typeof ApiPublicGuestChatRoute
 }
@@ -397,6 +410,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pending-approval': {
+      id: '/pending-approval'
+      path: '/pending-approval'
+      fullPath: '/pending-approval'
+      preLoaderRoute: typeof PendingApprovalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -668,6 +688,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  PendingApprovalRoute: PendingApprovalRoute,
   PricingRoute: PricingRoute,
   ApiPublicGuestChatRoute: ApiPublicGuestChatRoute,
 }
