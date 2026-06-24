@@ -27,9 +27,13 @@ function Jobs() {
   const scrapeFn = useServerFn(scrapeEgyptJobs);
   const qc = useQueryClient();
   const [keyword, setKeyword] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data, isLoading } = useQuery({ queryKey: ["matches"], queryFn: () => listFn() });
-  const { data: allJobs } = useQuery({ queryKey: ["all-jobs"], queryFn: () => allJobsFn() });
+  const { data: allJobs, isFetching: isJobsFetching } = useQuery({
+    queryKey: ["all-jobs", searchTerm],
+    queryFn: () => allJobsFn({ data: { keyword: searchTerm || undefined } }),
+  });
 
   const mut = useMutation({
     mutationFn: () => matchFn(),
@@ -48,7 +52,7 @@ function Jobs() {
   });
 
   const scrape = useMutation({
-    mutationFn: () => scrapeFn({ data: { keyword: keyword || undefined } }),
+    mutationFn: (kw?: string) => scrapeFn({ data: { keyword: (kw ?? keyword) || undefined } }),
     onSuccess: (r: any) => {
       qc.invalidateQueries({ queryKey: ["all-jobs"] });
       toast.success(t("jobs.scrapeOk", { n: r?.inserted ?? 0 }));
@@ -56,13 +60,18 @@ function Jobs() {
     onError: (e: any) => toast.error(String(e?.message ?? t("jobs.scrapeFail"))),
   });
 
-  useEffect(() => {
-    if (!isLoading && data && data.length === 0 && !mut.isPending) {
-      // auto-run once
-    }
-  }, [isLoading, data, mut.isPending]);
+  const runSearch = () => {
+    const kw = keyword.trim();
+    setSearchTerm(kw);
+    if (kw.length >= 2) scrape.mutate(kw);
+  };
 
-  const showMatches = data && data.length > 0;
+  const clearSearch = () => {
+    setKeyword("");
+    setSearchTerm("");
+  };
+
+  const showMatches = !searchTerm && data && data.length > 0;
   const browseList = !showMatches ? allJobs ?? [] : [];
 
   return (
