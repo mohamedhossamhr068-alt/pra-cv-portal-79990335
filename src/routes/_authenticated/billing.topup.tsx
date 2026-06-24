@@ -99,13 +99,21 @@ function TopupPage() {
   const [uploading, setUploading] = useState(false);
 
   const rate = Number((wallet as any)?.credits_per_egp ?? 0.02);
-  const expectedCredits = selectedPlan ? planOptions[selectedPlan].credits : Math.max(1, Math.floor((amount || 0) * rate));
+  // Minimum EGP per credit (e.g. 50 EGP = 1 credit). Custom top-ups must be a multiple of this.
+  const egpPerCredit = Math.max(1, Math.round(1 / (rate || 0.02)));
+  const expectedCredits = selectedPlan
+    ? planOptions[selectedPlan].credits
+    : Math.max(0, Math.floor((amount || 0) / egpPerCredit));
 
   const mut = useMutation({
     mutationFn: async () => {
       if (!selected) throw new Error(T("اختر وسيلة الدفع", "Select a payment method"));
       if (!file) throw new Error(T("ارفع صورة التحويل أولاً", "Upload the transfer screenshot first"));
       if (!amount || amount <= 0) throw new Error(T("أدخل المبلغ", "Enter amount"));
+      if (!selectedPlan && amount < egpPerCredit) {
+        throw new Error(T(`الحد الأدنى ${egpPerCredit} ج.م لكل كريديت`, `Minimum is ${egpPerCredit} EGP per credit`));
+      }
+
       setUploading(true);
       const userId = me.data?.profile?.id;
       const ext = file.name.split(".").pop() || "png";
@@ -265,9 +273,14 @@ function TopupPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <Label>{T("المبلغ بالجنيه", "Amount (EGP)")}</Label>
-              <Input type="number" min={1} value={amount}
+              <Input type="number" min={egpPerCredit} step={egpPerCredit} value={amount}
                 readOnly={!!selectedPlan}
                 onChange={(e) => setAmount(parseFloat(e.target.value || "0"))} />
+              {!selectedPlan && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {T(`الحد الأدنى ${egpPerCredit} ج.م — 1 كريديت = ${egpPerCredit} ج.م`, `Minimum ${egpPerCredit} EGP — 1 credit = ${egpPerCredit} EGP`)}
+                </p>
+              )}
             </div>
             <div>
               <Label>{T("رقم العملية (اختياري)", "Reference # (optional)")}</Label>

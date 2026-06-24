@@ -218,11 +218,17 @@ export const createTopupRequestV2 = createServerFn({ method: "POST" })
       supabase.from("platform_pricing").select("plan_credits_pro,plan_credits_business").eq("id", "global").maybeSingle(),
     ]);
     const rate = Number((w as any)?.credits_per_egp ?? 0.02);
+    const egpPerCredit = Math.max(1, Math.round(1 / (rate || 0.02)));
+    // Custom top-ups must hit at least 1 full credit (e.g. 50 EGP). Reject smaller amounts.
+    if (!data.requested_plan && data.amount_egp < egpPerCredit) {
+      throw new Error(`MIN_AMOUNT:${egpPerCredit}`);
+    }
+    const customCredits = Math.floor(data.amount_egp / egpPerCredit);
     const credits = data.requested_plan === "pro"
-      ? Math.max(1, Number((platform as any)?.plan_credits_pro ?? Math.floor(data.amount_egp * rate)))
+      ? Math.max(1, Number((platform as any)?.plan_credits_pro ?? customCredits))
       : data.requested_plan === "business"
-        ? Math.max(1, Number((platform as any)?.plan_credits_business ?? Math.floor(data.amount_egp * rate)))
-        : Math.max(1, Math.floor(data.amount_egp * rate));
+        ? Math.max(1, Number((platform as any)?.plan_credits_business ?? customCredits))
+        : Math.max(1, customCredits);
 
     const { error } = await supabase.from("topup_requests").insert({
       tenant_id: prof.tenant_id,
