@@ -10,3 +10,21 @@ export function useMeQuery() {
     staleTime: 30_000,
   });
 }
+
+export const ALL_FEATURE_FLAGS = [
+  "cv_builder",
+  "cv_library",
+  "jobs",
+  "billing",
+  "topup",
+  "settings",
+  "chat_support",
+] as const;
+export type FeatureFlag = (typeof ALL_FEATURE_FLAGS)[number];
+
+export function hasFeature(flags: Record<string, boolean> | null | undefined, key: FeatureFlag): boolean {
+  if (!flags) return true;
+  const v = flags[key];
+  return v === undefined ? true : !!v;
+}
+

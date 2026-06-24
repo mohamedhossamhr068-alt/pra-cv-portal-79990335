@@ -17,9 +17,10 @@ export const listTenantUsers = createServerFn({ method: "GET" })
 
     const { data: users } = await supabase
       .from("profiles")
-      .select("id,email,full_name,credits,is_blocked,created_at,grant_budget,grant_used,grant_period,grant_period_start")
+      .select("id,email,full_name,credits,is_blocked,created_at,grant_budget,grant_used,grant_period,grant_period_start,feature_flags")
       .eq("tenant_id", prof.tenant_id)
       .order("created_at", { ascending: false });
+
 
     const { data: roles } = await supabase
       .from("user_roles")
@@ -131,6 +132,31 @@ export const setModeratorBudget = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+export const setUserFeatureFlags = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      target_user: z.string().uuid(),
+      flags: z.record(z.string(), z.boolean()),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("admin_set_user_feature_flags" as any, {
+      _target_user: data.target_user,
+      _flags: data.flags as any,
+    } as any);
+    if (error) throw error;
+    await context.supabase.rpc("log_audit" as any, {
+      _action: "admin.feature_flags_updated",
+      _status: "success",
+      _target: data.target_user,
+      _link: "/admin/access",
+      _metadata: { flags: data.flags } as any,
+    });
+    return { ok: true };
+  });
+
 
 export const getTenantPricing = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

@@ -26,7 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { setLocale } from "@/lib/i18n";
-import { useMeQuery } from "@/lib/me.hooks";
+import { useMeQuery, hasFeature, type FeatureFlag } from "@/lib/me.hooks";
 import { NotificationBell } from "@/components/notification-bell";
 import { CairoClock } from "@/components/cairo-clock";
 
@@ -76,31 +76,57 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (isSuperOnly && !_isSuper) { navigate({ to: "/dashboard", replace: true }); return; }
     if (pathname.startsWith("/admin/") && !_isAdmin && !_isSuper) {
       navigate({ to: "/dashboard", replace: true });
+      return;
+    }
+    const _isMod = me.data.roles?.includes("moderator");
+    const _privileged = !!(_isAdmin || _isSuper || _isMod);
+    if (_privileged) return;
+    const _flags = (me.data.profile as any)?.feature_flags as Record<string, boolean> | undefined;
+    if (!_flags) return;
+    const gate = (path: string, key: string) => pathname.startsWith(path) && _flags[key] === false;
+    if (
+      gate("/cv/new", "cv_builder") ||
+      (pathname === "/cv" || pathname.startsWith("/cv/")) && _flags["cv_library"] === false && !pathname.startsWith("/cv/new") ||
+      gate("/jobs", "jobs") ||
+      (pathname === "/billing" && _flags["billing"] === false) ||
+      gate("/billing/topup", "topup") ||
+      gate("/settings", "settings") ||
+      gate("/chat/support", "chat_support")
+    ) {
+      navigate({ to: "/dashboard", replace: true });
     }
   }, [pathname, me.isLoading, me.data, _isAdmin, _isSuper, navigate]);
 
 
-  const items: NavItem[] = [
-    { to: "/dashboard", key: "dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
-    { to: "/cv/new", key: "cvnew", label: t("nav.cv"), icon: Sparkles },
-    { to: "/cv", key: "cv", label: t("nav.library"), icon: FileText },
-    { to: "/jobs", key: "jobs", label: t("nav.jobs"), icon: Briefcase },
-    { to: "/billing", key: "billing", label: t("nav.billing"), icon: CreditCard },
-    { to: "/billing/topup", key: "topup", label: i18n.language === "ar" ? "شحن رصيد" : "Top up", icon: CreditCard },
-    { to: "/settings", key: "settings", label: t("nav.settings"), icon: SettingsIcon },
-    { to: "/chat/support", key: "chat-support", label: i18n.language === "ar" ? "الدعم" : "Support", icon: MessageCircle },
-  ];
 
+  const flags = (me.data?.profile as any)?.feature_flags as Record<string, boolean> | undefined;
   const isAdmin = me.data?.roles?.includes("company_admin");
   const isSuper = me.data?.roles?.includes("superadmin");
   const isMod = me.data?.roles?.includes("moderator");
+  const privileged = !!(isAdmin || isSuper || isMod);
+  const allow = (k: FeatureFlag) => privileged || hasFeature(flags, k);
+
+  const rawItems: (NavItem & { flag?: FeatureFlag })[] = [
+    { to: "/dashboard", key: "dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
+    { to: "/cv/new", key: "cvnew", label: t("nav.cv"), icon: Sparkles, flag: "cv_builder" },
+    { to: "/cv", key: "cv", label: t("nav.library"), icon: FileText, flag: "cv_library" },
+    { to: "/jobs", key: "jobs", label: t("nav.jobs"), icon: Briefcase, flag: "jobs" },
+    { to: "/billing", key: "billing", label: t("nav.billing"), icon: CreditCard, flag: "billing" },
+    { to: "/billing/topup", key: "topup", label: i18n.language === "ar" ? "شحن رصيد" : "Top up", icon: CreditCard, flag: "topup" },
+    { to: "/settings", key: "settings", label: t("nav.settings"), icon: SettingsIcon, flag: "settings" },
+    { to: "/chat/support", key: "chat-support", label: i18n.language === "ar" ? "الدعم" : "Support", icon: MessageCircle, flag: "chat_support" },
+  ];
+  const items: NavItem[] = rawItems.filter((it) => !it.flag || allow(it.flag));
 
   if (isMod && !isAdmin) {
     items.push({ to: "/chat/credit", key: "chat-credit", label: i18n.language === "ar" ? "طلبات الكرديت" : "Credit requests", icon: Coins });
   }
 
+
   const adminItems: NavItem[] = [
     { to: "/admin/users", key: "users", label: t("admin.tileUsers"), icon: Users },
+    { to: "/admin/access", key: "access", label: i18n.language === "ar" ? "صلاحيات الواجهة" : "Access control", icon: ShieldCheck },
+
     { to: "/admin/pricing", key: "pricing", label: t("admin.tilePricing"), icon: SettingsIcon },
     { to: "/admin/offers", key: "offers", label: i18n.language === "ar" ? "العروض والخصومات" : "Offers", icon: Sparkles },
     { to: "/admin/wallet", key: "wallet", label: i18n.language === "ar" ? "محفظة فودافون" : "Wallet", icon: CreditCard },
