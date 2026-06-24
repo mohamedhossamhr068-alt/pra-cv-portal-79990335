@@ -1,5 +1,6 @@
 import { registerSW } from "virtual:pwa-register";
 
+
 const SW_PATH = "/sw.js";
 
 function shouldRegister(): boolean {
