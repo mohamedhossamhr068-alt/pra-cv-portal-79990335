@@ -61,7 +61,7 @@ export function registerPWA(): void {
 
   registerSW({
     immediate: true,
-    onRegisteredSW(swUrl, registration) {
+    onRegisteredSW(swUrl: string, registration: ServiceWorkerRegistration | undefined) {
       console.log("[PWA] Service worker registered:", swUrl);
       if (!registration) return;
 
@@ -69,8 +69,9 @@ export function registerPWA(): void {
         void registration.update();
       }, 60 * 60 * 1000);
     },
-    onRegisterError(error) {
+    onRegisterError(error: unknown) {
       console.error("[PWA] Service worker registration failed:", error);
     },
   });
+
 }
