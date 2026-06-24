@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.notify_topup_submitted() FROM anon, PUBLIC;
