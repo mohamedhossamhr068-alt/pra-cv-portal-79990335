@@ -69,7 +69,7 @@ export type Database = {
           kind: string
           reviewed_at: string | null
           reviewed_by: string | null
-          sender_id: string
+          sender_id: string | null
         }
         Insert: {
           body?: string | null
@@ -81,7 +81,7 @@ export type Database = {
           kind?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
-          sender_id: string
+          sender_id?: string | null
         }
         Update: {
           body?: string | null
@@ -93,7 +93,7 @@ export type Database = {
           kind?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
-          sender_id?: string
+          sender_id?: string | null
         }
         Relationships: [
           {
@@ -1041,6 +1041,10 @@ export type Database = {
       }
       chat_get_or_create_my_conversation: {
         Args: { _kind: string }
+        Returns: string
+      }
+      chat_insert_bot_reply: {
+        Args: { _body: string; _conversation_id: string; _is_guest?: boolean }
         Returns: string
       }
       chat_review_credit_request: {
