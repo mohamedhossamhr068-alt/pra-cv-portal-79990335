@@ -159,12 +159,12 @@ function AdminPricing() {
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
                 {planItems.map((p) => (
-                  <div key={p.key} className="rounded-xl border bg-card p-3">
+                  <div key={p.key} className="rounded-xl border bg-card p-3 space-y-2">
                     <div className="flex items-center justify-between">
                       <Label className="text-sm font-semibold">{p.label}</Label>
                       <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{p.badge}</span>
                     </div>
-                    <div className="mt-2 flex items-center gap-1">
+                    <div className="flex items-center gap-1">
                       <span className="text-sm font-medium text-muted-foreground">{currencyMeta.symbol}</span>
                       <Input
                         type="number"
@@ -176,11 +176,45 @@ function AdminPricing() {
                       />
                       <span className="text-xs text-muted-foreground whitespace-nowrap">/mo</span>
                     </div>
+                    <div>
+                      <Label className="text-[11px] text-muted-foreground">{T("الكريديت الشهري", "Monthly credits")}</Label>
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="number"
+                          min={0}
+                          value={p.credits}
+                          onChange={(e) => p.setCredits(Math.max(0, parseInt(e.target.value || "0", 10)))}
+                          className="font-semibold"
+                        />
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">{T("كريديت", "credits")}</span>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
+              <div className="mt-3 flex items-center gap-3 rounded-xl border bg-primary/5 p-3">
+                <div className="rounded-lg bg-primary/15 p-2 text-primary"><Coins className="h-4 w-4" /></div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold">{T("كريديت إضافي مع كل باقة", "Bonus credits per package")}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {T("يتم إضافته تلقائياً مع أي عملية شحن أو اشتراك.", "Automatically granted on every top-up or subscription.")}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={10000}
+                    value={bonus}
+                    onChange={(e) => setBonus(Math.max(0, parseInt(e.target.value || "0", 10)))}
+                    className="w-24 font-bold"
+                  />
+                  <span className="text-xs text-muted-foreground">{T("كريديت", "credits")}</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
+
 
           {/* Credit costs (per action) */}
           <Card className="border-border/60">
