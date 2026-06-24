@@ -26,6 +26,11 @@ export const listTenantUsers = createServerFn({ method: "GET" })
       .select("user_id,role")
       .eq("tenant_id", prof.tenant_id);
 
+    const { data: perms } = await supabase
+      .from("user_permissions" as any)
+      .select("user_id,permission")
+      .eq("tenant_id", prof.tenant_id);
+
     const rolesByUser = new Map<string, string[]>();
     (roles ?? []).forEach((r) => {
       const list = rolesByUser.get(r.user_id) ?? [];
@@ -33,8 +38,48 @@ export const listTenantUsers = createServerFn({ method: "GET" })
       rolesByUser.set(r.user_id, list);
     });
 
-    return (users ?? []).map((u) => ({ ...u, roles: rolesByUser.get(u.id) ?? [] }));
+    const permsByUser = new Map<string, string[]>();
+    ((perms as any[]) ?? []).forEach((p) => {
+      const list = permsByUser.get(p.user_id) ?? [];
+      list.push(p.permission as string);
+      permsByUser.set(p.user_id, list);
+    });
+
+    return (users ?? []).map((u) => ({
+      ...u,
+      roles: rolesByUser.get(u.id) ?? [],
+      permissions: permsByUser.get(u.id) ?? [],
+    }));
   });
+
+const PermissionEnum = z.enum(["manage_users", "review_topups", "manage_offers", "view_audit", "view_usage"]);
+
+export const setUserPermissions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      target_user: z.string().uuid(),
+      permissions: z.array(PermissionEnum).max(20),
+      make_moderator: z.boolean().nullable().optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("admin_set_user_permissions" as any, {
+      _target_user: data.target_user,
+      _permissions: data.permissions,
+      _make_moderator: data.make_moderator ?? null,
+    } as any);
+    if (error) throw error;
+    await context.supabase.rpc("log_audit" as any, {
+      _action: "admin.permissions_updated",
+      _status: "success",
+      _target: data.target_user,
+      _link: "/admin/users",
+      _metadata: { permissions: data.permissions, make_moderator: data.make_moderator } as any,
+    });
+    return { ok: true };
+  });
+
 
 export const adminUpdateUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
