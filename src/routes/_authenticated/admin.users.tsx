@@ -2,14 +2,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
-import { listTenantUsers, adminUpdateUser, setUserPermissions } from "@/lib/admin.functions";
+import { listTenantUsers, adminUpdateUser, setUserPermissions, setModeratorBudget } from "@/lib/admin.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Shield, Ban, Check, Coins, Users, Search, Crown, KeyRound } from "lucide-react";
+import { Shield, Ban, Check, Coins, Users, Search, Crown, KeyRound, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -35,7 +36,16 @@ function AdminUsers() {
       qc.invalidateQueries({ queryKey: ["tenant-users"] });
       toast.success(t("admin.updated"));
     },
-    onError: (e: any) => toast.error(e?.message ?? t("admin.updateFailed")),
+    onError: (e: any) => {
+      const msg = String(e?.message ?? "");
+      if (msg.includes("MOD_BUDGET_EXCEEDED")) {
+        toast.error(t("admin.budgetExhausted"));
+      } else if (msg.includes("MOD_CANNOT_LOWER_CREDITS")) {
+        toast.error(t("admin.budgetCannotLower"));
+      } else {
+        toast.error(e?.message ?? t("admin.updateFailed"));
+      }
+    },
   });
 
   const users = (data ?? []) as any[];
@@ -134,6 +144,14 @@ function UserRow({ user, onUpdate, pending, t }: { user: any; onUpdate: (p: any)
                 <KeyRound className="h-3 w-3" /> {t("admin.moderatorBadge")} · {permCount}
               </Badge>
             )}
+            {isModerator && !isAdmin && (
+              <Badge variant="outline" className="gap-1 border-emerald-500/40 text-emerald-700 dark:text-emerald-400">
+                <Wallet className="h-3 w-3" />
+                {user.grant_budget == null
+                  ? t("admin.budgetUnlimited")
+                  : `${(user.grant_budget ?? 0) - (user.grant_used ?? 0)} / ${user.grant_budget}`}
+              </Badge>
+            )}
             {user.is_blocked && <Badge variant="destructive" className="gap-1"><Ban className="h-3 w-3" /> {t("admin.blockedBadge")}</Badge>}
           </div>
           <div className="truncate text-xs text-muted-foreground">{user.email}</div>
@@ -199,6 +217,7 @@ function RoleDialog({ open, onOpenChange, user, t }: {
   const qc = useQueryClient();
   const setPerms = useServerFn(setUserPermissions);
   const updateUser = useServerFn(adminUpdateUser);
+  const setBudget = useServerFn(setModeratorBudget);
   const initialPerms = (user.permissions ?? []) as Permission[];
   const wasAdmin = user.roles?.includes("company_admin");
   const wasModerator = user.roles?.includes("moderator");
@@ -206,6 +225,9 @@ function RoleDialog({ open, onOpenChange, user, t }: {
 
   const [role, setRole] = useState<RoleKind>(initialRole);
   const [selected, setSelected] = useState<Set<Permission>>(new Set(initialPerms));
+  const [unlimited, setUnlimited] = useState<boolean>(user.grant_budget == null);
+  const [budget, setBudgetVal] = useState<number>(user.grant_budget ?? 0);
+  const [resetUsed, setResetUsed] = useState<boolean>(false);
 
   const toggle = (p: Permission) => {
     setSelected((prev) => {
@@ -218,13 +240,11 @@ function RoleDialog({ open, onOpenChange, user, t }: {
 
   const mut = useMutation({
     mutationFn: async () => {
-      // 1) Admin role transitions (only true admins may toggle this).
       if (role === "admin" && !wasAdmin) {
         await updateUser({ data: { target_user: user.id, grant_admin: true } });
       } else if (role !== "admin" && wasAdmin) {
         await updateUser({ data: { target_user: user.id, grant_admin: false } });
       }
-      // 2) Moderator role + permissions.
       const perms: Permission[] = role === "moderator" ? Array.from(selected) : [];
       const makeMod = role === "moderator" ? true : role === "user" ? false : null;
       await setPerms({
@@ -234,6 +254,15 @@ function RoleDialog({ open, onOpenChange, user, t }: {
           ...(makeMod !== null ? { make_moderator: makeMod } : {}),
         },
       });
+      if (role === "moderator") {
+        await setBudget({
+          data: {
+            target_user: user.id,
+            budget: unlimited ? null : Math.max(0, Math.floor(budget)),
+            reset_used: resetUsed,
+          },
+        });
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tenant-users"] });
@@ -251,7 +280,7 @@ function RoleDialog({ open, onOpenChange, user, t }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <KeyRound className="h-5 w-5 text-primary" />
@@ -304,6 +333,40 @@ function RoleDialog({ open, onOpenChange, user, t }: {
                 </div>
               </label>
             ))}
+          </div>
+        )}
+
+        {role === "moderator" && (
+          <div className="space-y-3 rounded-lg border bg-muted/20 p-3">
+            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <Wallet className="h-3.5 w-3.5" /> {t("admin.budgetTitle")}
+            </div>
+            <p className="text-xs text-muted-foreground">{t("admin.budgetHint")}</p>
+            <label className="flex cursor-pointer items-center gap-2">
+              <Checkbox checked={unlimited} onCheckedChange={(v) => setUnlimited(!!v)} />
+              <span className="text-sm">{t("admin.budgetUnlimited")}</span>
+            </label>
+            {!unlimited && (
+              <div className="space-y-2">
+                <Label className="text-xs">{t("admin.budgetAmount")}</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={budget}
+                  onChange={(e) => setBudgetVal(Number(e.target.value))}
+                />
+                <div className="flex items-center justify-between rounded border bg-background px-2 py-1.5 text-xs">
+                  <span className="text-muted-foreground">{t("admin.budgetUsed")}</span>
+                  <span className="font-medium">
+                    {user.grant_used ?? 0} / {budget || 0}
+                  </span>
+                </div>
+                <label className="flex cursor-pointer items-center gap-2">
+                  <Checkbox checked={resetUsed} onCheckedChange={(v) => setResetUsed(!!v)} />
+                  <span className="text-xs">{t("admin.budgetReset")}</span>
+                </label>
+              </div>
+            )}
           </div>
         )}
 

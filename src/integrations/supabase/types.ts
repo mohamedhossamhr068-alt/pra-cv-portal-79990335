@@ -398,6 +398,8 @@ export type Database = {
           credits: number
           email: string
           full_name: string | null
+          grant_budget: number | null
+          grant_used: number
           id: string
           is_blocked: boolean
           locale: string
@@ -408,6 +410,8 @@ export type Database = {
           credits?: number
           email: string
           full_name?: string | null
+          grant_budget?: number | null
+          grant_used?: number
           id: string
           is_blocked?: boolean
           locale?: string
@@ -418,6 +422,8 @@ export type Database = {
           credits?: number
           email?: string
           full_name?: string | null
+          grant_budget?: number | null
+          grant_used?: number
           id?: string
           is_blocked?: boolean
           locale?: string
@@ -779,6 +785,10 @@ export type Database = {
     Functions: {
       admin_review_topup: {
         Args: { _approve: boolean; _note?: string; _request_id: string }
+        Returns: undefined
+      }
+      admin_set_moderator_budget: {
+        Args: { _budget?: number; _reset_used?: boolean; _target_user: string }
         Returns: undefined
       }
       admin_set_user_permissions: {

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMeQuery } from "@/lib/me.hooks";
 import { Button } from "@/components/ui/button";
-import { FileText, Sparkles, Briefcase, Users, ArrowRight, Shield, Coins, BarChart3, Palette, ScrollText, BellRing } from "lucide-react";
+import { FileText, Sparkles, Briefcase, Users, ArrowRight, Shield, Coins, BarChart3, Palette, ScrollText, BellRing, Wallet } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -14,6 +14,10 @@ function Dashboard() {
   const me = useMeQuery();
   const quota = me.data?.quota;
   const isAdmin = me.data?.roles?.includes("company_admin");
+  const isModerator = me.data?.roles?.includes("moderator") && !isAdmin;
+  const grantBudget = (me.data?.profile as any)?.grant_budget as number | null | undefined;
+  const grantUsed = (me.data?.profile as any)?.grant_used ?? 0;
+  const grantRemaining = grantBudget == null ? null : Math.max(0, grantBudget - grantUsed);
 
   const stats = [
     { label: t("dashboard.cvsThisMonth"), value: quota?.used ?? 0, icon: FileText, accent: "bg-primary/10 text-primary" },
@@ -42,6 +46,32 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      {isModerator && (
+        <Card className={`border-2 ${grantRemaining === 0 ? "border-destructive/60 bg-destructive/5" : "border-emerald-500/40 bg-emerald-500/5"}`}>
+          <CardContent className="flex flex-wrap items-center gap-4 py-4">
+            <div className={`grid h-12 w-12 place-items-center rounded-xl ${grantRemaining === 0 ? "bg-destructive/15 text-destructive" : "bg-emerald-500/15 text-emerald-600"}`}>
+              <Wallet className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("admin.budgetRemaining")}</div>
+              <div className="mt-1 text-2xl font-bold">
+                {grantBudget == null
+                  ? t("admin.budgetUnlimited")
+                  : `${grantRemaining} / ${grantBudget}`}
+              </div>
+              {grantBudget != null && grantRemaining === 0 && (
+                <div className="mt-1 text-xs text-destructive">{t("admin.budgetExhausted")}</div>
+              )}
+            </div>
+            <Link to="/admin/users">
+              <Button size="sm" variant="outline" className="gap-1.5"><Users className="h-4 w-4" /> {t("admin.usersTitle")}</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
+
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => {
