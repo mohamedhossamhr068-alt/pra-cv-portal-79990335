@@ -273,6 +273,22 @@ function AuthPage() {
                     <div className="h-px flex-1 bg-border" />
                   </div>
                 <form className="flex flex-col gap-3" onSubmit={sendCode} noValidate>
+                  <div className="grid grid-cols-2 gap-1 rounded-lg border bg-muted/30 p-1">
+                    <button
+                      type="button"
+                      onClick={() => { setMode("email"); setEmailError(null); }}
+                      className={`h-9 rounded-md text-sm font-medium transition-colors ${mode === "email" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      {t("auth.email")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setMode("phone"); setEmailError(null); }}
+                      className={`h-9 rounded-md text-sm font-medium transition-colors ${mode === "phone" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      رقم الهاتف
+                    </button>
+                  </div>
 
                   <div className="grid gap-1.5">
                     <Label htmlFor="fn">{t("auth.fullName")}</Label>
@@ -282,36 +298,48 @@ function AuthPage() {
                     <Label htmlFor="co">{t("auth.company")}</Label>
                     <Input id="co" value={company} onChange={(e) => setCompany(e.target.value)} maxLength={120} />
                   </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="em">{t("auth.email")}</Label>
-                    <Input
-                      id="em"
-                      type="email"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        if (emailError) setEmailError(null);
-                      }}
-                      onBlur={() => {
-                        if (!email) return;
-                        const r = emailSchema.safeParse(email);
-                        setEmailError(r.success ? null : r.error.issues[0]?.message ?? null);
-                      }}
-                      placeholder="you@company.com"
-                      autoComplete="email"
-                      maxLength={255}
-                      aria-invalid={!!emailError}
-                      aria-describedby={emailError ? "em-err" : undefined}
-                      className={emailError ? "border-destructive focus-visible:ring-destructive/40" : undefined}
-                      required
-                    />
-                    {emailError && (
-                      <p id="em-err" className="flex items-start gap-1.5 text-xs text-destructive">
-                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                        <span>{emailError}</span>
-                      </p>
-                    )}
-                  </div>
+                  {mode === "email" ? (
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="em">{t("auth.email")}</Label>
+                      <Input
+                        id="em"
+                        type="email"
+                        value={email}
+                        onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(null); }}
+                        placeholder="you@company.com"
+                        autoComplete="email"
+                        maxLength={255}
+                        aria-invalid={!!emailError}
+                        className={emailError ? "border-destructive focus-visible:ring-destructive/40" : undefined}
+                        required
+                      />
+                    </div>
+                  ) : (
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="ph">رقم الهاتف</Label>
+                      <Input
+                        id="ph"
+                        type="tel"
+                        dir="ltr"
+                        value={phone}
+                        onChange={(e) => { setPhone(e.target.value); if (emailError) setEmailError(null); }}
+                        placeholder="+201001234567"
+                        autoComplete="tel"
+                        maxLength={20}
+                        aria-invalid={!!emailError}
+                        className={emailError ? "border-destructive focus-visible:ring-destructive/40" : undefined}
+                        required
+                      />
+                      <p className="text-[11px] text-muted-foreground">أدخل الرقم بصيغة دولية تبدأ بـ + ومفتاح الدولة</p>
+                    </div>
+                  )}
+                  {emailError && (
+                    <p className="flex items-start gap-1.5 text-xs text-destructive">
+                      <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                      <span>{emailError}</span>
+                    </p>
+                  )}
+
                   <Button type="submit" disabled={loading} className="mt-2 h-11">
                     {loading ? (
                       <>
