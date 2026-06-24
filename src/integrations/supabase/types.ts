@@ -737,6 +737,7 @@ export type Database = {
           admin_note: string | null
           amount_egp: number
           created_at: string
+          credits_granted: number | null
           credits_requested: number
           id: string
           payment_method_id: string | null
@@ -753,6 +754,7 @@ export type Database = {
           admin_note?: string | null
           amount_egp: number
           created_at?: string
+          credits_granted?: number | null
           credits_requested: number
           id?: string
           payment_method_id?: string | null
@@ -769,6 +771,7 @@ export type Database = {
           admin_note?: string | null
           amount_egp?: number
           created_at?: string
+          credits_granted?: number | null
           credits_requested?: number
           id?: string
           payment_method_id?: string | null
