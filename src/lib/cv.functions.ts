@@ -383,25 +383,57 @@ export const listCvs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { data } = await supabase
+    const { data: prof } = await supabase.from("profiles").select("tenant_id").eq("id", userId).maybeSingle();
+    const tenantId = prof?.tenant_id ?? null;
+    let isAdmin = false;
+    if (tenantId) {
+      const { data: a } = await supabase.rpc("is_tenant_admin", { _user_id: userId, _tenant_id: tenantId });
+      isAdmin = !!a;
+    }
+    const { data: isSuper } = await supabase.rpc("is_superadmin", { _user_id: userId });
+
+    let query = supabase
       .from("cv_logs")
-      .select("id,title,template,created_at")
-      .eq("user_id", userId)
+      .select("id,title,template,created_at,user_id")
       .order("created_at", { ascending: false })
-      .limit(50);
-    return data ?? [];
+      .limit(200);
+    if (isSuper) {
+      // all
+    } else if (isAdmin && tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    } else {
+      query = query.eq("user_id", userId);
+    }
+    const { data: cvs } = await query;
+    const list = (cvs ?? []) as any[];
+    const ids = Array.from(new Set(list.map((c) => c.user_id).filter(Boolean)));
+    let profilesById = new Map<string, { full_name: string | null; email: string | null }>();
+    if (ids.length) {
+      const { data: ps } = await supabase.from("profiles").select("id,full_name,email").in("id", ids);
+      profilesById = new Map((ps ?? []).map((p: any) => [p.id, { full_name: p.full_name, email: p.email }]));
+    }
+    return list.map((c) => ({
+      id: c.id,
+      title: c.title,
+      template: c.template,
+      created_at: c.created_at,
+      user_id: c.user_id,
+      owner_name: profilesById.get(c.user_id)?.full_name ?? null,
+      owner_email: profilesById.get(c.user_id)?.email ?? null,
+      is_mine: c.user_id === userId,
+    }));
   });
 
 export const getCv = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    const { supabase } = context;
+    // RLS already allows owner, tenant admin, or superadmin.
     const { data: cv } = await supabase
       .from("cv_logs")
       .select("*")
       .eq("id", data.id)
-      .eq("user_id", userId)
       .maybeSingle();
     if (!cv) throw new Error("Not found");
     return cv;
@@ -412,9 +444,25 @@ export const deleteCv = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await supabase.from("cv_logs").delete().eq("id", data.id).eq("user_id", userId);
+    // owner can delete via RLS; admins use service role check via rpc
+    const { data: cv } = await supabase.from("cv_logs").select("user_id,tenant_id").eq("id", data.id).maybeSingle();
+    if (!cv) throw new Error("Not found");
+    if (cv.user_id === userId) {
+      await supabase.from("cv_logs").delete().eq("id", data.id).eq("user_id", userId);
+      return { ok: true };
+    }
+    // admin path — use service role after authorization
+    const { data: isAdmin } = cv.tenant_id
+      ? await supabase.rpc("is_tenant_admin", { _user_id: userId, _tenant_id: cv.tenant_id })
+      : { data: false };
+    const { data: isSuper } = await supabase.rpc("is_superadmin", { _user_id: userId });
+
+    if (!isAdmin && !isSuper) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("cv_logs").delete().eq("id", data.id);
     return { ok: true };
   });
+
 
 export const updateCvStyle = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
