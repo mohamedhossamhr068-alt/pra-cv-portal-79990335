@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate, redirect, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ShieldCheck, Sparkles, Briefcase, Users } from "lucide-react";
+import { ShieldCheck, Sparkles, Briefcase, Users, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
@@ -28,6 +29,17 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+function mapAuthError(t: (k: string) => string, msg: string | undefined, kind: "email" | "code"): string {
+  const m = (msg ?? "").toLowerCase();
+  if (!m) return kind === "email" ? t("auth.errEmailInvalid") : t("auth.errCodeInvalid");
+  if (m.includes("rate") || m.includes("too many") || m.includes("429")) return t("auth.errRate");
+  if (m.includes("network") || m.includes("fetch") || m.includes("failed to fetch")) return t("auth.errNetwork");
+  if (kind === "code" && (m.includes("invalid") || m.includes("expired") || m.includes("otp") || m.includes("token")))
+    return t("auth.errCodeInvalid");
+  if (kind === "email" && (m.includes("invalid") || m.includes("email"))) return t("auth.errEmailInvalid");
+  return msg ?? "";
+}
+
 function AuthPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -37,14 +49,37 @@ function AuthPage() {
   const [company, setCompany] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+
+  const emailSchema = z
+    .string()
+    .trim()
+    .min(1, t("auth.errEmailRequired"))
+    .max(255, t("auth.errEmailTooLong"))
+    .email(t("auth.errEmailInvalid"));
+
+  const codeSchema = z
+    .string()
+    .trim()
+    .min(1, t("auth.errCodeRequired"))
+    .regex(/^\d+$/, t("auth.errCodeDigits"))
+    .length(6, t("auth.errCodeShort"));
 
   const sendCode = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!email.trim()) return;
+    setEmailError(null);
+    const parsed = emailSchema.safeParse(email);
+    if (!parsed.success) {
+      setEmailError(parsed.error.issues[0]?.message ?? t("auth.errEmailInvalid"));
+      return;
+    }
     setLoading(true);
+    setStatus(t("auth.statusSending"));
     try {
       const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
+        email: parsed.data,
         options: {
           shouldCreateUser: true,
           emailRedirectTo: window.location.origin + "/pending-approval",
@@ -52,32 +87,48 @@ function AuthPage() {
         },
       });
       if (error) throw error;
-      toast.success(t("auth.codeSent", { email }));
+      toast.success(t("auth.codeSent", { email: parsed.data }));
       setStep("code");
+      setCode("");
+      setCodeError(null);
     } catch (err: any) {
-      toast.error(err?.message ?? "Failed");
+      const friendly = mapAuthError(t, err?.message, "email");
+      setEmailError(friendly);
+      toast.error(friendly);
     } finally {
       setLoading(false);
+      setStatus(null);
     }
   };
 
   const verifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCodeError(null);
+    const parsed = codeSchema.safeParse(code);
+    if (!parsed.success) {
+      setCodeError(parsed.error.issues[0]?.message ?? t("auth.errCodeInvalid"));
+      return;
+    }
     setLoading(true);
+    setStatus(t("auth.statusVerifying"));
     try {
       const { error } = await supabase.auth.verifyOtp({
         email: email.trim(),
-        token: code.trim(),
+        token: parsed.data,
         type: "email",
       });
       if (error) throw error;
       navigate({ to: "/dashboard" });
     } catch (err: any) {
-      toast.error(err?.message ?? "Invalid code");
+      const friendly = mapAuthError(t, err?.message, "code");
+      setCodeError(friendly);
+      toast.error(friendly);
     } finally {
       setLoading(false);
+      setStatus(null);
     }
   };
+
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -143,15 +194,25 @@ function AuthPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
+              {status && (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-primary"
+                >
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>{status}</span>
+                </div>
+              )}
               {step === "email" ? (
-                <form className="flex flex-col gap-3" onSubmit={sendCode}>
+                <form className="flex flex-col gap-3" onSubmit={sendCode} noValidate>
                   <div className="grid gap-1.5">
                     <Label htmlFor="fn">{t("auth.fullName")}</Label>
-                    <Input id="fn" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                    <Input id="fn" value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={100} />
                   </div>
                   <div className="grid gap-1.5">
                     <Label htmlFor="co">{t("auth.company")}</Label>
-                    <Input id="co" value={company} onChange={(e) => setCompany(e.target.value)} />
+                    <Input id="co" value={company} onChange={(e) => setCompany(e.target.value)} maxLength={120} />
                   </div>
                   <div className="grid gap-1.5">
                     <Label htmlFor="em">{t("auth.email")}</Label>
@@ -159,20 +220,46 @@ function AuthPage() {
                       id="em"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (emailError) setEmailError(null);
+                      }}
+                      onBlur={() => {
+                        if (!email) return;
+                        const r = emailSchema.safeParse(email);
+                        setEmailError(r.success ? null : r.error.issues[0]?.message ?? null);
+                      }}
                       placeholder="you@company.com"
+                      autoComplete="email"
+                      maxLength={255}
+                      aria-invalid={!!emailError}
+                      aria-describedby={emailError ? "em-err" : undefined}
+                      className={emailError ? "border-destructive focus-visible:ring-destructive/40" : undefined}
                       required
                     />
+                    {emailError && (
+                      <p id="em-err" className="flex items-start gap-1.5 text-xs text-destructive">
+                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <span>{emailError}</span>
+                      </p>
+                    )}
                   </div>
-                  <Button type="submit" disabled={loading || !email} className="mt-2 h-11">
-                    {loading ? t("auth.sending") : t("auth.sendCode")}
+                  <Button type="submit" disabled={loading} className="mt-2 h-11">
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t("auth.sending")}
+                      </>
+                    ) : (
+                      t("auth.sendCode")
+                    )}
                   </Button>
                   <p className="text-center text-xs text-muted-foreground">
                     {t("auth.awaitingApproval")}
                   </p>
                 </form>
               ) : (
-                <form className="flex flex-col gap-3" onSubmit={verifyCode}>
+                <form className="flex flex-col gap-3" onSubmit={verifyCode} noValidate>
                   <div className="grid gap-1.5">
                     <Label htmlFor="code">{t("auth.enterCode")}</Label>
                     <Input
@@ -181,26 +268,50 @@ function AuthPage() {
                       autoComplete="one-time-code"
                       maxLength={6}
                       value={code}
-                      onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                      onChange={(e) => {
+                        setCode(e.target.value.replace(/\D/g, ""));
+                        if (codeError) setCodeError(null);
+                      }}
                       placeholder="••••••"
-                      className="h-12 text-center text-2xl tracking-[0.5em]"
+                      className={`h-12 text-center text-2xl tracking-[0.5em] ${
+                        codeError ? "border-destructive focus-visible:ring-destructive/40" : ""
+                      }`}
+                      aria-invalid={!!codeError}
+                      aria-describedby={codeError ? "code-err" : undefined}
                       required
                     />
+                    {codeError && (
+                      <p id="code-err" className="flex items-start gap-1.5 text-xs text-destructive">
+                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <span>{codeError}</span>
+                      </p>
+                    )}
                   </div>
-                  <Button type="submit" disabled={loading || code.length < 6} className="h-11">
-                    {loading ? t("auth.verifying") : t("auth.verify")}
+                  <Button type="submit" disabled={loading} className="h-11">
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t("auth.verifying")}
+                      </>
+                    ) : (
+                      t("auth.verify")
+                    )}
                   </Button>
                   <div className="flex justify-between text-xs">
                     <button
                       type="button"
-                      className="text-muted-foreground hover:text-foreground"
-                      onClick={() => setStep("email")}
+                      className="text-muted-foreground hover:text-foreground disabled:opacity-50"
+                      onClick={() => {
+                        setStep("email");
+                        setCodeError(null);
+                      }}
+                      disabled={loading}
                     >
                       ← {t("auth.changeEmail")}
                     </button>
                     <button
                       type="button"
-                      className="text-primary hover:underline"
+                      className="text-primary hover:underline disabled:opacity-50"
                       onClick={() => sendCode()}
                       disabled={loading}
                     >
@@ -210,6 +321,7 @@ function AuthPage() {
                 </form>
               )}
             </CardContent>
+
           </Card>
         </div>
       </div>
