@@ -18,6 +18,8 @@ import {
   LogOut,
   Menu,
   ShieldCheck,
+  MessageCircle,
+  Coins,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -69,10 +71,16 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/billing", key: "billing", label: t("nav.billing"), icon: CreditCard },
     { to: "/billing/topup", key: "topup", label: i18n.language === "ar" ? "شحن رصيد" : "Top up", icon: CreditCard },
     { to: "/settings", key: "settings", label: t("nav.settings"), icon: SettingsIcon },
+    { to: "/chat/support", key: "chat-support", label: i18n.language === "ar" ? "الدعم" : "Support", icon: MessageCircle },
   ];
 
   const isAdmin = me.data?.roles?.includes("company_admin");
   const isSuper = me.data?.roles?.includes("superadmin");
+  const isMod = me.data?.roles?.includes("moderator");
+
+  if (isMod && !isAdmin) {
+    items.push({ to: "/chat/credit", key: "chat-credit", label: i18n.language === "ar" ? "طلبات الكرديت" : "Credit requests", icon: Coins });
+  }
 
   const adminItems: NavItem[] = [
     { to: "/admin/users", key: "users", label: t("admin.tileUsers"), icon: Users },
@@ -82,6 +90,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/admin/team", key: "team", label: t("nav.team"), icon: Users },
     { to: "/admin/usage", key: "usage", label: t("nav.usage"), icon: BarChart3 },
     { to: "/admin/branding", key: "branding", label: t("nav.branding"), icon: Palette },
+    { to: "/admin/chat/support", key: "chat-sup", label: i18n.language === "ar" ? "محادثات الدعم" : "Support inbox", icon: MessageCircle },
+    { to: "/admin/chat/credit", key: "chat-cr", label: i18n.language === "ar" ? "طلبات الكرديت" : "Credit requests", icon: Coins },
   ];
   const superItems: NavItem[] = [
     { to: "/platform/tenants", key: "tenants", label: t("nav.tenants"), icon: Building2 },

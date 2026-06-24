@@ -22,6 +22,8 @@ import { Route as AuthenticatedPlatformTenantsRouteImport } from './routes/_auth
 import { Route as AuthenticatedPlatformAnalyticsRouteImport } from './routes/_authenticated/platform.analytics'
 import { Route as AuthenticatedCvNewRouteImport } from './routes/_authenticated/cv.new'
 import { Route as AuthenticatedCvIdRouteImport } from './routes/_authenticated/cv.$id'
+import { Route as AuthenticatedChatSupportRouteImport } from './routes/_authenticated/chat.support'
+import { Route as AuthenticatedChatCreditRouteImport } from './routes/_authenticated/chat.credit'
 import { Route as AuthenticatedBillingTopupRouteImport } from './routes/_authenticated/billing.topup'
 import { Route as AuthenticatedAdminWalletRouteImport } from './routes/_authenticated/admin.wallet'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
@@ -32,6 +34,8 @@ import { Route as AuthenticatedAdminOffersRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminNotificationsRouteImport } from './routes/_authenticated/admin.notifications'
 import { Route as AuthenticatedAdminBrandingRouteImport } from './routes/_authenticated/admin.branding'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
+import { Route as AuthenticatedAdminChatSupportRouteImport } from './routes/_authenticated/admin.chat.support'
+import { Route as AuthenticatedAdminChatCreditRouteImport } from './routes/_authenticated/admin.chat.credit'
 
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
@@ -99,6 +103,17 @@ const AuthenticatedCvIdRoute = AuthenticatedCvIdRouteImport.update({
   path: '/cv/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedChatSupportRoute =
+  AuthenticatedChatSupportRouteImport.update({
+    id: '/chat/support',
+    path: '/chat/support',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedChatCreditRoute = AuthenticatedChatCreditRouteImport.update({
+  id: '/chat/credit',
+  path: '/chat/credit',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBillingTopupRoute =
   AuthenticatedBillingTopupRouteImport.update({
     id: '/topup',
@@ -155,6 +170,18 @@ const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
   path: '/admin/audit',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminChatSupportRoute =
+  AuthenticatedAdminChatSupportRouteImport.update({
+    id: '/admin/chat/support',
+    path: '/admin/chat/support',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminChatCreditRoute =
+  AuthenticatedAdminChatCreditRouteImport.update({
+    id: '/admin/chat/credit',
+    path: '/admin/chat/credit',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -174,11 +201,15 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/wallet': typeof AuthenticatedAdminWalletRoute
   '/billing/topup': typeof AuthenticatedBillingTopupRoute
+  '/chat/credit': typeof AuthenticatedChatCreditRoute
+  '/chat/support': typeof AuthenticatedChatSupportRoute
   '/cv/$id': typeof AuthenticatedCvIdRoute
   '/cv/new': typeof AuthenticatedCvNewRoute
   '/platform/analytics': typeof AuthenticatedPlatformAnalyticsRoute
   '/platform/tenants': typeof AuthenticatedPlatformTenantsRoute
   '/cv/': typeof AuthenticatedCvIndexRoute
+  '/admin/chat/credit': typeof AuthenticatedAdminChatCreditRoute
+  '/admin/chat/support': typeof AuthenticatedAdminChatSupportRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -198,11 +229,15 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/wallet': typeof AuthenticatedAdminWalletRoute
   '/billing/topup': typeof AuthenticatedBillingTopupRoute
+  '/chat/credit': typeof AuthenticatedChatCreditRoute
+  '/chat/support': typeof AuthenticatedChatSupportRoute
   '/cv/$id': typeof AuthenticatedCvIdRoute
   '/cv/new': typeof AuthenticatedCvNewRoute
   '/platform/analytics': typeof AuthenticatedPlatformAnalyticsRoute
   '/platform/tenants': typeof AuthenticatedPlatformTenantsRoute
   '/cv': typeof AuthenticatedCvIndexRoute
+  '/admin/chat/credit': typeof AuthenticatedAdminChatCreditRoute
+  '/admin/chat/support': typeof AuthenticatedAdminChatSupportRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -224,11 +259,15 @@ export interface FileRoutesById {
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/admin/wallet': typeof AuthenticatedAdminWalletRoute
   '/_authenticated/billing/topup': typeof AuthenticatedBillingTopupRoute
+  '/_authenticated/chat/credit': typeof AuthenticatedChatCreditRoute
+  '/_authenticated/chat/support': typeof AuthenticatedChatSupportRoute
   '/_authenticated/cv/$id': typeof AuthenticatedCvIdRoute
   '/_authenticated/cv/new': typeof AuthenticatedCvNewRoute
   '/_authenticated/platform/analytics': typeof AuthenticatedPlatformAnalyticsRoute
   '/_authenticated/platform/tenants': typeof AuthenticatedPlatformTenantsRoute
   '/_authenticated/cv/': typeof AuthenticatedCvIndexRoute
+  '/_authenticated/admin/chat/credit': typeof AuthenticatedAdminChatCreditRoute
+  '/_authenticated/admin/chat/support': typeof AuthenticatedAdminChatSupportRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -250,11 +289,15 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/wallet'
     | '/billing/topup'
+    | '/chat/credit'
+    | '/chat/support'
     | '/cv/$id'
     | '/cv/new'
     | '/platform/analytics'
     | '/platform/tenants'
     | '/cv/'
+    | '/admin/chat/credit'
+    | '/admin/chat/support'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -274,11 +317,15 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/wallet'
     | '/billing/topup'
+    | '/chat/credit'
+    | '/chat/support'
     | '/cv/$id'
     | '/cv/new'
     | '/platform/analytics'
     | '/platform/tenants'
     | '/cv'
+    | '/admin/chat/credit'
+    | '/admin/chat/support'
   id:
     | '__root__'
     | '/'
@@ -299,11 +346,15 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/users'
     | '/_authenticated/admin/wallet'
     | '/_authenticated/billing/topup'
+    | '/_authenticated/chat/credit'
+    | '/_authenticated/chat/support'
     | '/_authenticated/cv/$id'
     | '/_authenticated/cv/new'
     | '/_authenticated/platform/analytics'
     | '/_authenticated/platform/tenants'
     | '/_authenticated/cv/'
+    | '/_authenticated/admin/chat/credit'
+    | '/_authenticated/admin/chat/support'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -406,6 +457,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCvIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/chat/support': {
+      id: '/_authenticated/chat/support'
+      path: '/chat/support'
+      fullPath: '/chat/support'
+      preLoaderRoute: typeof AuthenticatedChatSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/chat/credit': {
+      id: '/_authenticated/chat/credit'
+      path: '/chat/credit'
+      fullPath: '/chat/credit'
+      preLoaderRoute: typeof AuthenticatedChatCreditRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/billing/topup': {
       id: '/_authenticated/billing/topup'
       path: '/topup'
@@ -476,6 +541,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/chat/support': {
+      id: '/_authenticated/admin/chat/support'
+      path: '/admin/chat/support'
+      fullPath: '/admin/chat/support'
+      preLoaderRoute: typeof AuthenticatedAdminChatSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/chat/credit': {
+      id: '/_authenticated/admin/chat/credit'
+      path: '/admin/chat/credit'
+      fullPath: '/admin/chat/credit'
+      preLoaderRoute: typeof AuthenticatedAdminChatCreditRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -504,11 +583,15 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminUsageRoute: typeof AuthenticatedAdminUsageRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminWalletRoute: typeof AuthenticatedAdminWalletRoute
+  AuthenticatedChatCreditRoute: typeof AuthenticatedChatCreditRoute
+  AuthenticatedChatSupportRoute: typeof AuthenticatedChatSupportRoute
   AuthenticatedCvIdRoute: typeof AuthenticatedCvIdRoute
   AuthenticatedCvNewRoute: typeof AuthenticatedCvNewRoute
   AuthenticatedPlatformAnalyticsRoute: typeof AuthenticatedPlatformAnalyticsRoute
   AuthenticatedPlatformTenantsRoute: typeof AuthenticatedPlatformTenantsRoute
   AuthenticatedCvIndexRoute: typeof AuthenticatedCvIndexRoute
+  AuthenticatedAdminChatCreditRoute: typeof AuthenticatedAdminChatCreditRoute
+  AuthenticatedAdminChatSupportRoute: typeof AuthenticatedAdminChatSupportRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -525,11 +608,15 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminUsageRoute: AuthenticatedAdminUsageRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedAdminWalletRoute: AuthenticatedAdminWalletRoute,
+  AuthenticatedChatCreditRoute: AuthenticatedChatCreditRoute,
+  AuthenticatedChatSupportRoute: AuthenticatedChatSupportRoute,
   AuthenticatedCvIdRoute: AuthenticatedCvIdRoute,
   AuthenticatedCvNewRoute: AuthenticatedCvNewRoute,
   AuthenticatedPlatformAnalyticsRoute: AuthenticatedPlatformAnalyticsRoute,
   AuthenticatedPlatformTenantsRoute: AuthenticatedPlatformTenantsRoute,
   AuthenticatedCvIndexRoute: AuthenticatedCvIndexRoute,
+  AuthenticatedAdminChatCreditRoute: AuthenticatedAdminChatCreditRoute,
+  AuthenticatedAdminChatSupportRoute: AuthenticatedAdminChatSupportRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
