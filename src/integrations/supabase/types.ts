@@ -69,7 +69,7 @@ export type Database = {
           kind: string
           reviewed_at: string | null
           reviewed_by: string | null
-          sender_id: string
+          sender_id: string | null
         }
         Insert: {
           body?: string | null
@@ -81,7 +81,7 @@ export type Database = {
           kind?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
-          sender_id: string
+          sender_id?: string | null
         }
         Update: {
           body?: string | null
@@ -93,7 +93,7 @@ export type Database = {
           kind?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
-          sender_id?: string
+          sender_id?: string | null
         }
         Relationships: [
           {
@@ -107,7 +107,9 @@ export type Database = {
       }
       conversations: {
         Row: {
+          bot_enabled: boolean
           created_at: string
+          human_replied: boolean
           id: string
           kind: string
           last_message_at: string
@@ -116,7 +118,9 @@ export type Database = {
           title: string | null
         }
         Insert: {
+          bot_enabled?: boolean
           created_at?: string
+          human_replied?: boolean
           id?: string
           kind: string
           last_message_at?: string
@@ -125,7 +129,9 @@ export type Database = {
           title?: string | null
         }
         Update: {
+          bot_enabled?: boolean
           created_at?: string
+          human_replied?: boolean
           id?: string
           kind?: string
           last_message_at?: string
@@ -184,6 +190,85 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guest_conversations: {
+        Row: {
+          bot_enabled: boolean
+          created_at: string
+          display_name: string | null
+          email: string | null
+          guest_token: string
+          human_replied: boolean
+          id: string
+          last_message_at: string
+          tenant_id: string | null
+        }
+        Insert: {
+          bot_enabled?: boolean
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          guest_token: string
+          human_replied?: boolean
+          id?: string
+          last_message_at?: string
+          tenant_id?: string | null
+        }
+        Update: {
+          bot_enabled?: boolean
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          guest_token?: string
+          human_replied?: boolean
+          id?: string
+          last_message_at?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_conversations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guest_messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          sender: string
+          sender_id: string | null
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender: string
+          sender_id?: string | null
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender?: string
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "guest_conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -958,6 +1043,10 @@ export type Database = {
         Args: { _kind: string }
         Returns: string
       }
+      chat_insert_bot_reply: {
+        Args: { _body: string; _conversation_id: string; _is_guest?: boolean }
+        Returns: string
+      }
       chat_review_credit_request: {
         Args: { _approve: boolean; _message_id: string; _note?: string }
         Returns: undefined
@@ -970,6 +1059,14 @@ export type Database = {
           _kind?: string
         }
         Returns: string
+      }
+      chat_set_bot_enabled: {
+        Args: {
+          _conversation_id: string
+          _enabled: boolean
+          _is_guest?: boolean
+        }
+        Returns: undefined
       }
       get_user_tenant: { Args: { _user_id: string }; Returns: string }
       has_permission: {

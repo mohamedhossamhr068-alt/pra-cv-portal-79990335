@@ -10,6 +10,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 import "@/lib/i18n";
 import { Toaster } from "@/components/ui/sonner";
+import { FloatingChatWidget } from "@/components/floating-chat-widget";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -124,6 +125,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      <FloatingChatWidget />
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );

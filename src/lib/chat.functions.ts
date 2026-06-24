@@ -25,7 +25,7 @@ export const listConversations = createServerFn({ method: "GET" })
     const { supabase } = context;
     const { data: convs, error } = await supabase
       .from("conversations" as any)
-      .select("id, owner_id, kind, title, last_message_at, created_at, tenant_id")
+      .select("id, owner_id, kind, title, last_message_at, created_at, tenant_id, bot_enabled, human_replied")
       .eq("kind", data.kind)
       .order("last_message_at", { ascending: false });
     if (error) throw new Error(error.message);

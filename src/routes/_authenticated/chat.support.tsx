@@ -29,7 +29,7 @@ function SupportChat() {
             : "Send questions to the admins & moderators."}
         </p>
       </div>
-      {q.data && <ChatPanel conversationId={q.data} kind="support" />}
+      {q.data && <ChatPanel conversationId={q.data} kind="support" triggerBot />}
     </div>
   );
 }

@@ -71,8 +71,8 @@ function Pricing() {
       credits: Number((pricing as any)?.plan_credits_business ?? 500),
       popular: false,
       features: ar
-        ? ["مساحة عمل للفريق", "هوية بصرية مخصصة", "تحليلات وتصدير", "دعم ذو أولوية"]
-        : ["Team workspace", "Custom branding", "Analytics & exports", "Priority support"],
+        ? ["حساب مؤسسة للفريق", "هوية بصرية مخصصة", "تحليلات وتصدير", "دعم ذو أولوية"]
+        : ["Team organization", "Custom branding", "Analytics & exports", "Priority support"],
     },
   ];
   return (
