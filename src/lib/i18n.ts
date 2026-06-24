@@ -130,10 +130,11 @@ const en = {
       business: "Business",
     },
     features: {
-      free: ["3 CVs / month", "1 user", "Basic templates"],
-      pro: ["50 CVs / month", "All templates", "Job matching", "Priority AI"],
-      business: ["Unlimited CVs", "Team workspace", "Branding", "Analytics & exports"],
+      free: ["10 credits / month", "1 user", "Basic templates"],
+      pro: ["100 credits / month", "All templates", "Job matching", "Priority AI"],
+      business: ["500 credits / month", "Team workspace", "Branding", "Analytics & exports"],
     },
+
     stripeNote: "Stripe checkout is available once payments are enabled on this workspace.",
   },
   settings: {
