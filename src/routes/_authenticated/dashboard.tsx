@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMeQuery } from "@/lib/me.hooks";
 import { Button } from "@/components/ui/button";
-import { FileText, Sparkles, Briefcase, Users, ArrowRight, Shield, Coins, BarChart3, Palette, ScrollText, BellRing } from "lucide-react";
+import { FileText, Sparkles, Briefcase, Users, ArrowRight, Shield, Coins, BarChart3, Palette, ScrollText, BellRing, Wallet } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
