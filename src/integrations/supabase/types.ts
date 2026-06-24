@@ -673,6 +673,41 @@ export type Database = {
           },
         ]
       }
+      user_permissions: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          permission: Database["public"]["Enums"]["app_permission"]
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          permission: Database["public"]["Enums"]["app_permission"]
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          permission?: Database["public"]["Enums"]["app_permission"]
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_permissions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -746,6 +781,14 @@ export type Database = {
         Args: { _approve: boolean; _note?: string; _request_id: string }
         Returns: undefined
       }
+      admin_set_user_permissions: {
+        Args: {
+          _make_moderator?: boolean
+          _permissions: Database["public"]["Enums"]["app_permission"][]
+          _target_user: string
+        }
+        Returns: undefined
+      }
       admin_update_platform_pricing: {
         Args: {
           _currency?: string
@@ -802,6 +845,13 @@ export type Database = {
         Returns: undefined
       }
       get_user_tenant: { Args: { _user_id: string }; Returns: string }
+      has_permission: {
+        Args: {
+          _permission: Database["public"]["Enums"]["app_permission"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -837,7 +887,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "superadmin" | "company_admin" | "user"
+      app_permission:
+        | "manage_users"
+        | "review_topups"
+        | "manage_offers"
+        | "view_audit"
+        | "view_usage"
+      app_role: "superadmin" | "company_admin" | "user" | "moderator"
       plan_tier: "free" | "pro" | "business"
       sub_status: "active" | "trialing" | "past_due" | "canceled" | "incomplete"
     }
@@ -967,7 +1023,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["superadmin", "company_admin", "user"],
+      app_permission: [
+        "manage_users",
+        "review_topups",
+        "manage_offers",
+        "view_audit",
+        "view_usage",
+      ],
+      app_role: ["superadmin", "company_admin", "user", "moderator"],
       plan_tier: ["free", "pro", "business"],
       sub_status: ["active", "trialing", "past_due", "canceled", "incomplete"],
     },
