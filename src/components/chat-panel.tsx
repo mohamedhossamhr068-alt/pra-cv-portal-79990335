@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { listMessages, sendChatMessage, reviewCreditRequest } from "@/lib/chat.functions";
+import { fmtCairo } from "@/lib/time";
 import { useMeQuery } from "@/lib/me.hooks";
 import { toast } from "sonner";
 
@@ -195,7 +196,7 @@ export function ChatPanel({ conversationId, kind, showCreditRequest, canReview }
                   <div className="text-sm whitespace-pre-wrap">{m.body}</div>
                 )}
                 <div className="text-[10px] opacity-60 mt-1">
-                  {new Date(m.created_at).toLocaleString(ar ? "ar-EG" : "en-US")}
+                  {fmtCairo(m.created_at, ar)}
                 </div>
               </div>
             </div>

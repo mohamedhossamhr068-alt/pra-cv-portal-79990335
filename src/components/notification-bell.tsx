@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNotifications } from "@/lib/notifications.hooks";
+import { fmtCairo } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 function timeAgo(iso: string, ar: boolean) {
@@ -77,7 +78,7 @@ export function NotificationBell() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <div className="truncate text-sm font-semibold">{n.title}</div>
-                      <div className="shrink-0 text-[10px] text-muted-foreground">
+                      <div className="shrink-0 text-[10px] text-muted-foreground" title={fmtCairo(n.created_at, ar)}>
                         {timeAgo(n.created_at, ar)}
                       </div>
                     </div>
