@@ -9,7 +9,7 @@ import { useMeQuery } from "@/lib/me.hooks";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, Sparkles, MapPin, RefreshCw, Building2, Calendar, Coins } from "lucide-react";
+import { ExternalLink, Sparkles, MapPin, RefreshCw, Building2, Calendar, Coins, Search, X } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/jobs")({
