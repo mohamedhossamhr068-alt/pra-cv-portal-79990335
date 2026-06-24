@@ -234,11 +234,12 @@ export const getPlatformPricing = createServerFn({ method: "GET" }).handler(asyn
     .maybeSingle();
   return (
     data ?? {
-      currency: "USD",
-      plan_price_free: 0, plan_price_pro: 29, plan_price_business: 99,
+      currency: "EGP",
+      plan_price_free: 0, plan_price_pro: 499, plan_price_business: 1499,
       plan_credits_free: 10, plan_credits_pro: 100, plan_credits_business: 500,
       bonus_credits: 3,
     }
   );
 });
+
 

@@ -22,8 +22,13 @@ import { PaymentMethodIcon, PAYMENT_TYPE_META } from "@/components/payment-metho
 import { fmtCairo } from "@/lib/time";
 
 export const Route = createFileRoute("/_authenticated/billing/topup")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    plan: typeof s.plan === "string" ? s.plan : undefined,
+    amount: s.amount != null && !Number.isNaN(Number(s.amount)) ? Number(s.amount) : undefined,
+  }),
   component: TopupPage,
 });
+
 
 function TopupPage() {
   const { i18n: i } = useTranslation();
@@ -64,7 +69,9 @@ function TopupPage() {
     [fallbackMethods, selectedId],
   );
 
-  const [amount, setAmount] = useState<number>(50);
+  const search = Route.useSearch();
+  const [amount, setAmount] = useState<number>(search.amount && search.amount > 0 ? search.amount : 50);
+
   const [ref, setRef] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);

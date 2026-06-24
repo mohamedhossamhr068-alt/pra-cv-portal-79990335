@@ -129,11 +129,12 @@ function Pricing() {
                       </li>
                     )}
                   </ul>
-                  <Link to="/auth">
+                  <Link to={tier.id === "free" ? "/auth" : "/billing/topup"} search={tier.id === "free" ? undefined : ({ plan: tier.id, amount: tier.price } as any)}>
                     <Button className="w-full" variant={tier.popular ? "default" : "outline"}>
-                      {ar ? "ابدأ الآن" : "Get started"}
+                      {tier.id === "free" ? (ar ? "ابدأ مجاناً" : "Start free") : (ar ? "اشحن وادفع الآن" : "Top up & pay")}
                     </Button>
                   </Link>
+
                 </CardContent>
               </Card>
             );
