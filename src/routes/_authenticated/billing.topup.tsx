@@ -98,7 +98,7 @@ function TopupPage() {
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  const rate = Number((wallet as any)?.credits_per_egp ?? 1);
+  const rate = Number((wallet as any)?.credits_per_egp ?? 0.02);
   const expectedCredits = selectedPlan ? planOptions[selectedPlan].credits : Math.max(1, Math.floor((amount || 0) * rate));
 
   const mut = useMutation({

@@ -57,7 +57,7 @@ function AdminWallet() {
   const [nmInstr, setNmInstr] = useState("");
 
   useEffect(() => {
-    if (wallet) setRate(Number((wallet as any).credits_per_egp ?? 1));
+    if (wallet) setRate(Number((wallet as any).credits_per_egp ?? 0.02));
   }, [wallet]);
 
   // Resolve signed thumbnail URLs for pending screenshots
