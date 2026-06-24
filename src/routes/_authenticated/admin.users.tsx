@@ -149,7 +149,7 @@ function UserRow({ user, onUpdate, pending, t }: { user: any; onUpdate: (p: any)
                 <Wallet className="h-3 w-3" />
                 {user.grant_budget == null
                   ? t("admin.budgetUnlimited")
-                  : `${(user.grant_budget ?? 0) - (user.grant_used ?? 0)} / ${user.grant_budget}`}
+                  : `${(user.grant_budget ?? 0) - (user.grant_used ?? 0)} / ${user.grant_budget} · ${t(`admin.budgetPeriod_${user.grant_period ?? "monthly"}`)}`}
               </Badge>
             )}
             {user.is_blocked && <Badge variant="destructive" className="gap-1"><Ban className="h-3 w-3" /> {t("admin.blockedBadge")}</Badge>}
