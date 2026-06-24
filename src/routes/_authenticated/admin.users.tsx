@@ -2,14 +2,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
-import { listTenantUsers, adminUpdateUser, setUserPermissions } from "@/lib/admin.functions";
+import { listTenantUsers, adminUpdateUser, setUserPermissions, setModeratorBudget } from "@/lib/admin.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Shield, Ban, Check, Coins, Users, Search, Crown, KeyRound } from "lucide-react";
+import { Shield, Ban, Check, Coins, Users, Search, Crown, KeyRound, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
