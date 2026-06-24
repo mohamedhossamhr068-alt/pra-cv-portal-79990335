@@ -105,9 +105,9 @@ export const runMatch = createServerFn({ method: "POST" })
       .select("credits,is_blocked")
       .eq("id", userId)
       .maybeSingle();
-    if (profile?.is_blocked) throw new Error("ACCOUNT_BLOCKED");
+    if (profile?.is_blocked) return { matched: 0, error: "ACCOUNT_BLOCKED" as const };
     const MATCH_CREDIT_COST = await getMatchCost(supabase, userId);
-    if ((profile?.credits ?? 0) < MATCH_CREDIT_COST) throw new Error("NO_CREDITS");
+    if ((profile?.credits ?? 0) < MATCH_CREDIT_COST) return { matched: 0, error: "NO_CREDITS" as const };
 
     const { data: cvs } = await supabase
       .from("cv_logs")
@@ -115,7 +115,7 @@ export const runMatch = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(1);
-    if (!cvs || cvs.length === 0) throw new Error("NO_CV");
+    if (!cvs || cvs.length === 0) return { matched: 0, error: "NO_CV" as const };
 
     const cv = buildCvContext(cvs[0].output);
     const { data: jobs } = await supabase.from("job_listings").select("*").eq("country", "EG").limit(200);
@@ -134,8 +134,9 @@ export const runMatch = createServerFn({ method: "POST" })
       .from("profiles")
       .update({ credits: (profile?.credits ?? 0) - MATCH_CREDIT_COST })
       .eq("id", userId);
-    return { matched: top.length };
+    return { matched: top.length, error: null };
   });
+
 
 
 export const listMatches = createServerFn({ method: "GET" })

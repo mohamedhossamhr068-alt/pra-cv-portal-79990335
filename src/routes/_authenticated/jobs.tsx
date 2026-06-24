@@ -37,19 +37,18 @@ function Jobs() {
 
   const mut = useMutation({
     mutationFn: () => matchFn(),
-    onSuccess: () => {
+    onSuccess: (r: any) => {
+      const err = r?.error as string | null | undefined;
+      if (err === "NO_CV") { toast.error(t("jobs.needCv")); return; }
+      if (err === "NO_CREDITS") { toast.error(t("jobs.noCredits")); return; }
+      if (err === "ACCOUNT_BLOCKED") { toast.error(t("jobs.blocked")); return; }
       qc.invalidateQueries({ queryKey: ["matches"] });
       qc.invalidateQueries({ queryKey: ["me"] });
       toast.success(t("jobs.matchOk"));
     },
-    onError: (e: any) => {
-      const msg = String(e?.message ?? "");
-      if (msg.includes("NO_CV")) toast.error(t("jobs.needCv"));
-      else if (msg.includes("NO_CREDITS")) toast.error(t("jobs.noCredits"));
-      else if (msg.includes("BLOCKED")) toast.error(t("jobs.blocked"));
-      else toast.error(msg || t("jobs.scrapeFail"));
-    },
+    onError: (e: any) => toast.error(String(e?.message ?? t("jobs.scrapeFail"))),
   });
+
 
   const scrape = useMutation({
     mutationFn: (kw?: string) => scrapeFn({ data: { keyword: (kw ?? keyword) || undefined } }),
