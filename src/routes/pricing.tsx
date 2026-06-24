@@ -44,7 +44,7 @@ function Pricing() {
     refetchOnWindowFocus: true,
     refetchInterval: 5_000,
   });
-  const currency = pricing?.currency ?? "USD";
+  const currency = pricing?.currency ?? "EGP";
   const bonus = Number((pricing as any)?.bonus_credits ?? 3);
   const tiers = [
     {
