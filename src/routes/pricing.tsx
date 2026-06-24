@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
+import { getPlatformPricing } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -16,13 +19,33 @@ export const Route = createFileRoute("/pricing")({
   component: Pricing,
 });
 
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  USD: "$", EGP: "ج.م", SAR: "ر.س", AED: "د.إ", EUR: "€", GBP: "£", KWD: "د.ك", QAR: "ر.ق",
+};
+
+function formatPrice(amount: number, currency: string) {
+  const sym = CURRENCY_SYMBOLS[currency] ?? currency;
+  const n = Number(amount ?? 0);
+  const pretty = Number.isInteger(n) ? n.toString() : n.toFixed(2);
+  // Symbol-first for Latin currencies, code-after for Arabic ones
+  if (["USD", "EUR", "GBP"].includes(currency)) return `${sym}${pretty}`;
+  return `${pretty} ${sym}`;
+}
+
 function Pricing() {
   const { t } = useTranslation();
+  const getPricing = useServerFn(getPlatformPricing);
+  const { data: pricing } = useQuery({
+    queryKey: ["platform-pricing"],
+    queryFn: () => getPricing(),
+    staleTime: 30_000,
+  });
+  const currency = pricing?.currency ?? "USD";
   const tiers = [
-    { id: "free", price: "$0", popular: false },
-    { id: "pro", price: "$29", popular: true },
-    { id: "business", price: "$99", popular: false },
-  ] as const;
+    { id: "free" as const, price: Number(pricing?.plan_price_free ?? 0), popular: false },
+    { id: "pro" as const, price: Number(pricing?.plan_price_pro ?? 29), popular: true },
+    { id: "business" as const, price: Number(pricing?.plan_price_business ?? 99), popular: false },
+  ];
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
@@ -48,7 +71,7 @@ function Pricing() {
                     )}
                   </CardTitle>
                   <div className="text-3xl font-bold">
-                    {tier.price}
+                    {formatPrice(tier.price, currency)}
                     <span className="text-sm font-normal text-muted-foreground">/mo</span>
                   </div>
                 </CardHeader>

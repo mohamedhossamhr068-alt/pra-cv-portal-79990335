@@ -344,6 +344,36 @@ export type Database = {
           },
         ]
       }
+      platform_pricing: {
+        Row: {
+          currency: string
+          id: string
+          plan_price_business: number
+          plan_price_free: number
+          plan_price_pro: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          currency?: string
+          id?: string
+          plan_price_business?: number
+          plan_price_free?: number
+          plan_price_pro?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          currency?: string
+          id?: string
+          plan_price_business?: number
+          plan_price_free?: number
+          plan_price_pro?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -684,6 +714,15 @@ export type Database = {
     Functions: {
       admin_review_topup: {
         Args: { _approve: boolean; _note?: string; _request_id: string }
+        Returns: undefined
+      }
+      admin_update_platform_pricing: {
+        Args: {
+          _currency?: string
+          _plan_business?: number
+          _plan_free?: number
+          _plan_pro?: number
+        }
         Returns: undefined
       }
       admin_update_pricing:

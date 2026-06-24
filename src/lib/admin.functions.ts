@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 export const listTenantUsers = createServerFn({ method: "GET" })
@@ -100,5 +101,34 @@ export const updateTenantPricing = createServerFn({ method: "POST" })
       _plan_business: data.plan_business ?? null,
     } as any);
     if (error) throw error;
+    // Also mirror plan prices + currency to the GLOBAL platform_pricing so the public site reflects changes.
+    if (
+      data.currency !== undefined ||
+      data.plan_free !== undefined ||
+      data.plan_pro !== undefined ||
+      data.plan_business !== undefined
+    ) {
+      const { error: gerr } = await context.supabase.rpc("admin_update_platform_pricing", {
+        _currency: data.currency ?? null,
+        _plan_free: data.plan_free ?? null,
+        _plan_pro: data.plan_pro ?? null,
+        _plan_business: data.plan_business ?? null,
+      } as any);
+      if (gerr) throw gerr;
+    }
     return { ok: true };
   });
+
+export const getPlatformPricing = createServerFn({ method: "GET" }).handler(async () => {
+  const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+  });
+  const { data } = await sb
+    .from("platform_pricing")
+    .select("currency,plan_price_free,plan_price_pro,plan_price_business")
+    .eq("id", "global")
+    .maybeSingle();
+  return (
+    data ?? { currency: "USD", plan_price_free: 0, plan_price_pro: 29, plan_price_business: 99 }
+  );
+});
