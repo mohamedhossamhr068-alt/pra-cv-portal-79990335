@@ -8,37 +8,39 @@ export const listTenantUsers = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { data: prof } = await supabase.from("profiles").select("tenant_id").eq("id", userId).maybeSingle();
-    if (!prof?.tenant_id) return [];
-    const { data: isAdmin } = await supabase.rpc("is_tenant_admin", {
-      _user_id: userId,
-      _tenant_id: prof.tenant_id,
-    });
-    if (!isAdmin) throw new Error("Forbidden");
+    const tenantId = prof?.tenant_id ?? null;
+    const { data: isSuper } = await supabase.rpc("is_superadmin", { _user_id: userId });
+    let isAdmin = false;
+    if (tenantId) {
+      const { data: a } = await supabase.rpc("is_tenant_admin", { _user_id: userId, _tenant_id: tenantId });
+      isAdmin = !!a;
+    }
+    if (!isSuper && !isAdmin) throw new Error("Forbidden");
 
-    const { data: users } = await supabase
+    // Superadmin sees every signup on the platform; tenant admin only their workspace.
+    let usersQuery = supabase
       .from("profiles")
-      .select("id,email,full_name,credits,is_blocked,created_at,grant_budget,grant_used,grant_period,grant_period_start,feature_flags")
-      .eq("tenant_id", prof.tenant_id)
+      .select("id,email,full_name,credits,is_blocked,created_at,grant_budget,grant_used,grant_period,grant_period_start,feature_flags,tenant_id")
       .order("created_at", { ascending: false });
-
-
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("user_id,role")
-      .eq("tenant_id", prof.tenant_id);
-
-    const { data: perms } = await supabase
-      .from("user_permissions" as any)
-      .select("user_id,permission")
-      .eq("tenant_id", prof.tenant_id);
+    let rolesQuery = supabase.from("user_roles").select("user_id,role,tenant_id");
+    let permsQuery = supabase.from("user_permissions" as any).select("user_id,permission,tenant_id");
+    if (!isSuper && tenantId) {
+      usersQuery = usersQuery.eq("tenant_id", tenantId);
+      rolesQuery = rolesQuery.eq("tenant_id", tenantId);
+      permsQuery = permsQuery.eq("tenant_id", tenantId);
+    }
+    const [{ data: users }, { data: roles }, { data: perms }] = await Promise.all([
+      usersQuery,
+      rolesQuery,
+      permsQuery,
+    ]);
 
     const rolesByUser = new Map<string, string[]>();
-    (roles ?? []).forEach((r) => {
+    (roles ?? []).forEach((r: any) => {
       const list = rolesByUser.get(r.user_id) ?? [];
       list.push(r.role as string);
       rolesByUser.set(r.user_id, list);
     });
-
     const permsByUser = new Map<string, string[]>();
     ((perms as any[]) ?? []).forEach((p) => {
       const list = permsByUser.get(p.user_id) ?? [];
@@ -46,12 +48,22 @@ export const listTenantUsers = createServerFn({ method: "GET" })
       permsByUser.set(p.user_id, list);
     });
 
-    return (users ?? []).map((u) => ({
+    // Tenant names for superadmin's cross-tenant view
+    const tenantIds = Array.from(new Set((users ?? []).map((u: any) => u.tenant_id).filter(Boolean)));
+    let tenantsById = new Map<string, string>();
+    if (isSuper && tenantIds.length) {
+      const { data: ts } = await supabase.from("tenants").select("id,name").in("id", tenantIds);
+      tenantsById = new Map((ts ?? []).map((t: any) => [t.id, t.name]));
+    }
+
+    return (users ?? []).map((u: any) => ({
       ...u,
       roles: rolesByUser.get(u.id) ?? [],
       permissions: permsByUser.get(u.id) ?? [],
+      tenant_name: u.tenant_id ? tenantsById.get(u.tenant_id) ?? null : null,
     }));
   });
+
 
 const PermissionEnum = z.enum(["manage_users", "review_topups", "manage_offers", "view_audit", "view_usage"]);
 
