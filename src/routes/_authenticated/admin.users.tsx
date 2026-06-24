@@ -104,7 +104,7 @@ function AdminUsers() {
       ) : (
         <div className="grid gap-3">
           {filtered.map((u) => (
-            <UserRow key={u.id} user={u} onUpdate={(p) => mut.mutate({ target_user: u.id, ...p })} pending={mut.isPending} t={t} />
+            <UserRow key={u.id} user={u} meId={meId} onUpdate={(p) => mut.mutate({ target_user: u.id, ...p })} pending={mut.isPending} t={t} />
           ))}
         </div>
       )}
