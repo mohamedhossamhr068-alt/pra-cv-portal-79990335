@@ -67,7 +67,7 @@ export const getTenantPricing = createServerFn({ method: "GET" })
     if (!prof?.tenant_id) return null;
     const { data } = await supabase
       .from("tenants")
-      .select("cv_credit_cost,match_credit_cost,scrape_credit_cost,currency,plan_price_free,plan_price_pro,plan_price_business")
+      .select("cv_credit_cost,match_credit_cost,scrape_credit_cost,currency,plan_price_free,plan_price_pro,plan_price_business,plan_credits_free,plan_credits_pro,plan_credits_business,bonus_credits")
       .eq("id", prof.tenant_id)
       .maybeSingle();
     return data;
@@ -87,6 +87,10 @@ export const updateTenantPricing = createServerFn({ method: "POST" })
         plan_free: z.number().min(0).max(100000).optional(),
         plan_pro: z.number().min(0).max(100000).optional(),
         plan_business: z.number().min(0).max(100000).optional(),
+        credits_free: z.number().int().min(0).max(1000000).optional(),
+        credits_pro: z.number().int().min(0).max(1000000).optional(),
+        credits_business: z.number().int().min(0).max(1000000).optional(),
+        bonus_credits: z.number().int().min(0).max(10000).optional(),
       })
       .parse(d),
   )
@@ -99,23 +103,12 @@ export const updateTenantPricing = createServerFn({ method: "POST" })
       _plan_free: data.plan_free ?? null,
       _plan_pro: data.plan_pro ?? null,
       _plan_business: data.plan_business ?? null,
+      _credits_free: data.credits_free ?? null,
+      _credits_pro: data.credits_pro ?? null,
+      _credits_business: data.credits_business ?? null,
+      _bonus_credits: data.bonus_credits ?? null,
     } as any);
     if (error) throw error;
-    // Also mirror plan prices + currency to the GLOBAL platform_pricing so the public site reflects changes.
-    if (
-      data.currency !== undefined ||
-      data.plan_free !== undefined ||
-      data.plan_pro !== undefined ||
-      data.plan_business !== undefined
-    ) {
-      const { error: gerr } = await context.supabase.rpc("admin_update_platform_pricing", {
-        _currency: data.currency ?? null,
-        _plan_free: data.plan_free ?? null,
-        _plan_pro: data.plan_pro ?? null,
-        _plan_business: data.plan_business ?? null,
-      } as any);
-      if (gerr) throw gerr;
-    }
     return { ok: true };
   });
 
@@ -125,10 +118,16 @@ export const getPlatformPricing = createServerFn({ method: "GET" }).handler(asyn
   });
   const { data } = await sb
     .from("platform_pricing")
-    .select("currency,plan_price_free,plan_price_pro,plan_price_business")
+    .select("currency,plan_price_free,plan_price_pro,plan_price_business,plan_credits_free,plan_credits_pro,plan_credits_business,bonus_credits")
     .eq("id", "global")
     .maybeSingle();
   return (
-    data ?? { currency: "USD", plan_price_free: 0, plan_price_pro: 29, plan_price_business: 99 }
+    data ?? {
+      currency: "USD",
+      plan_price_free: 0, plan_price_pro: 29, plan_price_business: 99,
+      plan_credits_free: 10, plan_credits_pro: 100, plan_credits_business: 500,
+      bonus_credits: 3,
+    }
   );
 });
+
