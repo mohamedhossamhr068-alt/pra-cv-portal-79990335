@@ -106,6 +106,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const adminItems: NavItem[] = [
     { to: "/admin/users", key: "users", label: t("admin.tileUsers"), icon: Users },
+    { to: "/admin/access", key: "access", label: i18n.language === "ar" ? "صلاحيات الواجهة" : "Access control", icon: ShieldCheck },
+
     { to: "/admin/pricing", key: "pricing", label: t("admin.tilePricing"), icon: SettingsIcon },
     { to: "/admin/offers", key: "offers", label: i18n.language === "ar" ? "العروض والخصومات" : "Offers", icon: Sparkles },
     { to: "/admin/wallet", key: "wallet", label: i18n.language === "ar" ? "محفظة فودافون" : "Wallet", icon: CreditCard },
