@@ -163,6 +163,12 @@ function UserRow({ user, meId, onUpdate, pending, t }: { user: any; meId?: strin
               {!isAdmin && !isModerator && (
                 <Badge variant="outline" className="gap-1"><Users className="h-3 w-3" /> {t("admin.roleUser")}</Badge>
               )}
+              {user.tenant_name && (
+                <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
+                  {user.tenant_name}
+                </Badge>
+              )}
+
               {isModerator && !isAdmin && (
                 <Badge variant="outline" className="gap-1 border-emerald-500/40 text-emerald-700 dark:text-emerald-400">
                   <Wallet className="h-3 w-3" />
