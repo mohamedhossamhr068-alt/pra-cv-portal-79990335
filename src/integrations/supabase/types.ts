@@ -58,6 +58,83 @@ export type Database = {
           },
         ]
       }
+      conversation_messages: {
+        Row: {
+          body: string | null
+          conversation_id: string
+          created_at: string
+          credit_amount: number | null
+          credit_status: string | null
+          id: string
+          kind: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sender_id: string
+        }
+        Insert: {
+          body?: string | null
+          conversation_id: string
+          created_at?: string
+          credit_amount?: number | null
+          credit_status?: string | null
+          id?: string
+          kind?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_id: string
+        }
+        Update: {
+          body?: string | null
+          conversation_id?: string
+          created_at?: string
+          credit_amount?: number | null
+          credit_status?: string | null
+          id?: string
+          kind?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          last_message_at: string
+          owner_id: string
+          tenant_id: string
+          title: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          last_message_at?: string
+          owner_id: string
+          tenant_id: string
+          title?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          last_message_at?: string
+          owner_id?: string
+          tenant_id?: string
+          title?: string | null
+        }
+        Relationships: []
+      }
       cv_logs: {
         Row: {
           accent_color: string | null
@@ -876,6 +953,23 @@ export type Database = {
           _target_user: string
         }
         Returns: undefined
+      }
+      chat_get_or_create_my_conversation: {
+        Args: { _kind: string }
+        Returns: string
+      }
+      chat_review_credit_request: {
+        Args: { _approve: boolean; _message_id: string; _note?: string }
+        Returns: undefined
+      }
+      chat_send_message: {
+        Args: {
+          _body: string
+          _conversation_id: string
+          _credit_amount?: number
+          _kind?: string
+        }
+        Returns: string
       }
       get_user_tenant: { Args: { _user_id: string }; Returns: string }
       has_permission: {
