@@ -375,7 +375,8 @@ If languages or ERP systems were provided, include them as their own skillsMatri
     });
 
     return { id: inserted.id, output: cvOutput, analysis, creditsLeft: credits - CV_CREDIT_COST };
-  });
+}
+
 
 
 export const listCvs = createServerFn({ method: "GET" })
