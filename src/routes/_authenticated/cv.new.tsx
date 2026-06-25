@@ -67,7 +67,7 @@ function NewCv() {
     portfolioUrl: "",
     birthDate: "",
     maritalStatus: "" as "" | "single" | "married" | "divorced" | "widowed",
-    template: "classic_executive" as "classic_executive" | "creative_professional" | "corporate_minimal" | "modern_sidebar" | "elegant_serif" | "mono_dark",
+    template: "ats_clean" as "ats_clean" | "two_column_modern" | "classic_executive" | "creative_professional" | "corporate_minimal" | "modern_sidebar" | "elegant_serif" | "mono_dark",
     avatarDataUrl: "" as string,
     email: "",
     phone: "",
