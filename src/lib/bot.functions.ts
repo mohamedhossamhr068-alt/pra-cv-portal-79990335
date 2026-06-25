@@ -1,17 +1,22 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
-import { createLovableAiGatewayProvider, pickBotSystem } from "./ai-gateway.server";
+import { buildBotSystem, createLovableAiGatewayProvider, fetchBotPricing } from "./ai-gateway.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const MODEL = "google/gemini-3-flash-preview";
 
-async function callBot(history: { role: "user" | "assistant"; content: string }[], lang?: string) {
+async function callBot(
+  history: { role: "user" | "assistant"; content: string }[],
+  lang: string | undefined,
+  audience: "guest" | "user",
+) {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("Missing LOVABLE_API_KEY");
   const gateway = createLovableAiGatewayProvider(key);
   const lastUser = [...history].reverse().find((h) => h.role === "user")?.content;
-  const system = pickBotSystem(lang, lastUser);
+  const pricing = await fetchBotPricing();
+  const system = buildBotSystem(lang, lastUser, { audience, ...pricing });
   const { text } = await generateText({
     model: gateway(MODEL),
     system,
