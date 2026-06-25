@@ -67,7 +67,7 @@ export const triggerSupportBotReply = createServerFn({ method: "POST" })
     }
     let reply: string;
     try {
-      reply = await callBot(history, data.lang);
+      reply = await callBot(history, data.lang, "user");
     } catch (e: any) {
       console.error("bot error", e?.message);
       return { ok: false, reason: "ai_error" };
