@@ -254,63 +254,44 @@ function CvViewer() {
     if (!pdfRef.current) return;
     setDownloading(true);
     try {
-      const [{ default: html2canvas }, jsPDFmod] = await Promise.all([
-        import("html2canvas-pro"),
-        import("jspdf"),
-      ]);
-      const jsPDF = (jsPDFmod as any).jsPDF ?? (jsPDFmod as any).default;
+      // Real text-based PDF via the browser's print engine — ATS-friendly,
+      // selectable text, perfect Arabic shaping (no html2canvas raster).
       const node = pdfRef.current;
-
-      // A4 @ 96dpi ≈ 794 × 1123 px. Lock render width so the layout matches A4.
-      const A4_W_PX = 794;
-      const A4_H_PX = 1123;
-
-      const canvas = await html2canvas(node, {
-        scale: 3,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-        windowWidth: A4_W_PX,
-        width: A4_W_PX,
-      });
-
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
-      const pageWmm = pdf.internal.pageSize.getWidth();
-      const pageHmm = pdf.internal.pageSize.getHeight();
-      const pxPerMm = canvas.width / pageWmm;
-      const pageHpx = Math.floor(A4_H_PX * (canvas.width / A4_W_PX));
-
-      // Slice the tall canvas into clean A4-sized pages so text stays crisp
-      // and pages don't get stretched into a single huge image.
-      let renderedPx = 0;
-      let pageIndex = 0;
-      while (renderedPx < canvas.height) {
-        const sliceH = Math.min(pageHpx, canvas.height - renderedPx);
-        const pageCanvas = document.createElement("canvas");
-        pageCanvas.width = canvas.width;
-        pageCanvas.height = sliceH;
-        const ctx = pageCanvas.getContext("2d");
-        if (!ctx) break;
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-        ctx.drawImage(canvas, 0, renderedPx, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
-        const imgData = pageCanvas.toDataURL("image/png");
-        if (pageIndex > 0) pdf.addPage();
-        const sliceHmm = sliceH / pxPerMm;
-        pdf.addImage(imgData, "PNG", 0, 0, pageWmm, Math.min(sliceHmm, pageHmm));
-        renderedPx += sliceH;
-        pageIndex += 1;
-      }
-
-      const filename = `${data.title.replace(/[^\w\s-]/g, "").trim() || "cv"}.pdf`;
-      pdf.save(filename);
-    } catch (err) {
+      const win = window.open("", "_blank", "width=900,height=1200");
+      if (!win) throw new Error("popup-blocked");
+      const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+        .map((n) => n.outerHTML)
+        .join("\n");
+      const filename = `${data.title.replace(/[^\w\s\u0600-\u06FF-]/g, "").trim() || "cv"}.pdf`;
+      win.document.open();
+      win.document.write(`<!doctype html><html dir="${cvDir}" lang="${cvLang}"><head><meta charset="utf-8"><title>${filename.replace(/\.pdf$/, "")}</title>
+${styles}
+<style>
+  @page { size: A4; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+  body { font-family: ${cvLang === "ar" ? "'Noto Sans Arabic', 'Cairo', Inter, system-ui, sans-serif" : "Inter, system-ui, -apple-system, sans-serif"}; color: #0f172a; }
+  .cv-print-root { width: 210mm; min-height: 297mm; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  a { color: inherit; text-decoration: none; }
+</style>
+</head><body><div class="cv-print-root">${node.innerHTML}</div></body></html>`);
+      win.document.close();
+      await new Promise((r) => setTimeout(r, 700));
+      try { (win as any).focus(); } catch {}
+      win.print();
+      setTimeout(() => { try { win.close(); } catch {} }, 1500);
+    } catch (err: any) {
       console.error("PDF export failed", err);
-      toast.error(ar ? "تعذر إنشاء PDF" : "Could not generate PDF.");
+      if (err?.message === "popup-blocked") {
+        toast.error(ar ? "يرجى السماح بالنوافذ المنبثقة لتصدير PDF" : "Please allow pop-ups to export the PDF.");
+      } else {
+        toast.error(ar ? "تعذر إنشاء PDF" : "Could not generate PDF.");
+      }
     } finally {
       setDownloading(false);
     }
   };
+
 
 
   const handleDownloadDocx = async () => {
