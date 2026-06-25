@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { generateText } from "ai";
-import { createLovableAiGatewayProvider, pickBotSystem } from "@/lib/ai-gateway.server";
+import { buildBotSystem, createLovableAiGatewayProvider, fetchBotPricing } from "@/lib/ai-gateway.server";
 
 const Body = z.object({
   guest_token: z.string().min(8).max(80),
