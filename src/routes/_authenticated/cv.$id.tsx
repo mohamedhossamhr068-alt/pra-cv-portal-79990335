@@ -769,6 +769,9 @@ function CvTemplate({
   const isSidebar = template === "modern_sidebar";
   const isElegant = template === "elegant_serif";
   const isMono = template === "mono_dark";
+  const isAtsClean = template === "ats_clean";
+  const isTwoCol = template === "two_column_modern";
+
   const avatar = input?.avatarDataUrl as string | undefined;
   const personalLabels = (input?.locale === "ar")
     ? { dob: "تاريخ الميلاد", marital: "الحالة الاجتماعية" }
