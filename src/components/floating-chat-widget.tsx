@@ -356,8 +356,33 @@ function BubbleRow({ sender, children }: { sender: GuestMsg["sender"]; children:
           mine ? "bg-primary text-primary-foreground" : "bg-background border",
         )}
       >
-        {children}
+        {typeof children === "string" ? linkify(children) : children}
       </div>
     </div>
   );
+}
+
+// Convert [/path] tokens to in-app links so the bot can guide users.
+function linkify(text: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  const re = /\[(\/[a-zA-Z0-9/_-]+)\]/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let i = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    const href = m[1];
+    parts.push(
+      <a
+        key={`l-${i++}`}
+        href={href}
+        className="underline underline-offset-2 font-medium text-primary hover:opacity-80"
+      >
+        {href}
+      </a>,
+    );
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts.length ? parts : text;
 }

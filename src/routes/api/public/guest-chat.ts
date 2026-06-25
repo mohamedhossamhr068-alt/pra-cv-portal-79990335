@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { generateText } from "ai";
-import { createLovableAiGatewayProvider, pickBotSystem } from "@/lib/ai-gateway.server";
+import { buildBotSystem, createLovableAiGatewayProvider, fetchBotPricing } from "@/lib/ai-gateway.server";
 
 const Body = z.object({
   guest_token: z.string().min(8).max(80),
@@ -83,7 +83,8 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                 content: m.body as string,
               }));
               const gateway = createLovableAiGatewayProvider(key);
-              const system = pickBotSystem(body.lang, body.message);
+              const pricing = await fetchBotPricing();
+              const system = buildBotSystem(body.lang, body.message, { audience: "guest", ...pricing });
               const { text } = await generateText({
                 model: gateway("google/gemini-3-flash-preview"),
                 system,
