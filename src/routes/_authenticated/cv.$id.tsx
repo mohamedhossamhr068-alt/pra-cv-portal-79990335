@@ -530,7 +530,8 @@ ${styles}
 
       <Card className="overflow-hidden print:border-0 print:shadow-none">
         <CardContent className="p-0">
-          <div ref={pdfRef} dir={cvDir} lang={cvLang} className="bg-white text-neutral-900" style={{ width: "100%" }}>
+          <div ref={pdfRef} dir={cvDir} lang={cvLang} className="cv-print-area bg-white text-neutral-900" style={{ width: "100%" }}>
+
             <CvTemplate
               output={out}
               template={tpl}
