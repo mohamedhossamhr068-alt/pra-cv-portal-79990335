@@ -153,3 +153,13 @@
   }
   html[dir="rtl"] body { font-family: "Noto Sans Arabic", "Inter", system-ui, sans-serif; }
 }
+
+/* ===== CV print styles — ensures selectable text, A4, no margins ===== */
+@media print {
+  @page { size: A4; margin: 0; }
+  html, body { background: #fff !important; }
+  body * { visibility: hidden !important; }
+  .cv-print-area, .cv-print-area * { visibility: visible !important; }
+  .cv-print-area { position: absolute; inset: 0; width: 210mm; }
+  .print\:hidden { display: none !important; }
+}
