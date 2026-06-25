@@ -785,8 +785,134 @@ function CvTemplate({
   ].filter(Boolean) as { icon: any; text: string }[];
 
 
+  // === ATS Clean: pure single-column, no graphics, maximum ATS parse score ===
+  if (isAtsClean) {
+    return (
+      <div className="px-10 py-10 space-y-5 text-[12.5px] leading-[1.65] text-neutral-900" style={{ fontFamily: "Arial, Helvetica, 'Noto Sans Arabic', sans-serif", minHeight: "1100px" }}>
+        <header className="border-b border-neutral-300 pb-3">
+          <h1 className="text-[26px] font-bold tracking-tight text-neutral-900">{name}</h1>
+          {target && <div className="mt-0.5 text-[14px] text-neutral-700">{target}</div>}
+          {contactItems.length > 0 && (
+            <div className="mt-2 text-[11.5px] text-neutral-700">
+              {contactItems.map((c) => c.text).join(" · ")}
+            </div>
+          )}
+        </header>
+        {output.summary && (
+          <section>
+            <h2 className="mb-1 text-[12px] font-bold uppercase tracking-wider text-neutral-900">{t("cv.summary")}</h2>
+            <p>{output.summary}</p>
+          </section>
+        )}
+        {output.competencies.length > 0 && (
+          <section>
+            <h2 className="mb-1 text-[12px] font-bold uppercase tracking-wider text-neutral-900">{t("cv.competencies")}</h2>
+            <p>{output.competencies.join(" · ")}</p>
+          </section>
+        )}
+        <section>
+          <h2 className="mb-2 text-[12px] font-bold uppercase tracking-wider text-neutral-900">{t("cv.professional")}</h2>
+          <div className="space-y-3">
+            {output.experience.map((e, i) => (
+              <div key={i}>
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <div className="font-semibold">{e.role} — {e.company}</div>
+                  <div className="text-[11px] text-neutral-600">{e.dates}</div>
+                </div>
+                <ul className="ms-5 mt-1 list-disc space-y-0.5">
+                  {e.bullets.map((b, j) => (<li key={j}>{b}</li>))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+        {output.achievements.length > 0 && (
+          <section>
+            <h2 className="mb-1 text-[12px] font-bold uppercase tracking-wider text-neutral-900">{t("cv.achievements")}</h2>
+            <ul className="ms-5 list-disc space-y-0.5">{output.achievements.map((a, i) => (<li key={i}>{a}</li>))}</ul>
+          </section>
+        )}
+        {output.skillsMatrix.length > 0 && (
+          <section>
+            <h2 className="mb-1 text-[12px] font-bold uppercase tracking-wider text-neutral-900">{t("cv.skillsMatrix")}</h2>
+            <div className="space-y-1">
+              {output.skillsMatrix.map((g) => (
+                <div key={g.category}><span className="font-semibold">{g.category}:</span> {g.skills.join(", ")}</div>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    );
+  }
+
+  // === Two Column Modern: thin sidebar + main, balanced and ATS-readable ===
+  if (isTwoCol) {
+    return (
+      <div className="grid grid-cols-[36%_1fr] text-[12px] leading-[1.6] text-neutral-800" style={{ fontFamily: "Inter, 'Noto Sans Arabic', system-ui, sans-serif", minHeight: "1100px" }}>
+        <aside className="bg-neutral-50 p-7 space-y-5" style={{ borderInlineEnd: `3px solid ${accent}` }}>
+          {avatar && <img src={avatar} alt="" className="h-24 w-24 rounded-full object-cover" />}
+          <div>
+            <h1 className="text-[20px] font-bold leading-tight text-neutral-900">{name}</h1>
+            {target && <div className="mt-0.5 text-[12px]" style={{ color: accent }}>{target}</div>}
+          </div>
+          {contactItems.length > 0 && (
+            <div className="space-y-1 text-[11px] text-neutral-700">
+              {contactItems.map((c, i) => (
+                <div key={i} className="flex items-start gap-1.5 break-all"><span style={{ color: accent }}>{c.icon}</span><span>{c.text}</span></div>
+              ))}
+            </div>
+          )}
+          {output.competencies.length > 0 && (
+            <div>
+              <h3 className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: accent }}>{t("cv.competencies")}</h3>
+              <div className="space-y-0.5 text-[11.5px]">{output.competencies.map((c) => (<div key={c}>• {c}</div>))}</div>
+            </div>
+          )}
+          {output.skillsMatrix.length > 0 && (
+            <div>
+              <h3 className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: accent }}>{t("cv.skillsMatrix")}</h3>
+              {output.skillsMatrix.map((g) => (
+                <div key={g.category} className="mb-2">
+                  <div className="text-[11px] font-semibold text-neutral-800">{g.category}</div>
+                  <div className="text-[11px] text-neutral-600">{g.skills.join(" · ")}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </aside>
+        <main className="bg-white p-8 space-y-5">
+          {output.summary && (
+            <Section icon={<Sparkles className="h-4 w-4" />} title={t("cv.summary")} accent={accent}>
+              <p className="text-[12.5px] leading-[1.7] text-neutral-700">{output.summary}</p>
+            </Section>
+          )}
+          <Section icon={<Briefcase className="h-4 w-4" />} title={t("cv.professional")} accent={accent}>
+            <div className="space-y-4">
+              {output.experience.map((e, i) => (
+                <div key={i}>
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <div className="font-semibold text-neutral-900">{e.role}<span className="font-normal text-neutral-500"> · {e.company}</span></div>
+                    <div className="text-[10.5px] font-medium uppercase tracking-wider text-neutral-500">{e.dates}</div>
+                  </div>
+                  <ul className="ms-4 mt-1 list-disc space-y-1 text-neutral-700">{e.bullets.map((b, j) => (<li key={j}>{b}</li>))}</ul>
+                </div>
+              ))}
+            </div>
+          </Section>
+          {output.achievements.length > 0 && (
+            <Section icon={<Award className="h-4 w-4" />} title={t("cv.achievements")} accent={accent}>
+              <ul className="ms-4 list-disc space-y-1 text-neutral-700">{output.achievements.map((a, i) => (<li key={i}>{a}</li>))}</ul>
+            </Section>
+          )}
+        </main>
+      </div>
+    );
+  }
+
   // Sidebar layout: completely different structure
   if (isSidebar) {
+
     return (
       <div className="grid grid-cols-[34%_1fr] font-sans text-[12px] leading-[1.6] text-neutral-800" style={{ fontFamily: "Inter, system-ui, sans-serif", minHeight: "1100px" }}>
         <aside className="p-7 text-white" style={{ background: `linear-gradient(180deg, ${accent} 0%, ${accent}d0 100%)` }}>
