@@ -1106,6 +1106,8 @@ function Section({
 }
 
 const TEMPLATES: { id: string; nameAr: string; nameEn: string; descAr: string; descEn: string }[] = [
+  { id: "ats_clean", nameAr: "ATS نظيف", nameEn: "ATS Clean", descAr: "عمود واحد بدون رسوم — أعلى توافق ATS", descEn: "Single column, no graphics — best ATS parse" },
+  { id: "two_column_modern", nameAr: "عمودين حديث", nameEn: "Two-Column Modern", descAr: "شريط جانبي مرتب + محتوى رئيسي", descEn: "Tidy sidebar + main content" },
   { id: "classic_executive", nameAr: "كلاسيكي تنفيذي", nameEn: "Classic Executive", descAr: "تدرّج خفيف وتفاصيل أنيقة", descEn: "Soft gradient header, refined details" },
   { id: "creative_professional", nameAr: "إبداعي احترافي", nameEn: "Creative Pro", descAr: "هيدر ملوّن جريء", descEn: "Bold colored hero header" },
   { id: "corporate_minimal", nameAr: "مينيمال شركاتي", nameEn: "Corporate Minimal", descAr: "أبيض نظيف بخط لوني", descEn: "Clean white with accent rule" },
@@ -1113,6 +1115,7 @@ const TEMPLATES: { id: string; nameAr: string; nameEn: string; descAr: string; d
   { id: "elegant_serif", nameAr: "أنيق سيريف", nameEn: "Elegant Serif", descAr: "خط سيريف ولمسة ورقية", descEn: "Serif typography, paper feel" },
   { id: "mono_dark", nameAr: "داكن أحادي", nameEn: "Mono Dark", descAr: "هيدر داكن قوي", descEn: "Strong dark hero band" },
 ];
+
 
 const ACCENT_PALETTE = [
   { name: "Indigo", value: "#4f46e5" },
