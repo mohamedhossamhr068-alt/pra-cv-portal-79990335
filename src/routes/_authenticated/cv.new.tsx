@@ -458,6 +458,8 @@ function NewCv() {
             <Select value={form.template} onValueChange={(v: any) => setForm({ ...form, template: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
+                <SelectItem value="ats_clean">{ar ? "ATS نظيف (موصى به)" : "ATS Clean (recommended)"}</SelectItem>
+                <SelectItem value="two_column_modern">{ar ? "عمودين حديث" : "Two-Column Modern"}</SelectItem>
                 <SelectItem value="classic_executive">{ar ? "كلاسيكي تنفيذي" : "Classic Executive"}</SelectItem>
                 <SelectItem value="creative_professional">{ar ? "إبداعي احترافي" : "Creative Pro"}</SelectItem>
                 <SelectItem value="corporate_minimal">{ar ? "مينيمال شركاتي" : "Corporate Minimal"}</SelectItem>
@@ -465,6 +467,7 @@ function NewCv() {
                 <SelectItem value="elegant_serif">{ar ? "أنيق سيريف" : "Elegant Serif"}</SelectItem>
                 <SelectItem value="mono_dark">{ar ? "داكن أحادي" : "Mono Dark"}</SelectItem>
               </SelectContent>
+
             </Select>
           </div>
           <div className="sm:col-span-2 flex justify-end">
