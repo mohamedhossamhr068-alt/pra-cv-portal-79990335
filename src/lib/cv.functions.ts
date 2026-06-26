@@ -33,6 +33,8 @@ const CvInputSchema = z.object({
   experience: z.string().min(20).max(4000),
   skills: z.string().min(1).max(1000),
   template: z.enum([
+    "ats_clean",
+    "two_column_modern",
     "classic_executive",
     "creative_professional",
     "corporate_minimal",
@@ -41,7 +43,7 @@ const CvInputSchema = z.object({
     "mono_dark",
     // legacy values kept for backward compat
     "modern_executive",
-  ]).default("classic_executive"),
+  ]).default("ats_clean"),
   locale: z.enum(["en", "ar"]).default("en"),
   avatarDataUrl: z.string().max(400_000).optional(),
   email: z.string().max(160).optional(),
